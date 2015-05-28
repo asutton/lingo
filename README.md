@@ -60,7 +60,7 @@ This library is designed to be included as a submodule in a larger
 project. For your compiler add this submodule from your top-level
 source directory using the command
 
-  git submodule add https://github.com/asutton/lingo
+    git submodule add https://github.com/asutton/lingo
 
 
 The `lingo` library also depends on a few external libraries:

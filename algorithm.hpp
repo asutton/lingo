@@ -69,6 +69,33 @@ template<typename T>
 using Range_over = Range<Iterator_type<T>>;
 
 
+// -------------------------------------------------------------------------- //
+//                            Testing
+
+
+// Returns true if the next element in the stream is equal to x.
+template<typename Stream, typename T>
+inline bool 
+next_element_is(Stream const& s, T const& x)
+{
+  return !s.eof() && s.peek() == x;
+}
+
+
+// Returns true if the next element in the stream is distinct
+// from x.
+template<typename Stream, typename T>
+inline bool 
+next_element_is_not(Stream const& s, T const& x)
+{
+  return !s.eof() && s.peek() != x;
+}
+
+
+// -------------------------------------------------------------------------- //
+//                            Match any
+
+
 // If the current element of the stream exactly matches t, then
 // return an iterator to that element and advance the stream. 
 // Otherwise, return a null iterator.
@@ -100,6 +127,9 @@ match_if(Stream& s, P pred)
 }
 
 
+// -------------------------------------------------------------------------- //
+//                            Match any
+
 // The base case for match_any returns the null element.
 template<typename Stream>
 inline Iterator_type<Stream>
@@ -109,8 +139,8 @@ match_any(Stream& s)
 }
 
 
-// If the current element in the stream matches element
-// in the argument parck [a, args...], return that element.
+// If the current element in the stream matches any element
+// in the argument pack [a, args...], return that element.
 // Otherwise, return the null element.
 template<typename Stream, typename A, typename... Args>
 inline Iterator_type<Stream>
@@ -148,6 +178,34 @@ match_any_if(Stream& s, P pred, Preds const&... preds)
   else
     return match_any_if(s, preds...);
 }
+
+
+// -------------------------------------------------------------------------- //
+//                            Match all
+
+// The base case for match_all returns current element.
+template<typename Stream>
+inline Iterator_type<Stream>
+match_all(Stream& s)
+{
+  return s.begin();
+}
+
+
+// If the current element in the stream matches each element
+// in the argument pack [a, args...], return a pointer past
+// the last matched element. Otherwise, returns the null
+// element.
+template<typename Stream, typename A, typename... Args>
+inline Iterator_type<Stream>
+match_all(Stream& s, A const& a, Args const&... args)
+{
+  if (match(s, a))
+    return match_all(s, args...);
+  else
+    return {};
+}
+
 
 
 // -------------------------------------------------------------------------- //

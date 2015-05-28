@@ -42,5 +42,9 @@ add_library(lingo
   token.cpp
   algorithm.cpp
   lexing.cpp
-  parsing.cpp)
+  parsing.cpp
+  json.cpp)
 target_link_libraries(lingo ${GMP_LIBRARIES})
+
+
+add_subdirectory(test)

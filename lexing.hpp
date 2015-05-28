@@ -153,6 +153,24 @@ is_identifier_rest(char c)
 // be a token stream.
 
 
+// Returns true if the next character is `c`.
+template<typename Stream>
+inline bool
+next_character_is(Stream const& s, char c)
+{
+  return next_element_is(s, c);
+}
+
+
+// Returns true if the next character is not `c`.
+template<typename Stream>
+inline bool
+next_character_is_not(Stream const& s, char c)
+{
+  return next_element_is_not(s, c);
+}
+
+
 // Returns true if the current character in the stream matches
 // a whitespace character.
 template<typename Stream>

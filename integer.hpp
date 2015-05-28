@@ -43,7 +43,7 @@ public:
   Integer(long, int = 10);
 
   // String initialization
-  Integer(std::string const&, int);
+  Integer(std::string const&, int = 10);
 
   // Destructor
   ~Integer();
