@@ -105,10 +105,11 @@ parse_long_arg(Parser& p, int& argc, char** argv)
   while (*last != 0 && *last != '=')
     ++last;
 
+
   // Find the parameter.  
   // TODO: Can we avoid allocating memory here?
   std::string name(first, last);
-  auto iter = p.names.find(first);
+  auto iter = p.names.find(name);
   if (iter == p.names.end())
     throw std::runtime_error(format("no matching parameter for '{}'", first));
   Parameter* parm = iter->second;
