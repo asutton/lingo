@@ -73,6 +73,27 @@ using Range_over = Range<Iterator_type<T>>;
 //                            Testing
 
 
+template<typename T>
+inline bool
+is_one_of(T const&)
+{
+  return false;
+}
+
+
+// Returns true when the element matches one of those given
+// in [first, args...].
+template<typename T, typename... Args>
+inline bool
+is_one_of(T const& elem, T const& first, Args const&... args)
+{
+  if (elem == first)
+    return true;
+  else
+    return is_one_of(elem, args...);
+}
+
+
 // Returns true if the next element in the stream is equal to x.
 template<typename Stream, typename T>
 inline bool 

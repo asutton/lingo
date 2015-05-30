@@ -414,39 +414,78 @@ print(Printer& p, json::Value const* v)
 namespace
 {
 
-struct Parser;
-
-Value* parse_value(Parser&, Character_stream&);
-
-struct Parser
+// The parse context provides information about the state
+// of a parse. It provides the hooks for transforming characters
+// into values and emitting errors.
+struct Context 
 {
   using result_type = Value*;
   using argument_type = char;
 
-  Value* operator()(Character_stream& s)
+
+  Null* on_null(Location)
   {
-    return parse_value(*this, s);
+    return make_null();
   }
 
-  Int* on_decimal_integer(Location loc, char const* first, char const* last)
+  Bool* on_true(Location)
+  {
+    return make_true();
+  }
+
+  Bool* on_false(Location)
+  {
+    return make_false();
+  }
+
+  Int* on_decimal_integer(Location, char const* first, char const* last)
   {
     return make_int(std::string(first, last));
+  }
+
+  String* on_string(Location, char const* first, char const* last)
+  {
+    return make_string(first, last);
   }
 };
 
 
+// An alias for an underlying character stream.
+using Stream = Character_stream;
+
+
+// Returns true if the current character is one of the
+// punctuation characters.
+bool
+is_punctuation(Stream& s)
+{
+  switch (s.peek()) {
+  case '[':
+  case ']':
+  case '{':
+  case '}':
+  case '"':
+  case ',':
+  case ':':
+    return true;
+  default:
+    return is_whitespace(s);
+  }
+}
+
+
 // Consume whitespace.
 void
-discard_whitespace(Character_stream& s)
+discard_whitespace(Stream& s)
 {
-  discard_if(s, &is_whitespace<Character_stream>);
+  discard_if(s, &is_whitespace<Stream>);
 }
 
 
 // Ensure that whitespace is consumed before and after values.
 struct Whitespace_guard
 {
-  Whitespace_guard(Character_stream& s)
+  Whitespace_guard(Stream& s)
     : s(s)
   {
     discard_whitespace(s);
@@ -455,9 +494,44 @@ struct Whitespace_guard
   {
     discard_whitespace(s);
   }
-  Character_stream& s;
+  Stream& s;
 };
 
+
+Value* parse_value(Context&, Stream&);
+
+
+// Support for parsing literal values exactly.
+template<int N>
+struct Literal_parser;
+
+
+template<>
+struct Literal_parser<4>
+{
+  template<typename Make>
+  Value* operator()(Context& p, Stream& s, char const* lit, Make make) const
+  {
+    if (match_all(s, lit[1], lit[2], lit[3]))
+      if (s.eof() || is_whitespace(s) || is_punctuation(s))
+        return make(p);
+    return nullptr;
+  }
+};
+
+
+template<>
+struct Literal_parser<5>
+{
+  template<typename Make>
+  Value* operator()(Context& p, Stream& s, char const* lit, Make make) const
+  {
+    if (match_all(s, lit[1], lit[2], lit[3], lit[4]))
+      if (s.eof() || is_whitespace(s) || is_punctuation(s))
+        return make(p);
+    return nullptr;
+  }
+};
 
 
 // TODO: Improve diagnostics. Emit the sequence of tokens up 
@@ -466,21 +540,12 @@ struct Whitespace_guard
 // TODO: Use the parser for semantic actions.
 template<int N, typename Make>
 Value*
-parse_literal(Parser& p, Character_stream& s, char const* str, Make make)
+parse_literal(Context& p, Stream& s, char const* str, Make make)
 {
   s.get(); // Accept str[0]
-
-  // FIXME: This awful... It would be great if I could just
-  // expand an array (or C-str) into a sequence of arguments.
-  if (N == 4) {
-    if (match_all(s, str[1], str[2], str[3]))
-      return make();
-  }
-  else if (N == 5) {
-    if (match_all(s, str[1], str[2], str[3], str[4]))
-      return make();
-  }
-
+  Literal_parser<N> parse;
+  if (Value* v = parse(p, s, str, make))
+    return v;
   throw std::runtime_error(format("invalid {} literal", str));  
 }
 
@@ -489,9 +554,10 @@ parse_literal(Parser& p, Character_stream& s, char const* str, Make make)
 //
 //    null ::= 'null'
 inline Value*
-parse_null(Parser& p, Character_stream& s)
+parse_null(Context& p, Stream& s)
 {
-  return parse_literal<4>(p, s, "null", make_null);
+  auto make = [](Context& p) { return p.on_null(Location::none); };
+  return parse_literal<4>(p, s, "null", make);
 }
 
 
@@ -499,9 +565,10 @@ parse_null(Parser& p, Character_stream& s)
 //
 //    true ::= 'true'
 inline Value*
-parse_true(Parser& p, Character_stream& s)
+parse_true(Context& p, Stream& s)
 {
-  return parse_literal<4>(p, s, "true", make_true);
+  auto make = [](Context& p) { return p.on_true(Location::none); };
+  return parse_literal<4>(p, s, "true", make);
 }
 
 
@@ -509,9 +576,10 @@ parse_true(Parser& p, Character_stream& s)
 //
 //    false ::= 'false'
 inline Value*
-parse_false(Parser& p, Character_stream& s)
+parse_false(Context& p, Stream& s)
 {
-  return parse_literal<5>(p, s, "false", make_false);
+  auto make = [](Context& p) { return p.on_false(Location::none); };
+  return parse_literal<5>(p, s, "false", make);
 }
 
 
@@ -519,7 +587,7 @@ parse_false(Parser& p, Character_stream& s)
 //
 // FIXME: Support floating point values.
 inline Value*
-parse_nonnegative_number(Parser& p, Character_stream& s)
+parse_nonnegative_number(Context& p, Stream& s)
 {
   return lex_decimal_integer(p, s, Location::none);
 }
@@ -528,10 +596,14 @@ parse_nonnegative_number(Parser& p, Character_stream& s)
 // Parse a JSON number starting with a '-' sign.
 //
 // FIXME: Support floating point values.
+//
+// FIXME: This doesn't really support the p.on_xxx concept too
+// well because we're using a canned lexer. Perhaps we should
+// provide a flag that indicates negation? Positivity?
 inline Value*
-parse_negative_number(Parser& p, Character_stream& s)
+parse_negative_number(Context& p, Stream& s)
 {
-  s.get(); // Consume the '-'
+  s.get();
   Int* num = cast<Int>(lex_decimal_integer(p, s, Location::none));
   num->first.neg(); 
   return num;
@@ -544,7 +616,7 @@ parse_negative_number(Parser& p, Character_stream& s)
 // TODO: Is this sufficiently common that we could lift
 // it into the lexing header?
 Value*
-parse_string(Parser& p, Character_stream& s)
+parse_string(Context& p, Stream& s)
 {
   char const* first = &s.get();
   while (next_character_is_not(s, '"')) {
@@ -553,7 +625,7 @@ parse_string(Parser& p, Character_stream& s)
     s.get();
   }
   if (char const* last = match(s, '"'))
-    return make_string(first + 1, last);
+    return p.on_string(Location::none, first + 1, last);
   throw std::runtime_error("unterminated string");
 }
 
@@ -572,7 +644,7 @@ struct Temp_array : Array_impl
 // A helper function for parsing empty arrays. Note that the
 // opening bracket has already been matched.
 Array*
-parse_empty_array(Parser& p, Character_stream& s)
+parse_empty_array(Context& p, Stream& s)
 {
   discard_whitespace(s);
   if (match(s, ']'))
@@ -586,7 +658,7 @@ parse_empty_array(Parser& p, Character_stream& s)
 //    array ::= '[' [value-list] ']'
 //    value-list ::= value [','' value-list]
 Array*
-parse_array(Parser& p, Character_stream& s)
+parse_array(Context& p, Stream& s)
 {
   s.get();
 
@@ -617,7 +689,7 @@ parse_array(Parser& p, Character_stream& s)
 //
 //    key ::= string
 String*
-parse_key(Parser& p, Character_stream& s)
+parse_key(Context& p, Stream& s)
 {
   Whitespace_guard ws(s);
   if (next_character_is(s, '"'))
@@ -630,7 +702,7 @@ parse_key(Parser& p, Character_stream& s)
 //
 //    key-value-pair ::= key ':' value
 Pair
-parse_pair(Parser& p, Character_stream& s)
+parse_pair(Context& p, Stream& s)
 {
   String* k = parse_key(p, s);
   if (match(s, ':'))
@@ -653,7 +725,7 @@ struct Temp_object : Object_impl
 // A helper function for parsing empty objects. Note that the
 // opening brace has already been matched.
 inline Object*
-parse_empty_object(Parser& p, Character_stream& s)
+parse_empty_object(Context& p, Stream& s)
 {
   discard_whitespace(s);
   if (match(s, '}'))
@@ -669,7 +741,7 @@ parse_empty_object(Parser& p, Character_stream& s)
 //
 // Note that the key-value-list may be empty.
 Value*
-parse_object(Parser& p, Character_stream& s)
+parse_object(Context& p, Stream& s)
 {
   s.get();
 
@@ -695,7 +767,7 @@ parse_object(Parser& p, Character_stream& s)
 
 
 Value* 
-parse_value(Parser& p, Character_stream& s)
+parse_value(Context& p, Stream& s)
 {
   Whitespace_guard ws(s);
 
@@ -714,6 +786,7 @@ parse_value(Parser& p, Character_stream& s)
 
   case '-':
     return parse_negative_number(p, s);
+  
   case '0':
   case '1':
   case '2':
@@ -753,9 +826,10 @@ parse_value(Parser& p, Character_stream& s)
 Value*
 parse(char const* first, char const* last)
 {
-  Character_stream chars(first, last);
-  Parser parse;
-  return parse(chars);
+  Stream chars(first, last);
+  Context cxt;
+
+  return parse_value(cxt, chars);
 }
 
 
