@@ -77,7 +77,7 @@ struct String_eq
 
 // Implementation types.
 using Array_impl = std::vector<Value*>;
-using Object_impl = std::unordered_map<String*, Value*, String_hash, String_eq>;
+using Object_impl = std::unordered_map<String const*, Value*, String_hash, String_eq>;
 
 
 // The type of Key/value pairs in JSON.
@@ -112,8 +112,9 @@ struct Value
 template<Kind K, typename T>
 struct Literal : Value, Kind_of<K>
 {
-  Literal(T const& x)
-    : Value(K), first(x)
+  template<typename... Args>
+  Literal(Args&&... args)
+    : Value(K), first(std::forward<Args>(args)...)
   { }
 
   T const& value() const { return first; }
@@ -199,7 +200,71 @@ struct Object : Value, Object_impl, Kind_of<object_value>
   Object(Object_impl&& map)
     : Value(node_kind), Object_impl(std::move(map))
   { }
+
+  Value*& operator[](String const*);
+  Value*  operator[](String const*) const;
+
+  Value*& operator[](char const*);
+  Value*  operator[](char const*) const;
+
+  Value*& operator[](std::string const&);
+  Value*  operator[](std::string const&) const;
 };
+
+
+// Returns a reference to the object at the given position.
+// If the object does not exist, a new entry is created, allowing
+// assignment.
+inline Value*& 
+Object::operator[](String const* key)
+{
+  return Object_impl::operator[](key);
+}
+
+
+// Returs the value with the given key. If the key does not
+// exist, returns nullptr.
+inline Value*  
+Object::operator[](String const* key) const
+{
+  auto iter = find(key);
+  if (iter != end())
+    return iter->second;
+  else
+    return nullptr;
+}
+
+
+inline Value*&
+Object::operator[](char const* key)
+{
+  String s = key;
+  return operator[](&s);
+}
+
+
+inline Value*
+Object::operator[](char const* key) const
+{
+  String s = key;
+  return operator[](&s);
+}
+
+
+inline Value*&
+Object::operator[](std::string const& key)
+{
+  String s = key;
+  return operator[](&s);
+}
+
+
+inline Value*
+Object::operator[](std::string const& key) const
+{
+  String s = key;
+  return operator[](&s);
+}
 
 
 // -------------------------------------------------------------------------- //

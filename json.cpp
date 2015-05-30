@@ -219,7 +219,7 @@ inline void
 destroy_mapping(Object_impl& map)
 {
   for (Pair& p : map) {
-    destroy(p.first);
+    destroy(const_cast<String*>(p.first));
     destroy(p.second);
   }
 }

@@ -43,7 +43,8 @@ add_library(lingo
   algorithm.cpp
   lexing.cpp
   parsing.cpp
-  json.cpp)
+  json.cpp
+  cli.cpp)
 target_link_libraries(lingo ${GMP_LIBRARIES})
 
 

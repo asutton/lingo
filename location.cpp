@@ -68,8 +68,10 @@ operator<<(std::ostream& os, File const* f)
 std::ostream& 
 operator<<(std::ostream& os, Location loc)
 {
-  if (!loc)
-    return os << "<internal>";
+  if (loc == Location::none)
+    return os << "<internal>";  // Internally allocated
+  else if (loc == Location::cli)
+    return os;                  // Don't emit location data.
   else
     return os << loc.file() << ':' << loc.line() << ':' << loc.column();
 }
@@ -77,6 +79,7 @@ operator<<(std::ostream& os, Location loc)
 
 // Static values.
 Location Location::none { };
+Location Location::cli = (Location_data*)1;
 
 
 } // namespace lingo

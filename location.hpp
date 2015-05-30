@@ -50,6 +50,9 @@ struct Location
   // a source file.
   static Location none;
 
+  // The location is in a command line argument.
+  static Location cli;
+
   Location()
     : Location(nullptr)
   { }
@@ -66,6 +69,21 @@ struct Location
   
   Location_data const* loc_;
 };
+
+
+// Equality comparison.
+inline bool
+operator==(Location a, Location b)
+{
+  return a.loc_ == b.loc_;
+}
+
+
+inline bool
+operator!=(Location a, Location b)
+{
+  return a.loc_ == b.loc_;
+}
 
 
 std::ostream& operator<<(std::ostream&, Location);
