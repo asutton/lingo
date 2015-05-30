@@ -428,17 +428,9 @@ struct Parser
     return parse_value(*this, s);
   }
 
-  Value* on_decimal_integer(Location loc, char const* first, char const* last)
+  Int* on_decimal_integer(Location loc, char const* first, char const* last)
   {
-    bool neg = false;
-    if (*first == '-') {
-      neg = true;
-      ++first;
-    }
-    Integer val (std::string(first, last));
-    if (neg)
-      val.neg();
-    return make_int(val);
+    return make_int(std::string(first, last));
   }
 };
 
@@ -523,13 +515,26 @@ parse_false(Parser& p, Character_stream& s)
 }
 
 
-// Parse a JSON number.
+// Parse a JSON number starting with a digit.
 //
 // FIXME: Support floating point values.
 inline Value*
-parse_number(Parser& p, Character_stream& s)
+parse_nonnegative_number(Parser& p, Character_stream& s)
 {
   return lex_decimal_integer(p, s, Location::none);
+}
+
+
+// Parse a JSON number starting with a '-' sign.
+//
+// FIXME: Support floating point values.
+inline Value*
+parse_negative_number(Parser& p, Character_stream& s)
+{
+  s.get(); // Consume the '-'
+  Int* num = cast<Int>(lex_decimal_integer(p, s, Location::none));
+  num->first.neg(); 
+  return num;
 }
 
 
@@ -708,6 +713,7 @@ parse_value(Parser& p, Character_stream& s)
     return parse_false(p, s);
 
   case '-':
+    return parse_negative_number(p, s);
   case '0':
   case '1':
   case '2':
@@ -718,7 +724,7 @@ parse_value(Parser& p, Character_stream& s)
   case '7':
   case '8':
   case '9':
-    return parse_number(p, s);
+    return parse_nonnegative_number(p, s);
 
   case '"':
     return parse_string(p, s);
