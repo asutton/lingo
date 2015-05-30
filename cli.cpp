@@ -6,6 +6,7 @@
 
 #include <cstring>
 #include <algorithm>
+#include <iostream>
 
 namespace lingo
 {
@@ -34,7 +35,15 @@ parse_name_spec(Parameter& p, char const* first, char const* last)
 } // namespace
 
 
-Parameter::Parameter(char const* name)
+Parameter::Parameter(Parameter_kind k, char const* name)
+  : kind(k), doc()
+{
+  parse_name_spec(*this, name, name + std::strlen(name));
+}
+
+
+Parameter::Parameter(Parameter_kind k, char const* name, char const* doc)
+  : kind(k), doc(doc)
 {
   parse_name_spec(*this, name, name + std::strlen(name));
 }
@@ -47,33 +56,112 @@ Parameter::Parameter(char const* name)
 namespace
 {
 
-void
-parse_long_arg(Parser& p, int& argc, char const* first, char const* last)
+
+// Parse the value associated with value parameter.
+//
+// TODO: Improve diagnotics.
+json::Value*
+parse_value(Parameter const& parm, int& argc, char** argv, char const* str)
 {
+  if (!*str)            // The case "-f value"
+    str = argv[++argc];
+  else if (*str == '=') // The case "-f=value"
+    ++str;
+  else
+    throw std::runtime_error(format("expected value assignment for '{}'", parm.name));
+
+  // Try to parse the string as JSON. If it's not valid
+  // JSON, then it's clearly a string that could be valid
+  // if it were enclosed in quotes.
+  //
+  // Note that we can't just modify the JSON parser to
+  // accommodate a broader range values since we can
+  // take literally any character sequence on the command
+  // line, and those may not be compatible the JSON syntax.
+  //
+  // TODO: Allow for custom parsers for JSON values.
+  try {
+    return json::parse(str);
+  } catch (...) {
+    return json::make_string(str);
+  }
+}
+
+
+// Parse a long argument, which is known to start with the
+// character sequence '--'. Long-form characters have the
+// form:
+//
+//    --flag      # Flags only
+//    --opt value # Values only
+//    --opt=value # Values only
+void
+parse_long_arg(Parser& p, int& argc, char** argv)
+{
+  json::Object& named = p.result.named_arguments();
+
+  char const* first = &argv[argc][2];
+  char const* last = first + 1;
+  while (*last != 0 && *last != '=')
+    ++last;
+
+  // Find the parameter.  
+  // TODO: Can we avoid allocating memory here?
+  std::string name(first, last);
+  auto iter = p.names.find(first);
+  if (iter == p.names.end())
+    throw std::runtime_error(format("no matching parameter for '{}'", first));
+  Parameter* parm = iter->second;
+
+  // Parse the value.
+  if (parm->kind == flag)
+    named[parm->name] = json::make_true();
+  else
+    named[parm->name] = parse_value(*parm, argc, argv, last);
+
   ++argc;
 }
 
 
+// Parse a short argument or a sequence of short arguments.
+// The parse depends on the kind of parameter. For flags,
+// we accept the following:
+//
+//    -a    # Enable a
+//    -abc  # Enable a, b, and c
+//
+// These associate the value 'null', indicating presence.
+//
+// For valued parameters, we accept:
+//
+//    -f=value
+//    -f value
+//
+// Note that we also accept the following:
+//
+//    -abf=value
+//    -abf value
+//
+// When a and b are flags and f valued parameter.
 void
-parse_short_arg(Parser& p, int& argc, char const* first, char const* last)
+parse_short_arg(Parser& p, int& argc, char** argv)
 {
   json::Object& named = p.result.named_arguments();
 
-  while (first != last) {
-    // Try to find the parameter.
-    auto iter = p.chars.find(*first);
+  char const* s = &argv[argc][1];
+  while (*s) {
+    auto iter = p.chars.find(*s);
     if (iter == p.chars.end())
-      error(Location::cli, "no matching parameter for '{}'", *first);
+      throw std::runtime_error(format("no matching parameter for '{}'", *s));
     Parameter* parm = iter->second;
 
-    // Look at the next character. If it's an equals, then we
-    // need to parse the value.
-    ++first;
-    if (first != last && *first == '=') {
-      named[parm->name] = json::parse(first + 1, last);
-      first = last;
-    } else {
+    // Assign a value to the parameter.
+    ++s;
+    if (parm->kind == flag) {
       named[parm->name] = json::make_true();
+    } else {
+      named[parm->name] = parse_value(*parm, argc, argv, s);
+      break;
     }
   }
   ++argc;
@@ -83,12 +171,10 @@ parse_short_arg(Parser& p, int& argc, char const* first, char const* last)
 void
 parse_named_arg(Parser& p, int& argc, char** argv)
 {
-  char const* first = &argv[argc][1];
-  char const* last = first + std::strlen(argv[argc]);
-  if (*first == '-')
-    return parse_long_arg(p, argc, ++first, last);
+  if (argv[argc][1] == '-')
+    return parse_long_arg(p, argc, argv);
   else
-    return parse_short_arg(p, argc, first, last);
+    return parse_short_arg(p, argc, argv);
 }
 
 
@@ -119,13 +205,12 @@ Parser::Parser(Parameter_list& p)
 Parsed_arguments const&
 Parser::operator()(int argc, char** argv)
 {
-  for (int i = 0; i < argc; ++i) {
+  for (int i = 0; i < argc; ) {
     if (argv[i][0] == '-')
-      parse_named_arg(*this, argc, argv);
+      parse_named_arg(*this, i, argv);
     else
-      parse_positional_arg(*this, argc, argv);
+      parse_positional_arg(*this, i, argv);
   }
-
   return result;
 }
 

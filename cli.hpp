@@ -15,6 +15,8 @@
 //    - the parser itself.
 //
 // TODO: Make this better.
+//
+// TODO: This is a configuration library, not just CLI stuff.
 
 #include "lingo/json.hpp"
 
@@ -23,6 +25,16 @@ namespace lingo
 
 namespace cli
 {
+
+// Different kinds of parameters. A flag is a simple switch
+// used to enable or disable a feature. A value parameter
+// associates the flag with a value.
+enum Parameter_kind 
+{
+  flag,
+  value,
+};
+
 
 // A parameter is a specification of arguments that can be accepted
 // on the command line. 
@@ -35,12 +47,23 @@ namespace cli
 // Where `long` is the long name of the parameter, and `c` is a single
 // character abbreviation. The abbreviation may be omitted if there
 // is no short form.
+//
+// TODO: Ths isn't just a specification of parameters. This needs to
+// be a specification of the app configuration along with all of its
+// defaults, etc.
+//
+// TODO: Differentiate between flags that are enabled to determine
+// a mode, flags that can be enabled or disabled (and have some default
+// state), and options that take a typed value.
 struct Parameter
 {
-  Parameter(char const*);
+  Parameter(Parameter_kind, char const*);
+  Parameter(Parameter_kind, char const*, char const*);
 
-  char        abbr; // A short form
-  std::string name; // The parameter name
+  Parameter_kind kind;
+  char           abbr; // A short form
+  std::string    name; // The parameter name
+  std::string    doc;  // Documentation
 };
 
 
@@ -52,17 +75,14 @@ using Parameter_list = std::vector<Parameter>;
 // -------------------------------------------------------------------------- //
 //                           Parsed arguments
 
+// The parsed arguments class stores the result of parsing.
+// Note that this class is non-copyable.
 struct Parsed_arguments : std::pair<json::Object*, json::Array*>
 {
-  Parsed_arguments()
-    : std::pair<json::Object*, json::Array*>(json::make_object(), json::make_array())
-  { }
-
-  ~Parsed_arguments()
-  {
-    json::destroy(first);
-    json::destroy(second);
-  }
+  Parsed_arguments();
+  Parsed_arguments(Parsed_arguments const&) = delete;
+  Parsed_arguments& operator=(Parsed_arguments const&) = delete;
+  ~Parsed_arguments();
 
   json::Object&       named_arguments()            { return *first; }
   json::Object const& named_arguments() const      { return *first; }
@@ -73,6 +93,20 @@ struct Parsed_arguments : std::pair<json::Object*, json::Array*>
   json::Value const* operator[](char const*) const;
   json::Value const* operator[](std::size_t n) const;
 };
+
+
+inline
+Parsed_arguments::Parsed_arguments()
+  : std::pair<json::Object*, json::Array*>(json::make_object(), json::make_array())
+{ }
+
+inline
+Parsed_arguments::~Parsed_arguments()
+{
+  json::destroy(first);
+  json::destroy(second);
+}
+
 
 
 // Returns a pointer to the parsed argument with the given

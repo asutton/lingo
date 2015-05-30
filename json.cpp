@@ -49,6 +49,60 @@ String_eq::operator()(String const* a, String const* b) const
   return a->value() == b->value();
 }
 
+// TODO: These should be inlined.
+
+// Returns a reference to the object at the given position.
+// If the object does not exist, a new entry is created, allowing
+// assignment.
+inline Value*& 
+Object::operator[](String const* key)
+{
+  return Object_impl::operator[](key);
+}
+
+
+// Returns the value with the given key. If the key does not
+// exist, returns nullptr.
+Value*  
+Object::operator[](String const* key) const
+{
+  auto iter = find(key);
+  if (iter != end())
+    return iter->second;
+  else
+    return nullptr;
+}
+
+
+Value*&
+Object::operator[](char const* key)
+{
+  return operator[](make_string(key));
+}
+
+
+Value*
+Object::operator[](char const* key) const
+{
+  String s = key;
+  return operator[](&s);
+}
+
+
+Value*&
+Object::operator[](std::string const& key)
+{
+  return operator[](make_string(key));
+}
+
+
+Value*
+Object::operator[](std::string const& key) const
+{
+  String s = key;
+  return operator[](&s);
+}
+
 
 // -------------------------------------------------------------------------- //
 //                            Value creation
@@ -247,7 +301,7 @@ destroy(Value* v)
     return;
 
   case int_value: 
-    return destroy_literal(cast<Real>(v));
+    return destroy_literal(cast<Int>(v));
   
   case real_value: 
     return destroy_literal(cast<Real>(v));
@@ -288,7 +342,7 @@ print_literal(Printer& p, T const* value)
 inline void
 print_string(Printer& p, String const* value)
 {
-  print(p, value->value());
+  print_quoted(p, value->value());
 }
 
 
@@ -479,7 +533,8 @@ parse_number(Parser& p, Character_stream& s)
 }
 
 
-// Parse a string with the usual escape characters.
+// Parse a string with the usual escape characters. Note that
+// the enclosing quotes are not saved with the string.
 //
 // TODO: Is this sufficiently common that we could lift
 // it into the lexing header?
@@ -493,7 +548,7 @@ parse_string(Parser& p, Character_stream& s)
     s.get();
   }
   if (char const* last = match(s, '"'))
-    return make_string(first, last + 1);
+    return make_string(first + 1, last);
   throw std::runtime_error("unterminated string");
 }
 
