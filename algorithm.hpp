@@ -18,7 +18,6 @@
 namespace lingo
 {
 
-
 // The iterator type of an aggregate.
 template<typename T>
 using Iterator_type = decltype(std::begin(std::declval<T>()));
@@ -70,9 +69,9 @@ using Range_over = Range<Iterator_type<T>>;
 
 
 // -------------------------------------------------------------------------- //
-//                            Testing
+//                            Is one of
 
-
+// Returns false when there are no elements to match.
 template<typename T>
 inline bool
 is_one_of(T const&)
@@ -298,19 +297,28 @@ discard_if(Stream& s, P pred)
 
 // -------------------------------------------------------------------------- //
 //                            Expect element
+//
+// When using the expect* algorithms, the contex must provide
+// the following functions:
+//
+//    cxt.on_expected(loc, t)
+//    cxt.on_expected(loc, str)
+//
+// Where `t` is an element in the stream and `str` is a C-string.
+
 
 // If the current element matches of the stream the given kind, 
 // advance the stream, returning an iterator to the matched
-// element. Otherwise, emits the given message as a diagnostic
-// and returns false.
-template<typename Stream, typename T>
+// element. Otherwise, calls the on_expected error in the
+// context.
+template<typename Context, typename Stream, typename T>
 Iterator_type<Stream>
-expect(Stream& s, T const& t, std::string const& msg)
+expect(Context& cxt, Stream& s, T const& t)
 {
   if (auto iter = match(s, t)) {
     return iter;
   } else {
-    error(s.location(), msg);
+    cxt.on_expected(s.location(), t);
     return {};
   }
 }
@@ -318,15 +326,16 @@ expect(Stream& s, T const& t, std::string const& msg)
 
 // If the current element matches satisfies the predicate `pred`,
 // return an iterator to that element and advance the stream.
+// The `cond` string is used to 
 // Otherwise, emit the given error message.
-template<typename Stream, typename P>
+template<typename Context, typename Stream, typename P>
 Iterator_type<Stream>
-expect_if(Stream& s, P pred, std::string const& msg)
+expect_if(Context& cxt, Stream& s, P pred, char const* cond)
 {
   if (auto iter = match_if(s, pred)) {
     return iter;
   } else {
-    error(s.location(), msg);
+    cxt.on_expected(s.location(), cond);
     return {};
   }
 }

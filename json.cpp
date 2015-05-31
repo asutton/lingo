@@ -318,6 +318,28 @@ destroy(Value* v)
 }
 
 
+// Provides temporary storage for parsing an aray, which
+// also allows for proper memory cleanup.
+struct Temp_array : Array_impl
+{
+  ~Temp_array() 
+  {
+    destroy_sequence(*this);
+  }
+};
+
+
+// Provides temporary storage for parsing an object, which
+// also allows for proper memory cleanup.
+struct Temp_object : Object_impl
+{
+  ~Temp_object() 
+  {
+    destroy_mapping(*this);
+  }
+};
+
+
 // -------------------------------------------------------------------------- //
 //                            Pretty printing
 
@@ -420,8 +442,6 @@ namespace
 struct Context 
 {
   using result_type = Value*;
-  using argument_type = char;
-
 
   Null* on_null(Location)
   {
@@ -446,6 +466,36 @@ struct Context
   String* on_string(Location, char const* first, char const* last)
   {
     return make_string(first, last);
+  }
+
+  Array* on_array(Location)
+  {
+    return make_array();
+  }
+
+  Array* on_array(Location, Temp_array&& a)
+  {
+    return make_array(std::move(a));
+  }
+
+  Object* on_object(Location)
+  {
+    return make_object();
+  }
+
+  Object* on_object(Location, Temp_object&& o)
+  {
+    return make_object(std::move(o));
+  }
+
+  void on_expected(Location, char c)
+  {
+    throw std::runtime_error(format("expected '{}'", c));
+  }
+
+  void on_expected(Location, char const* cond)
+  {
+    throw std::runtime_error(format("expected '{}'", cond));
   }
 };
 
@@ -502,33 +552,43 @@ Value* parse_value(Context&, Stream&);
 
 
 // Support for parsing literal values exactly.
+//
+// TODO: For the specializations below, it would be more efficient
+// to have an unbounded lookahead to search for the next non-punctuation 
+// character and then analyze the result.
 template<int N>
 struct Literal_parser;
 
 
+// 4-character literals.
 template<>
 struct Literal_parser<4>
 {
   template<typename Make>
-  Value* operator()(Context& p, Stream& s, char const* lit, Make make) const
+  Value* operator()(Context& cxt, Stream& s, char const* lit, Make make) const
   {
+    Location loc = s.location();
+    s.get(); // match lit[0]
     if (match_all(s, lit[1], lit[2], lit[3]))
       if (s.eof() || is_whitespace(s) || is_punctuation(s))
-        return make(p);
+        return (cxt.*make)(loc);
     return nullptr;
   }
 };
 
 
+// 5-character literals.
 template<>
 struct Literal_parser<5>
 {
   template<typename Make>
-  Value* operator()(Context& p, Stream& s, char const* lit, Make make) const
+  Value* operator()(Context& cxt, Stream& s, char const* lit, Make make) const
   {
+    Location loc = s.location();
+    s.get(); // match lit[0]
     if (match_all(s, lit[1], lit[2], lit[3], lit[4]))
       if (s.eof() || is_whitespace(s) || is_punctuation(s))
-        return make(p);
+        return (cxt.*make)(loc);
     return nullptr;
   }
 };
@@ -540,11 +600,10 @@ struct Literal_parser<5>
 // TODO: Use the parser for semantic actions.
 template<int N, typename Make>
 Value*
-parse_literal(Context& p, Stream& s, char const* str, Make make)
+parse_literal(Context& cxt, Stream& s, char const* str, Make make)
 {
-  s.get(); // Accept str[0]
   Literal_parser<N> parse;
-  if (Value* v = parse(p, s, str, make))
+  if (Value* v = parse(cxt, s, str, make))
     return v;
   throw std::runtime_error(format("invalid {} literal", str));  
 }
@@ -554,10 +613,9 @@ parse_literal(Context& p, Stream& s, char const* str, Make make)
 //
 //    null ::= 'null'
 inline Value*
-parse_null(Context& p, Stream& s)
+parse_null(Context& cxt, Stream& s)
 {
-  auto make = [](Context& p) { return p.on_null(Location::none); };
-  return parse_literal<4>(p, s, "null", make);
+  return parse_literal<4>(cxt, s, "null", &Context::on_null);
 }
 
 
@@ -565,10 +623,9 @@ parse_null(Context& p, Stream& s)
 //
 //    true ::= 'true'
 inline Value*
-parse_true(Context& p, Stream& s)
+parse_true(Context& cxt, Stream& s)
 {
-  auto make = [](Context& p) { return p.on_true(Location::none); };
-  return parse_literal<4>(p, s, "true", make);
+  return parse_literal<4>(cxt, s, "true", &Context::on_true);
 }
 
 
@@ -576,10 +633,9 @@ parse_true(Context& p, Stream& s)
 //
 //    false ::= 'false'
 inline Value*
-parse_false(Context& p, Stream& s)
+parse_false(Context& cxt, Stream& s)
 {
-  auto make = [](Context& p) { return p.on_false(Location::none); };
-  return parse_literal<5>(p, s, "false", make);
+  return parse_literal<5>(cxt, s, "false", &Context::on_false);
 }
 
 
@@ -587,9 +643,9 @@ parse_false(Context& p, Stream& s)
 //
 // FIXME: Support floating point values.
 inline Value*
-parse_nonnegative_number(Context& p, Stream& s)
+parse_nonnegative_number(Context& cxt, Stream& s)
 {
-  return lex_decimal_integer(p, s, Location::none);
+  return lex_decimal_integer(cxt, s, Location::none);
 }
 
 
@@ -601,10 +657,10 @@ parse_nonnegative_number(Context& p, Stream& s)
 // well because we're using a canned lexer. Perhaps we should
 // provide a flag that indicates negation? Positivity?
 inline Value*
-parse_negative_number(Context& p, Stream& s)
+parse_negative_number(Context& cxt, Stream& s)
 {
   s.get();
-  Int* num = cast<Int>(lex_decimal_integer(p, s, Location::none));
+  Int* num = cast<Int>(lex_decimal_integer(cxt, s, Location::none));
   num->first.neg(); 
   return num;
 }
@@ -615,40 +671,36 @@ parse_negative_number(Context& p, Stream& s)
 //
 // TODO: Is this sufficiently common that we could lift
 // it into the lexing header?
+//
+// TODO: It might be more effecient to search for the end '"'
+// without calling get(). Note that we would have to advance
+// later, and if there were newlines in the string, we'd have
+// to search for and find those.
 Value*
-parse_string(Context& p, Stream& s)
+parse_string(Context& cxt, Stream& s)
 {
+  Location loc = s.location();
   char const* first = &s.get();
   while (next_character_is_not(s, '"')) {
     if (next_character_is(s, '\\'))
       s.get();
     s.get();
   }
-  if (char const* last = match(s, '"'))
-    return p.on_string(Location::none, first + 1, last);
-  throw std::runtime_error("unterminated string");
+  if (char const* last = expect(cxt, s, '"'))
+    return cxt.on_string(loc, first + 1, last);
+  else
+    return {};
 }
-
-
-// Provides temporary storage for parsing an aray, which
-// also allows for proper memory cleanup.
-struct Temp_array : Array_impl
-{
-  ~Temp_array() 
-  {
-    destroy_sequence(*this);
-  }
-};
 
 
 // A helper function for parsing empty arrays. Note that the
 // opening bracket has already been matched.
 Array*
-parse_empty_array(Context& p, Stream& s)
+parse_empty_array(Context& cxt, Stream& s)
 {
   discard_whitespace(s);
   if (match(s, ']'))
-    return make_array();
+    return cxt.on_array(Location::none);
   return nullptr;
 }
 
@@ -658,28 +710,21 @@ parse_empty_array(Context& p, Stream& s)
 //    array ::= '[' [value-list] ']'
 //    value-list ::= value [','' value-list]
 Array*
-parse_array(Context& p, Stream& s)
+parse_array(Context& cxt, Stream& s)
 {
-  s.get();
-
-  if (Array* a = parse_empty_array(p, s))
+  require(s, '[');
+  
+  if (Array* a = parse_empty_array(cxt, s))
     return a;
 
-  // Parse the value-list.
-  // FIXME: Factor this using combinators.
   Temp_array arr;
-  while (true) {
-    Value* v = parse_value(p, s);
+  do {
+    Value* v = parse_value(cxt, s);
     arr.push_back(v);
-
-    if (match(s, ','))
-      continue;
-    if (match(s, ']'))
-      break;
-
-    throw std::runtime_error("ill-formed array");
-  }
-  return make_array(std::move(arr));
+  } while (match(s, ','));
+  expect(cxt, s, ']');
+  
+  return cxt.on_array(Location::none, std::move(arr));
 }
 
 
@@ -689,11 +734,11 @@ parse_array(Context& p, Stream& s)
 //
 //    key ::= string
 String*
-parse_key(Context& p, Stream& s)
+parse_key(Context& cxt, Stream& s)
 {
   Whitespace_guard ws(s);
   if (next_character_is(s, '"'))
-    return cast<String>(parse_string(p, s));
+    return cast<String>(parse_string(cxt, s));
   throw std::runtime_error("ill-formed key");
 }
 
@@ -702,34 +747,23 @@ parse_key(Context& p, Stream& s)
 //
 //    key-value-pair ::= key ':' value
 Pair
-parse_pair(Context& p, Stream& s)
+parse_pair(Context& cxt, Stream& s)
 {
-  String* k = parse_key(p, s);
+  String* k = parse_key(cxt, s);
   if (match(s, ':'))
-    return {k, parse_value(p, s)};
+    return {k, parse_value(cxt, s)};
   throw std::runtime_error("ill-formed key-value pair");
 }
-
-
-// Provides temporary storage for parsing an object, which
-// also allows for proper memory cleanup.
-struct Temp_object : Object_impl
-{
-  ~Temp_object() 
-  {
-    destroy_mapping(*this);
-  }
-};
 
 
 // A helper function for parsing empty objects. Note that the
 // opening brace has already been matched.
 inline Object*
-parse_empty_object(Context& p, Stream& s)
+parse_empty_object(Context& cxt, Stream& s)
 {
   discard_whitespace(s);
   if (match(s, '}'))
-    return make_object();
+    return cxt.on_object(Location::none);
   return nullptr;
 }
 
@@ -741,51 +775,48 @@ parse_empty_object(Context& p, Stream& s)
 //
 // Note that the key-value-list may be empty.
 Value*
-parse_object(Context& p, Stream& s)
+parse_object(Context& cxt, Stream& s)
 {
   s.get();
 
-  if (Object* o = parse_empty_object(p, s))
+  if (Object* o = parse_empty_object(cxt, s))
     return o;
 
-  // Parse the key-value list.
-  // FIXME: Factor this using combinators.
+  // TODO: There is a generic algorithm here. See the
+  // parse_array function. We need a good strategy for
+  // generalizing the accumulated elements.
   Temp_object map;
-  while (true) {
-    Pair kv = parse_pair(p, s);
+  do {
+    Pair kv = parse_pair(cxt, s);
     map.insert(kv);
+  } while (match(s, ','));
+  expect(cxt, s, '}');
 
-    if (match(s, ','))
-      continue;
-    if (match(s, '}'))
-      break;
-    else
-      throw std::runtime_error("ill-formed object");
-  }
-  return make_object(std::move(map));
+  return cxt.on_object(Location::none, std::move(map));
 }
 
 
+// Parse a value from the stream. Note that 
 Value* 
-parse_value(Context& p, Stream& s)
+parse_value(Context& cxt, Stream& s)
 {
   Whitespace_guard ws(s);
 
   if (s.eof())
-    return nullptr;
+    throw std::runtime_error("missing value");
 
   switch (s.peek()) {
   case 'n':
-    return parse_null(p, s);
+    return parse_null(cxt, s);
   
   case 't':
-    return parse_true(p, s);
+    return parse_true(cxt, s);
   
   case 'f':
-    return parse_false(p, s);
+    return parse_false(cxt, s);
 
   case '-':
-    return parse_negative_number(p, s);
+    return parse_negative_number(cxt, s);
   
   case '0':
   case '1':
@@ -797,16 +828,16 @@ parse_value(Context& p, Stream& s)
   case '7':
   case '8':
   case '9':
-    return parse_nonnegative_number(p, s);
+    return parse_nonnegative_number(cxt, s);
 
   case '"':
-    return parse_string(p, s);
+    return parse_string(cxt, s);
 
   case '[':
-    return parse_array(p, s);
+    return parse_array(cxt, s);
   
   case '{':
-    return parse_object(p, s);
+    return parse_object(cxt, s);
 
   default:
     throw std::runtime_error(format("unrecognized character '{}'", s.peek()));
