@@ -326,8 +326,8 @@ expect(Context& cxt, Stream& s, T const& t)
 
 // If the current element matches satisfies the predicate `pred`,
 // return an iterator to that element and advance the stream.
-// The `cond` string is used to 
-// Otherwise, emit the given error message.
+// The `cond` string is used to provide feedback to the translation
+// via the `on_expected` methods.
 template<typename Context, typename Stream, typename P>
 Iterator_type<Stream>
 expect_if(Context& cxt, Stream& s, P pred, char const* cond)
@@ -335,7 +335,10 @@ expect_if(Context& cxt, Stream& s, P pred, char const* cond)
   if (auto iter = match_if(s, pred)) {
     return iter;
   } else {
-    cxt.on_expected(s.location(), cond);
+    if (!s.eof())
+      cxt.on_expected_got(s.location(), s.peek(), cond);
+    else
+      cxt.on_expected_eof(s.location(), cond);
     return {};
   }
 }

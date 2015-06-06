@@ -168,9 +168,9 @@ template<typename Parser, typename Stream, typename Rule>
 inline Result_type<Parser>
 parse_enclosed(Parser& p, Stream& s, Token_kind k1, Token_kind k2, Rule rule, char const* msg)
 {
-  if (auto* left = expect_if(s, is_token(k1), get_token_spelling(k1))) {
+  if (auto* left = expect_if(p, s, is_token(k1), get_token_spelling(k1))) {
     if (auto* enc = rule(p, s)) {
-      if (expect_if(s, is_token(k2), get_token_spelling(k2)))
+      if (expect_if(p, s, is_token(k2), get_token_spelling(k2)))
         return enc;
     } else {
       error(left->location(), "expected {} after '{}'", msg, *left);
