@@ -51,8 +51,7 @@ parse_primary_expression(Parser& p, Token_stream& toks)
 
 // Parse a prefix operator.
 //
-//    prefix-operator ::=
-//      '+' | '-'
+//    prefix-operator ::= '+' | '-'
 //
 // Note that this is the same as additive-operator.
 Token const*
@@ -82,11 +81,28 @@ parse_prefix_expression(Parser& p, Token_stream& toks)
 // -------------------------------------------------------------------------- //
 //                            Precedence parser
 
+// Returns true iff tok is one of the multiplicative operators.
+inline bool
+is_multiplicative_operator(Token const& tok)
+{
+  return tok.kind() == star_tok 
+      || tok.kind() == slash_tok
+      || tok.kind() == percent_tok;
+}
+
+
+// Returns true iff tok is one of the additive operators.
+inline bool
+is_additive_operator(Token const& tok)
+{
+  return tok.kind() == plus_tok 
+      || tok.kind() == minus_tok;
+}
+
 
 // Parse a multiplicative operator.
 //
-//    multiplicative-operator ::=
-//      '*' | '/' | '%'
+//    multiplicative-operator ::= '*' | '/' | '%'
 //
 // TODO: How do we generalize this. We really need the algorithm
 // header to project the token kind so we can make these kinds
@@ -95,14 +111,9 @@ parse_prefix_expression(Parser& p, Token_stream& toks)
 Token const*
 parse_multiplicative_operator(Parser& p, Token_stream& toks)
 {
-  // FIXME: I need a matching function for these kinds of things.
-  if (toks.eof())
-    return nullptr;
-  
-  Token_kind k = toks.peek().kind();
-  if (star_tok <= k && k <= percent_tok)
-    return &toks.get();
-  return {};
+  if (Token const* tok = match_if(toks, is_multiplicative_operator))
+    return tok;
+  return nullptr;
 }
 
 
@@ -122,19 +133,14 @@ parse_multiplicative_expression(Parser& p, Token_stream& toks)
 
 // Parse an additive operator.
 //
-//    additive-operator ::=
-//      '+' | '-'
+//    additive-operator ::= '+' | '-'
 Token const*
 parse_additive_operator(Parser& p, Token_stream& toks)
 {
-  // FIXME: This should be in a matching function.
-  if (toks.eof())
-    return nullptr;
+  if (Token const* tok = match_if(toks, is_additive_operator))
+    return tok;
+  return nullptr;
 
-  Token_kind k = toks.peek().kind();
-  if (plus_tok <= k && k <= minus_tok)
-    return &toks.get();
-  return {};
 }
 
 

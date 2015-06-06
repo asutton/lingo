@@ -4,6 +4,8 @@
 #include "lingo/memory.hpp"
 #include "lingo/error.hpp"
 
+#include <iostream>
+
 namespace calc
 {
 
@@ -49,56 +51,56 @@ Error* get_error()
 // -------------------------------------------------------------------------- //
 //                                  Evaluations
 
-Integer
+inline Integer
 eval_int(Int const* e)
 {
   return e->value();
 }
 
 
-Integer
+inline Integer
 eval_add(Add const* e) 
 {
   return evaluate(e->left()) + evaluate(e->right());
 }
 
 
-Integer
+inline Integer
 eval_sub(Sub const* e)
 {
   return evaluate(e->left()) - evaluate(e->right());
 }
 
 
-Integer
+inline Integer
 eval_mul(Mul const* e)
 {
   return evaluate(e->left()) * evaluate(e->right());
 }
 
 
-Integer
+inline Integer
 eval_div(Div const* e)
 {
   return evaluate(e->left()) / evaluate(e->right());
 }
 
 
-Integer
+inline Integer
 eval_mod(Mod const* e)
 {
   return evaluate(e->left()) % evaluate(e->right());
 }
 
 
-Integer
+inline Integer
 eval_neg(Neg const* e)
 {
   return -evaluate(e->arg());
 }
 
 
-Integer
+inline Integer
 eval_pos(Pos const* e)
 {
   return evaluate(e->arg());
@@ -166,11 +168,22 @@ inline void
 print_operator(Printer& p, Expr const* e)
 {
   switch (e->kind()) {
-  case add_expr: print(p, '+'); break;
-  case sub_expr: print(p, '-'); break;
-  case mul_expr: print(p, '*'); break;
-  case div_expr: print(p, '/'); break;
-  case mod_expr: print(p, '%'); break;
+  case add_expr:
+  case pos_expr:
+    print(p, '+'); break;
+
+  case sub_expr: 
+  case neg_expr:
+    print(p, '-'); break;
+  
+  case mul_expr:
+    print(p, '*'); break;
+  
+  case div_expr:
+    print(p, '/'); break;
+  
+  case mod_expr: 
+    print(p, '%'); break;
 
   default:
     lingo_unreachable("unhandled node '{}'", e->node_name());

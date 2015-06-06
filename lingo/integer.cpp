@@ -26,8 +26,9 @@ namespace
 // representation of a formatted string.
 inline std::size_t
 get_buffer_size(const mpz_t& z, int b) {
-  // Add 1 for a null terminator and room for prefix characters.
-  std::size_t r = mpz_sizeinbase(z, b) + 1; 
+  // Add 1 for a null terminator, 1 for a negative sign,
+  // and room for prefix characters.
+  std::size_t r = mpz_sizeinbase(z, b) + 2; 
   if (b != 10)
     return r + 2;
   else

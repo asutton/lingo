@@ -8,6 +8,7 @@
 #include "lingo/algorithm.hpp"
 #include "lingo/error.hpp"
 
+#include <iostream>
 
 namespace lingo
 {
@@ -229,7 +230,7 @@ parse_bracket_enclosed(Parser& p, Stream& s, Rule rule, char const* msg)
 // the next higher precedence in the grammar.
 //
 // For any grammar that uses this production, the parser must
-// define a handler, `p.on_unary_term(tok, expr)`.
+// define a handler, `p.on_unary_term(op, term)`.
 //
 // To support disagnostics, `msg` is the name of the grammar
 // production that invokes this parsing function.
@@ -237,11 +238,11 @@ template<typename Parser, typename Stream, typename Token, typename Rule>
 Result_type<Parser>
 parse_prefix_term(Parser& p, Stream& s, Token token, Rule rule, char const* msg)
 {
-  if (auto* tok = token(p, s)) {
-    if (auto* expr = parse_prefix_term(p, s, token, rule, msg))
-      return p.on_unary_term(tok, expr);
-    else {
-      error(tok->location(), "expected {} after '{}'", msg, *tok);
+  if (auto* op = token(p, s)) {
+    if (auto* term = parse_prefix_term(p, s, token, rule, msg)) {
+      return p.on_unary_term(op, term);
+    } else {
+      error(op->location(), "expected {} after '{}'", msg, *op);
       return p.on_error();
     }
   }

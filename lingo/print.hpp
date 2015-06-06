@@ -341,7 +341,7 @@ print(char const* msg, Args const&... args)
 {
   Printer p(default_print_stream());
   p.needs_newline = true;
-  print_chars(p, format(msg, print_str(args)...));
+  print_chars(p, format(msg, to_string(args)...));
 }
 
 
