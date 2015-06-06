@@ -9,6 +9,12 @@
 
 using namespace lingo;
 
+// -debug       // OK: true
+// -debug=true  // OK: true
+// -debug=false // OK: false
+// -nodebug     // OK: false
+// -debug true  // error
+
 int 
 main(int argc, char* argv[])
 {

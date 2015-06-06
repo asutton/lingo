@@ -8,7 +8,7 @@
 // Zverovich. In particular, it makes a number of facilities 
 // available in the lingo namesapce.
 
-#include "lingo/cppformat/format.h"
+#include "cppformat/format.h"
 
 #include <iosfwd>
 
