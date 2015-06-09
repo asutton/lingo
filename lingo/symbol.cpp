@@ -176,4 +176,15 @@ get_symbol(char const* str)
 }
 
 
+// Returns the symbol correspondng to the string in `[first, last)`.
+// Insert the symbol if it does not exist.
+Symbol*
+get_symbol(char const* first, char const* last)
+{
+  String_view str(first, last);
+  Symbol_table& syms = symbols();
+  return &syms.entry(syms.insert(str, 0));
+}
+
+
 } // namespace lingo

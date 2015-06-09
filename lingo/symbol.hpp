@@ -45,13 +45,14 @@ struct Binding
 // Information associated with a symbol. This includes the kind
 // of token, and token-specific data.
 //
-// TODO: The binding should probably be in a union.
+// TODO: The binding must a union. Improve this data structure.
 struct Symbol_data
 {
   Symbol_data()
     : bind(nullptr) { }
   
-  Binding* bind;
+  int      kw;    // The keyword token kind
+  Binding* bind;  // An identifier binding
 };
 
 
@@ -67,12 +68,19 @@ struct Symbol_data
 // when referring through symbol data.
 using Symbol_kind = int;
 
+constexpr Symbol_kind unspcified_sym = 0;
+constexpr Symbol_kind keyword_sym    = 1;
+constexpr Symbol_kind identifier_sym = 2;
+
 
 // A Symbol represents a lexeme saved in the symbol table and
 // its associated attributes. The string representation of symbols 
 // are represented as a pair of pointers into a character array.
 // Additional attributes include the kind of token and the token
 // specific data.
+//
+// TODO: What kinds of information can we add to this entry
+// to simplify functioning...
 struct Symbol
 {
   Symbol(String_view s, Symbol_kind k)
@@ -138,6 +146,17 @@ Symbol_table& symbols();
 int           get_symbol_entry(char const*, int);
 int           get_symbol_entry(char const*, char const*);
 Symbol*       get_symbol(char const*);
+Symbol*       get_symbol(char const*, char const*);
+
+
+// Return a new string, interned in the symbol table. 
+// Note that `str` must have a lifetime longer than the 
+// symbol table.
+inline String_view
+get_string(char const* str)
+{
+  return get_symbol(str)->str;
+}
 
 } // namespace lingo
 

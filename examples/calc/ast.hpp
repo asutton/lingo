@@ -164,7 +164,7 @@ struct Neg : Unary<neg_expr>
 };
 
 
-// Identify of numbers.
+// Identity of numbers.
 struct Pos : Unary<pos_expr>
 {
   using Unary<pos_expr>::Unary;

@@ -92,7 +92,7 @@ public:
   char const*   token_spelling() const { return get_token_spelling(kind_); }
   Location      location() const       { return loc_; }
   Token_kind    kind() const           { return kind_; }
-  Symbol const* symbol() const;
+  Symbol const* symbol() const         { return sym_; }
   String_view   rep() const;
   std::string   str() const;
 
@@ -103,7 +103,7 @@ public:
 private:
   Location   loc_;
   Token_kind kind_;
-  int        sym_;
+  Symbol*    sym_;
 };
 
 

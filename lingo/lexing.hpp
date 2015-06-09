@@ -171,6 +171,18 @@ next_character_is_not(Stream const& s, char c)
 }
 
 
+// Returns true if nth character is 'c'. If `n == 0`, this is
+// equivalent to `next_character_is(s, c)`.
+template<typename Stream>
+inline bool
+nth_character_is(Stream const& s, int n, char c)
+{
+  return nth_element_is(s, n, c);
+}
+
+
+// FIXME: Rename these to "next_is".
+
 // Returns true if the current character in the stream matches
 // a whitespace character.
 template<typename Stream>

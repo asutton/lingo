@@ -112,6 +112,15 @@ next_element_is_not(Stream const& s, T const& x)
 }
 
 
+// Returns true if the nth element in the stream is equal to x.
+template<typename Stream, typename T>
+inline bool 
+nth_element_is(Stream const& s, int n, T const& x)
+{
+  return !s.eof() && s.peek(n) == x;
+}
+
+
 // -------------------------------------------------------------------------- //
 //                            Match any
 

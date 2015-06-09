@@ -101,11 +101,11 @@ get_token_spelling(Token_kind k)
   case colon_tok: return ":";
   
   // Non-spellable tokens.
-  case identifier_tok: return "identifier_tok";
-  case binary_integer_tok: return "binary_integer_tok";
-  case decimal_integer_tok: return "decimal_integer_tok";
-  case octal_integer_tok: return "octal_integer_tok";
-  case hexadecimal_integer_tok: return "hexadecimal_integer_tok";
+  case identifier_tok: return "identifier";
+  case binary_integer_tok: return "binary integer";
+  case decimal_integer_tok: return "decimal integer";
+  case octal_integer_tok: return "octal integer";
+  case hexadecimal_integer_tok: return "hexadecimal integer";
 
   default:
     if (toks_)
@@ -126,23 +126,15 @@ operator<<(std::ostream& os, Token_kind k)
 // Initialize a token with the given kind and having the text
 // given by the characters in [str, str + len).
 Token::Token(Location loc, Token_kind k, char const* str, int len)
-  : loc_(loc), kind_(k), sym_(get_symbol_entry(str, len))
+  : loc_(loc), kind_(k), sym_(get_symbol(str, str + len))
 { }
 
 
 // Initialize a token with the given kind and having the
 // text given by the characters in [first, last).
 Token::Token(Location loc, Token_kind k, char const* first, char const* last)
-  : loc_(loc), kind_(k), sym_(get_symbol_entry(first, last))
+  : loc_(loc), kind_(k), sym_(get_symbol(first, last))
 { }
-
-
-// Returns the symbol table entry corresponding to the token.
-Symbol const*
-Token::symbol() const
-{
-  return &symbols().entry(sym_);
-}
 
 
 // Returns a string view of the token's original spelling.
