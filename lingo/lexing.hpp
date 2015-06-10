@@ -40,6 +40,8 @@ namespace lingo
 // This is a stronger concept than the NullablePointer concept.
 //
 // TODO: Add legitimate file support.
+//
+// TODO: This does not belong in this file.
 struct Character_stream
 {
   using value_type = char;
@@ -82,7 +84,7 @@ struct Character_stream
 
 // Returns true if c is white space.
 inline bool
-is_whitespace (char c)
+is_space(char c)
 {
   return std::isspace(c);
 }
@@ -124,110 +126,23 @@ is_decimal_digit(char c)
 inline bool
 is_hexadecimal_digit(char c)
 {
-  c = std::tolower(c);
-  return is_decimal_digit(c) || ('a' <= c && c <= 'f');
+  return std::isxdigit(c);
 }
 
 
 // Returns true if c starts an identifier. 
 inline bool
-is_identifier_start(char c)
+is_ident_head(char c)
 {
   return is_alpha(c) || c == '_';
 }
 
 
-// Returns true if c can appear in the rest of an 
-// identifier.
+// Returns true if c can appear in the rest of an identifier.
 inline bool
-is_identifier_rest(char c)
+is_ident_tail(char c)
 {
-  return is_identifier_start(c) || is_decimal_digit(c);
-}
-
-
-// -------------------------------------------------------------------------- //
-//                             Testing algorithms
-//
-// For all of the following algorithms, the stream is expected to 
-// be a token stream.
-
-
-// Returns true if the next character is `c`.
-template<typename Stream>
-inline bool
-next_character_is(Stream const& s, char c)
-{
-  return next_element_is(s, c);
-}
-
-
-// Returns true if the next character is not `c`.
-template<typename Stream>
-inline bool
-next_character_is_not(Stream const& s, char c)
-{
-  return next_element_is_not(s, c);
-}
-
-
-// Returns true if nth character is 'c'. If `n == 0`, this is
-// equivalent to `next_character_is(s, c)`.
-template<typename Stream>
-inline bool
-nth_character_is(Stream const& s, int n, char c)
-{
-  return nth_element_is(s, n, c);
-}
-
-
-// FIXME: Rename these to "next_is".
-
-// Returns true if the current character in the stream matches
-// a whitespace character.
-template<typename Stream>
-inline bool
-is_whitespace(Stream& s)
-{
-  return is_whitespace(s.peek());
-}
-
-
-// Returns true if the current character is a decimal digit.
-//
-// Stream is required to be a character stream.
-template<typename Stream>
-inline bool
-is_decimal_digit(Stream& s)
-{
-  return is_decimal_digit(s.peek());
-}
-
-
-// Returns true if the current character is a decimal digit.
-template<typename Stream>
-inline bool
-is_binary_digit(Stream& s)
-{
-  return is_binary_digit(s.peek());
-}
-
-
-// Returns true if the current character is a decimal digit.
-template<typename Stream>
-inline bool
-is_octal_digit(Stream& s)
-{
-  return is_octal_digit(s.peek());
-}
-
-
-// Returns true if the current character is a decimal digit.
-template<typename Stream>
-inline bool
-is_hexadecimal_digit(Stream& s)
-{
-  return is_hexadecimal_digit(s.peek());
+  return is_ident_tail(c) || is_decimal_digit(c);
 }
 
 
@@ -237,8 +152,12 @@ is_hexadecimal_digit(Stream& s)
 // TODO: Conditionally support a character as a digit separator
 // in integer values.
 //
-// FIXME: Integer values accepting a prefix like 0x can be ill-formed
-// if there is not a corresponding digit following the prefix.
+// Note that an integer value like '0x' is an error. Note that the
+// lexers for prefixed integer values require the lexer to define 
+// the following functions:
+// 
+//    cxt.on_expected(loc, t)
+//    cxt.on_expected(loc, str)
 
 
 // Lexically analyze a decimal integer. The current character
@@ -247,8 +166,8 @@ template<typename Lexer, typename Stream>
 inline Result_type<Lexer>
 lex_decimal_integer(Lexer& lex, Stream& s, Location loc)
 {
-  auto pred = [](Stream& s) { return is_decimal_digit(s); };
-  auto range = match_continued_range(s, pred);
+  auto pred = [](Stream& s) { return next_element_if(s, is_decimal_digit); };
+  auto range = match_range_after_first(s, pred);
   return lex.on_decimal_integer(loc, range.begin(), range.end());
 }
 
@@ -264,7 +183,7 @@ inline Range_over<Stream>
 match_integer_in_base(Stream& s, P pred)
 {
   auto first = discard_n(s, 2);
-  auto range = match_continued_range(s, pred);
+  auto range = match_range_after_first(s, pred);
   if (range)
     return {first, range.end()};
   else
@@ -280,10 +199,10 @@ template<typename Lexer, typename Stream>
 inline Result_type<Lexer>
 lex_binary_integer(Lexer& lex, Stream& s, Location loc)
 {
-  auto pred = [](Stream& s) { return is_binary_digit(s); };
+  auto pred = [](Stream& s) { return next_element_if(s, is_binary_digit); };
   auto range = match_integer_in_base(s, pred);
   if (!range) {
-    error(loc, "ill-formed binary integer");
+    lex.on_expected(loc, "binary-digit");
     return {};
   }
   return lex.on_binary_integer(loc, range.begin(), range.end());
@@ -296,10 +215,10 @@ template<typename Lexer, typename Stream>
 inline Result_type<Lexer>
 lex_octal_integer(Lexer& lex, Stream& s, Location loc)
 {
-  auto pred = [](Stream& s) { return is_octal_digit(s); };
+  auto pred = [](Stream& s) { return next_element_if(s, is_octal_digit); };
   auto range = match_integer_in_base(s, pred);
   if (!range) {
-    error(loc, "ill-formed octal integer");
+    lex.on_expected(loc, "octal-digit");
     return {};
   }
   return lex.on_octal_integer(loc, range.begin(), range.end());
@@ -312,10 +231,10 @@ template<typename Lexer, typename Stream>
 inline Result_type<Lexer>
 lex_hexadecimal_integer(Lexer& lex, Stream& s, Location loc)
 {
-  auto pred = [](Stream& s) { return is_hexadecimal_digit(s); };
+  auto pred = [](Stream& s) { return next_element_if(s, is_hexadecimal_digit); };
   auto range = match_integer_in_base(s, pred);
   if (!range) {
-    error(loc, "ill-formed hexadecimal integer");
+    lex.on_expected(loc, "hexadecimal-digit");
     return {};
   }
   return lex.on_hexadecimal_integer(loc, range.begin(), range.end());

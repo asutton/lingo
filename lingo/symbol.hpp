@@ -11,9 +11,9 @@
 #include "lingo/string.hpp"
 
 #include <cstring>
+#include <list>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 namespace lingo
 {
@@ -79,10 +79,18 @@ constexpr Symbol_kind identifier_sym = 2;
 // Additional attributes include the kind of token and the token
 // specific data.
 //
+// Note that the symbol owns the pointer to its string view and is
+// responsible for de-allocating that memory.
+//
 // TODO: What kinds of information can we add to this entry
-// to simplify functioning...
+// to simplify functioning.
+//
+// TODO: When we start using a reasonable allocator for the symbol
+// table, revisit the destructor.
 struct Symbol
 {
+  ~Symbol();
+
   Symbol(String_view s, Symbol_kind k)
     : str(s), kind(k)
   { }
@@ -101,6 +109,20 @@ struct Symbol
 };
 
 
+inline bool
+operator==(Symbol const& a, Symbol const& b)
+{
+  return a.str == b.str;
+}
+
+
+inline bool
+operator!=(Symbol const& a, Symbol const& b)
+{
+  return a.str != b.str;
+}
+
+
 void push_binding(Symbol&, void*);
 void pop_binding(Symbol&);
 void* get_binding(Symbol const&);
@@ -110,31 +132,27 @@ void* get_binding(Symbol const&);
 //                           Symbol table
 
 // A symbol table stores unique representations of strings in
-// a program and their affiliated information (e.g., token
-// kind, etc.). The symbol table also supports efficient insertion
-// and lookup of those strings.
+// a program and their affiliated information (e.g., token kind, 
+// etc.). The symbol table also supports efficient insertion and 
+// lookup of those strings.
 //
-// The symbol table is implemented as a vector of symbols with
-// a side table to support efficient lookup.
+// The symbol table is implemented as a linked list of symbols 
+// with a side table to support efficient lookup.
 class Symbol_table
 {
   using Hash = String_view_hash;
   using Eq = String_view_eq;
-  using List = std::vector<Symbol>;
-  using Map = std::unordered_map<String_view, int, Hash, Eq>;
+  using List = std::list<Symbol>;
+  using Map = std::unordered_map<String_view, Symbol*, Hash, Eq>;
 
 public:
-  int insert(String_view, Symbol_kind);
-  int insert(char const*, Symbol_kind);
-  int insert(char const*, char const*, Symbol_kind);
+  Symbol& insert(String_view, Symbol_kind);
+  Symbol& insert(char const*, Symbol_kind);
+  Symbol& insert(char const*, char const*, Symbol_kind);
 
-  int lookup(String_view) const;
+  Symbol* lookup(String_view) const;
 
-  Symbol&       entry(int);
-  Symbol const& entry(int) const;
-
-  Symbol&       entry(String_view);
-  Symbol const& entry(String_view) const;
+  void clear();
 
 private:
   List syms_;
@@ -143,19 +161,17 @@ private:
 
 
 Symbol_table& symbols();
-int           get_symbol_entry(char const*, int);
-int           get_symbol_entry(char const*, char const*);
-Symbol*       get_symbol(char const*);
-Symbol*       get_symbol(char const*, char const*);
+Symbol&       get_symbol(char const*);
+Symbol&       get_symbol(char const*, char const*);
 
 
 // Return a new string, interned in the symbol table. 
 // Note that `str` must have a lifetime longer than the 
 // symbol table.
 inline String_view
-get_string(char const* str)
+get_symbol_string(char const* str)
 {
-  return get_symbol(str)->str;
+  return get_symbol(str).str;
 }
 
 } // namespace lingo

@@ -505,11 +505,11 @@ using Stream = Character_stream;
 
 
 // Returns true if the current character is one of the
-// punctuation characters.
+// punctuation characters. Note that s.eof() is false.
 bool
-is_punctuation(Stream& s)
+is_punctuation(char c)
 {
-  switch (s.peek()) {
+  switch (c) {
   case '[':
   case ']':
   case '{':
@@ -519,7 +519,7 @@ is_punctuation(Stream& s)
   case ':':
     return true;
   default:
-    return is_whitespace(s);
+    return is_space(c);
   }
 }
 
@@ -528,7 +528,8 @@ is_punctuation(Stream& s)
 void
 discard_whitespace(Stream& s)
 {
-  discard_if(s, &is_whitespace<Stream>);
+  auto pred = [](Stream& s) { return next_element_if(s, is_space); };
+  discard_if(s, pred);
 }
 
 
@@ -570,7 +571,7 @@ struct Literal_parser<4>
     Location loc = s.location();
     s.get(); // match lit[0]
     if (match_all(s, lit[1], lit[2], lit[3]))
-      if (s.eof() || is_whitespace(s) || is_punctuation(s))
+      if (s.eof() || is_space(s.peek()) || is_punctuation(s.peek()))
         return (cxt.*make)(loc);
     return nullptr;
   }
@@ -587,7 +588,7 @@ struct Literal_parser<5>
     Location loc = s.location();
     s.get(); // match lit[0]
     if (match_all(s, lit[1], lit[2], lit[3], lit[4]))
-      if (s.eof() || is_whitespace(s) || is_punctuation(s))
+      if (s.eof() || is_space(s.peek() || is_punctuation(s.peek())))
         return (cxt.*make)(loc);
     return nullptr;
   }
@@ -681,8 +682,8 @@ parse_string(Context& cxt, Stream& s)
 {
   Location loc = s.location();
   char const* first = &s.get();
-  while (next_character_is_not(s, '"')) {
-    if (next_character_is(s, '\\'))
+  while (next_element_is_not(s, '"')) {
+    if (next_element_is(s, '\\'))
       s.get();
     s.get();
   }
@@ -737,7 +738,7 @@ String*
 parse_key(Context& cxt, Stream& s)
 {
   Whitespace_guard ws(s);
-  if (next_character_is(s, '"'))
+  if (next_element_is(s, '"'))
     return cast<String>(parse_string(cxt, s));
   throw std::runtime_error("ill-formed key");
 }

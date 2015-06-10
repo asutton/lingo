@@ -71,7 +71,8 @@ inline void
 discard_whitespace(Character_stream& cs)
 {
   using namespace lingo;
-  discard_if(cs, &is_whitespace<Character_stream>);
+  auto pred = [](Character_stream& s) { return next_element_if(s, is_space); };
+  discard_if(cs, pred);
 }
 
 

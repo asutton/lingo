@@ -5,6 +5,7 @@
 #include "lingo/print.hpp"
 
 #include <cassert>
+#include <cstring>
 #include <iostream>
 
 namespace lingo
@@ -13,9 +14,14 @@ namespace lingo
 // -------------------------------------------------------------------------- //
 //                             Symbols
 //
-// TODO: Check that the symbol has the appropriate
-// kind before accessing its bindings or other
-// (eventual) attributes.
+// TODO: Check that the symbol has the appropriate kind before 
+// accessing its bindings or other (eventual) attributes.
+
+Symbol::~Symbol()
+{
+  delete str.begin();
+}
+
 
 // Push a new binding onto the symbol.
 void
@@ -58,76 +64,58 @@ get_binding(Symbol const& s)
 
 // Insert a symbol as having the given kind. If the symbol already
 // exists, do nothing and return its index.
-int
+Symbol&
 Symbol_table::insert(String_view s, Symbol_kind k)
 {
   auto iter = map_.find(s);
   if (iter == map_.end()) {
-    int n = syms_.size();
-    syms_.emplace_back(s, k);
-    map_.insert({s, n});
-    return n;
+    // Allocate a new string to store in the symbol
+    // table. This lets us add entries without worrying
+    // about the source of the input (and whether or not
+    // it goes out of scope).
+    //
+    // TODO: Use a sequential allocator for this table.
+    // That would make memory management trivial. See 
+    // the Symbol destructor.
+    char* str = new char[s.size()];
+    std::strncpy(str, s.begin(), s.size());
+    String_view v(str, str + s.size());
+
+    // Create/insert a new symbol for the given string.
+    syms_.emplace_back(v, k);
+    Symbol* sym = &syms_.back();
+
+    // Insert the string into the lookup table.
+    map_.insert({v, sym});
+    return *sym;
   } else {
-    return iter->second;
+    return *iter->second;
   }
 }
 
 
-int 
+Symbol& 
 Symbol_table::insert(char const* s, Symbol_kind k)
 {
   return insert(String_view(s), k);
 }
 
 
-int 
+Symbol& 
 Symbol_table::insert(char const* f, char const* l, Symbol_kind k)
 {
   return insert(String_view(f, l), k);
 }
 
 
-int
+Symbol*
 Symbol_table::lookup(String_view s) const
 {
   auto iter = map_.find(s);
   if (iter != map_.end())
     return iter->second;
   else
-    return -1;
-}
-
-
-// Return the entry at the given position.
-Symbol&
-Symbol_table::entry(int n)
-{
-  assert(0 <= n && n <= (int)syms_.size());
-  return syms_[n];
-}
-
-
-const Symbol&
-Symbol_table::entry(int n) const
-{
-  assert(0 <= n && n <= (int)syms_.size());
-  return syms_[n];
-}
-
-// Returns the symbol corresponding to the given
-// string. Note that the string must be in the
-// symbol table.
-Symbol&
-Symbol_table::entry(String_view s)
-{
-  return entry(lookup(s));
-}
-
-
-Symbol const& 
-Symbol_table::entry(String_view s) const
-{
-  return entry(lookup(s));
+    return nullptr;
 }
 
 
@@ -148,42 +136,23 @@ symbols()
 }
 
 
-// Returns the entry of the symbol in [str, str + n) or inserts it if
-// not already present.
-int
-get_symbol_entry(char const* str, int n)
-{
-  return symbols().insert(str, str + n, 0);
-}
-
-
-// Returns the entry of the symbol in [first, last) or inserts it if
-// not already present.
-int
-get_symbol_entry(char const* first, char const* last)
-{
-  return symbols().insert(first, last, 0);
-}
-
-
 // Returns the symbol correspondng to `str`, inserting a new
 // symbol if it is not already present.
-Symbol*
+Symbol&
 get_symbol(char const* str)
 {
   Symbol_table& syms = symbols();
-  return &syms.entry(syms.insert(str, 0));
+  return syms.insert(str, 0);
 }
 
 
 // Returns the symbol correspondng to the string in `[first, last)`.
 // Insert the symbol if it does not exist.
-Symbol*
+Symbol&
 get_symbol(char const* first, char const* last)
 {
-  String_view str(first, last);
   Symbol_table& syms = symbols();
-  return &syms.entry(syms.insert(str, 0));
+  return syms.insert(first, last, 0);
 }
 
 

@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <type_traits>
+#include <iostream>
 
 namespace lingo
 {
@@ -62,35 +63,13 @@ struct Range
 };
 
 
-// An alias used to constraint ranges over containers or
-// streams.
+// An alias used to constraint ranges over containers or streams.
 template<typename T>
 using Range_over = Range<Iterator_type<T>>;
 
 
 // -------------------------------------------------------------------------- //
-//                            Is one of
-
-// Returns false when there are no elements to match.
-template<typename T>
-inline bool
-is_one_of(T const&)
-{
-  return false;
-}
-
-
-// Returns true when the element matches one of those given
-// in [first, args...].
-template<typename T, typename... Args>
-inline bool
-is_one_of(T const& elem, T const& first, Args const&... args)
-{
-  if (elem == first)
-    return true;
-  else
-    return is_one_of(elem, args...);
-}
+//                              Next element
 
 
 // Returns true if the next element in the stream is equal to x.
@@ -121,8 +100,99 @@ nth_element_is(Stream const& s, int n, T const& x)
 }
 
 
+// Returns true if the next element satisfies the given predicate.
+template<typename Stream, typename Pred>
+inline bool 
+next_element_if_unguarded(Stream const& s, Pred pred)
+{
+  return pred(s.peek());
+}
+
+// Returns true if the next element satisfies the given predicate.
+template<typename Stream, typename Pred>
+inline bool 
+next_element_if(Stream const& s, Pred pred)
+{
+  return !s.eof() && pred(s.peek());
+}
+
+
 // -------------------------------------------------------------------------- //
-//                            Match any
+//                         Next element in
+
+// Returns false when there are no elements to match.
+template<typename Stream>
+inline bool
+next_element_in(Stream const& s)
+{
+  return false;
+}
+
+
+// Returns true when the element matches in the set of elements
+// given by [first, args...].
+template<typename Stream, typename T, typename... Args>
+inline bool
+next_element_in(Stream const& s, T const& first, Args const&... args)
+{
+  if (next_element_is(s, first))
+    return true;
+  else
+    return next_element_in(s, args...);
+}
+
+
+// -------------------------------------------------------------------------- //
+//                         Next elements are
+
+
+// Base case. Returns false.
+template<typename Stream>
+inline bool
+next_elements_past_n_are(Stream const& s, int)
+{
+  return true;
+}
+
+
+// Rerusive step. Match the nth element and check the rest.
+template<typename Stream, typename T, typename... Args>
+inline bool
+next_elements_past_n_are(Stream const& s, int n, T const& first, Args const&... args)
+{
+  if (nth_element_is(s, n, first))
+    return next_elements_past_n_are(s, n + 1, args...);
+  return false;
+}
+
+
+// Returns true when the next elements in match those given
+// in by args.... Note that this operation requires lookahead
+// of sizeof...(Args). 
+//
+// If the required lookahead exceeds the buffer, this returns
+// false.
+template<typename Stream, typename T, typename... Args>
+inline bool
+next_elements_are(Stream const& s, Args const&... args)
+{
+  return next_elements_past_n_are(s, 0, args...);
+}
+
+
+// -------------------------------------------------------------------------- //
+//                               Match 
+//
+// The matching algorithms operate on streams. A stream `s` is required
+// to support the following operations:
+//
+// - `s.eof()` -- returns true when the stream is at the end of file.
+// - `s.peek()` -- returns a reference to the current element
+// - `s.get()` -- returns a reference to the current element and advances
+//
+// Additionally, the iterator type must be the same `&s.get()`, 
+// and default constructing the iterator type must be contextually 
+// convertible to bool. This is typically a pointer into the stream.
 
 
 // If the current element of the stream exactly matches t, then
@@ -238,20 +308,20 @@ match_all(Stream& s, A const& a, Args const&... args)
 
 
 // -------------------------------------------------------------------------- //
-//                            Match element range
-
+//                            Match range
 
 // Returns an iterator range corresponding to a sequence
 // of matched elements in the stream when the current element
 // of the stream satisfies `pred`. 
 template<typename Stream, typename P>
 inline Range_over<Stream>
-match_continued_range(Stream& s, P pred)
+match_range_after_first(Stream& s, P pred)
 {
   assert(pred(s));
   Iterator_type<Stream> first = &s.get(); // Save the first position
-  while (!s.eof() && pred(s))
+  while (!s.eof() && pred(s)) {
     s.get();
+  }
   Iterator_type<Stream> last = s.begin(); // Past the end of the range
   return {first, last};
 }
@@ -269,7 +339,7 @@ match_range(Stream& s, P pred)
     return {s.end(), s.end()};
   if (!match(s))
     return {s.begin(), s.begin()};
-  return match_continued_range(s, match);
+  return match_range_after_first(s, match);
 }
 
 
@@ -307,14 +377,25 @@ discard_if(Stream& s, P pred)
 // -------------------------------------------------------------------------- //
 //                            Expect element
 //
-// When using the expect* algorithms, the contex must provide
-// the following functions:
+// The expect* algorithms are similar to the match algorithms except
+// that diagnostics are emitted when the match fails. To support
+// diagnostics, these algorithms also require the stream to provide
+// support for source code locations. For any stream `s`
+//
+//    s.location()
+//
+// returns the current location in the underlying file or buffer. The
+// only requirement for this type is that it is semiregular. 
+//
+// To support generic diagnostics, the expect* algorithms require a
+// context parameter, which defines the context of translation. The
+// context must define the following functions:
 //
 //    cxt.on_expected(loc, t)
 //    cxt.on_expected(loc, str)
 //
-// Where `t` is an element in the stream and `str` is a C-string.
-
+// Where `loc` is a value returned by `s.location()`, `t` is an element 
+// in the stream and `str` is a C-string.
 
 // If the current element matches of the stream the given kind, 
 // advance the stream, returning an iterator to the matched

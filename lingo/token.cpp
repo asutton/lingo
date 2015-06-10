@@ -126,22 +126,23 @@ operator<<(std::ostream& os, Token_kind k)
 // Initialize a token with the given kind and having the text
 // given by the characters in [str, str + len).
 Token::Token(Location loc, Token_kind k, char const* str, int len)
-  : loc_(loc), kind_(k), sym_(get_symbol(str, str + len))
+  : loc_(loc), kind_(k), sym_(&get_symbol(str, str + len))
 { }
 
 
 // Initialize a token with the given kind and having the
 // text given by the characters in [first, last).
 Token::Token(Location loc, Token_kind k, char const* first, char const* last)
-  : loc_(loc), kind_(k), sym_(get_symbol(first, last))
-{ }
+  : loc_(loc), kind_(k), sym_(&get_symbol(first, last))
+{ 
+}
 
 
 // Returns a string view of the token's original spelling.
 String_view
 Token::rep() const
 {
-  return symbol()->str;
+  return symbol().str;
 }
 
 

@@ -12,6 +12,8 @@
 // This is actually an extension of traditional JSON. In particular,
 // we differentiate between ints and reals, and allow unquoted
 // identifiers as strings.
+//
+// TODO: Move this into examples.
 
 #include "lingo/node.hpp"
 #include "lingo/integer.hpp"
