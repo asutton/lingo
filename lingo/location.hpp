@@ -7,82 +7,73 @@
 // The location module provides facilities for representing
 // locations in source code.
 
+#include "lingo/file.hpp"
+
+#include <cstdint>
 #include <iosfwd>
 
 namespace lingo
 {
 
-struct Location;
-
-
-// FIXME: Add legitimate support for files.
-struct File { };
-
-
-// The Location_data class represents a location is a source
-// file. Note that source locations are maintained privately
-// by this module. The primary interface is the Location
-// class below.
-struct Location_data
+// A source code location is a 32-bit integer that encodes the
+// file and offset of a source code location. The first 12 bytes
+// indicate the file index in the file manager, and the remaining
+// 20 give its offset in the source file.
+//
+// NOTE: Ths places a hard limit of 20MB source files.
+struct Location_id
 {
-  Location_data()
-    : Location_data(nullptr, 1, 1)
-  { }
+  int file   : 12;
+  int offset : 20;
 
-  Location_data(File* f, int l, int c)
-    : file(f), line(l), col(c)
-  { }
+  bool operator==(Location_id id)  const
+  { 
+    return file == id.file && offset == id.offset; 
+  }
 
-  Location save() const;
-
-  File* file;
-  int line;
-  int col;
+  bool operator!=(Location_id id) const
+  {
+    return !(*this == id);
+  }
 };
 
 
 // The location provides an interface to a location data. Locations 
 // can be contextually converted to bool, to determine whether or 
 // not they are "pinned" to an underlying source location.
-struct Location
+class Location
 {
+public:
   // Indicates a program element that does not originate within
   // a source file.
   static Location none;
 
-  // The location is in a command line argument.
-  static Location cli;
-
   Location()
-    : Location(nullptr)
+    : loc_{0, 0}
   { }
 
-  Location(Location_data const* l)
-    : loc_(l)
-  { }
+  Location(File const*, int);
 
-  explicit operator bool() const { return loc_; }
+  explicit operator bool() const { return (*this == none); }
 
-  File const* file() const { return loc_->file; }
-  int         line() const { return loc_->line; }
-  int         column() const { return loc_->col; }
-  
-  Location_data const* loc_;
+  File const& file() const;
+  Line const& line() const;
+  int         line_number() const;
+  int         column_number() const;
+
+  bool operator==(Location l) const { return loc_ == l.loc_; }
+  bool operator!=(Location l) const { return loc_ != l.loc_; }
+
+private:
+  Location_id loc_;
 };
 
 
-// Equality comparison.
-inline bool
-operator==(Location a, Location b)
+// Return the line number of the current location.
+inline int
+Location::line_number() const
 {
-  return a.loc_ == b.loc_;
-}
-
-
-inline bool
-operator!=(Location a, Location b)
-{
-  return a.loc_ == b.loc_;
+  return line().number();
 }
 
 

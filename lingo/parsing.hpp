@@ -49,9 +49,6 @@ struct Token_stream
   // Returns the source location of the the current token.
   Location location() { return eof() ? Location{} : peek().location(); }
 
-  // Returns the empty value.
-  static Token null() { return {}; }
-
   Token const* first; // Current character pointer
   Token const* last;  // Past the end of the character buffer
 };

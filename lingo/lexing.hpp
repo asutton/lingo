@@ -21,66 +21,7 @@ namespace lingo
 {
 
 // -------------------------------------------------------------------------- //
-//                          Character stream
-
-
-// A character stream provides a sequence of characters and has
-// a very simple streaming interface consisting of only 5 functions:
-// peek(), get(), and eof(), begin(), and end(). Character streams
-// are the input to lexical analyzers.
-//
-// There are also two support functions: null() returns a non-character
-// value (i.e., the null character), and location() returns the source
-// location for a character in the stream.
-//
-// Note that as a general rule for streams, &s.peek() == s.begin().
-//
-// Hypothetically, the null() function is a mechanism for creating
-// a value that contextually evaluates to false upon default construction.
-// This is a stronger concept than the NullablePointer concept.
-//
-// TODO: Add legitimate file support.
-//
-// TODO: This does not belong in this file.
-struct Character_stream
-{
-  using value_type = char;
-
-  Character_stream(char const* f, char const* l)
-    : first(f), last(l), loc()
-  { }
-
-  Character_stream(std::string const& s)
-    : Character_stream(s.data(), s.data() + s.size())
-  { }
-
-  // Stream control
-  bool eof() const { return first == last; }
-  char const& peek() const;
-  char        peek(int) const;
-  char const& get();
-
-  // Iterators
-  char const* begin()       { return first; }
-  char const* begin() const { return first; }
-  char const* end()       { return last; }
-  char const* end() const { return last; }
-
-  // Returns the source location of the the current character.
-  Location location() { return loc.save(); }
-
-  // Returns the empty value.
-  static char null() { return 0; }
-
-  char const*   first; // Current character pointer
-  char const*   last;  // Past the end of the character buffer
-  Location_data loc;   // Current location in file
-};
-
-
-
-// -------------------------------------------------------------------------- //
-//                                 Characters
+//                             Character classes
 
 // Returns true if c is white space.
 inline bool

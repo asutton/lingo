@@ -1,67 +1,40 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "lingo/location.hpp"
+#include "location.hpp"
+#include "file.hpp"
 
 #include <iostream>
-#include <set>
 
 namespace lingo
 {
 
-namespace
+
+Location::Location(File const* f, int n)
+  : loc_{f->index(), n}
+{ }
+
+
+
+// Returns the file associated with the location.
+File const&
+Location::file() const
 {
-
-// FIXME: This is terribly inefficient. Design a more efficient
-// data structure for maintaining source locations. Also, don't
-// compare pointers.
-
-struct Loc_less
-{
-  bool 
-  operator()(Location_data const& a, Location_data const& b)
-  {
-    if (a.file < b.file)
-      return true;
-    if (b.file < a.file)
-      return false;
-    
-    if (a.line < b.line)
-      return true;
-    if (b.line < a.line)
-      return false;
-
-    return a.col < b.col;
-  }
-};
-
-
-// A global table of source locations. 
-std::set<Location_data, Loc_less> locs_;
-
-
-} // namespace
-
-
-// Memoize the current source location, and return a handle
-// to it.
-Location
-Location_data::save() const
-{
-  auto ins = locs_.insert(*this);
-  return &*ins.first;
+  return file_manager().file(loc_.file);
 }
 
 
-// FIXME: Actually use the file name.
-std::ostream&
-operator<<(std::ostream& os, File const* f)
+
+Line const&
+Location::line() const
 {
-  if (f)
-    os << "<file>"; 
-  else
-    os << "<input>";
-  return os;
+  return file().line(loc_.offset);
+}
+
+int
+Location::column_number() const
+{
+  return loc_.offset - line().offset();
 }
 
 
@@ -69,17 +42,16 @@ std::ostream&
 operator<<(std::ostream& os, Location loc)
 {
   if (loc == Location::none)
-    return os << "<internal>";  // Internally allocated
-  else if (loc == Location::cli)
-    return os;                  // Don't emit location data.
-  else
-    return os << loc.file() << ':' << loc.line() << ':' << loc.column();
+    return os;
+
+  return os << loc.file() 
+            << ':' << loc.line_number() 
+            << ':' << loc.column_number();
 }
 
 
 // Static values.
 Location Location::none { };
-Location Location::cli = (Location_data*)1;
 
 
 } // namespace lingo

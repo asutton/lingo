@@ -13,7 +13,8 @@
 // we differentiate between ints and reals, and allow unquoted
 // identifiers as strings.
 //
-// TODO: Move this into examples.
+// TODO: Move this into examples. Also, in-memory parsing doesn't
+// actually work.
 
 #include "lingo/node.hpp"
 #include "lingo/integer.hpp"

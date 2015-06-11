@@ -6,6 +6,7 @@
 // language and the machine used to recognize those tokens 
 // in input source.
 
+#include "lingo/character.hpp"
 #include "lingo/lexing.hpp"
 
 #include <string>

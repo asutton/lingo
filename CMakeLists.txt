@@ -17,10 +17,15 @@ find_library(GMP_LIBRARIES NAMES gmp libgmp)
 MESSAGE(STATUS "GMP libs: " ${GMP_LIBRARIES})
 
 
+# Boost dependencies
+find_package(Boost 1.55.0 REQUIRED
+  COMPONENTS system filesystem)
+
+
 
 # Build configuration.
-include_directories(. ${GMP_INCLUDE_DIR})
-
+include_directories(. ${GMP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
 
 add_subdirectory(lingo)
 add_subdirectory(test)

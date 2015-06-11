@@ -14,6 +14,8 @@ add_library(lingo
   string.cpp
   integer.cpp
   location.cpp
+  file.cpp
+  character.cpp
   error.cpp
   print.cpp
   debug.cpp
@@ -24,4 +26,4 @@ add_library(lingo
   parsing.cpp
   json.cpp
   cli.cpp)
-target_link_libraries(lingo ${GMP_LIBRARIES})
+target_link_libraries(lingo ${GMP_LIBRARIES} ${Boost_LIBRARIES})

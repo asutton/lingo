@@ -3,6 +3,7 @@
 
 #include "lingo/lexing.hpp"
 #include "lingo/symbol.hpp"
+#include "lingo/character.hpp"
 #include "lingo/error.hpp"
 
 #include <cassert>

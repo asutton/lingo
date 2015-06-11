@@ -3,6 +3,7 @@
 
 #include "json.hpp"
 #include "memory.hpp"
+#include "character.hpp"
 #include "lexing.hpp"
 #include "parsing.hpp"
 
@@ -855,13 +856,16 @@ parse_value(Context& cxt, Stream& s)
 //
 // Note that this will return `nullptr` if the
 // range `[first, last)` is empty or only whitespace.
+//
+// FIXME: Re-think how this should work.
 Value*
 parse(char const* first, char const* last)
 {
-  Stream chars(first, last);
-  Context cxt;
+  // Stream chars(first, last);
+  // Context cxt;
+  // return parse_value(cxt, chars);
 
-  return parse_value(cxt, chars);
+  return nullptr;
 }
 
 
