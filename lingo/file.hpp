@@ -6,61 +6,16 @@
 
 // The file module contains facilities for managing open
 // files and their text.
-//
-// TODO: Seprate out line maps into a separate module.
-// Also, re-organize this so that we can support source
-// code locations in different kinds of memory buffers.
-// These might be:
-// - files
-// - strings in memory
-// - macro expansions
 
-#include <iosfwd>
-#include <map>
-#include <string>
+#include "lingo/buffer.hpp"
+
 #include <unordered_map>
+#include <vector>
 
 #include <boost/filesystem.hpp>
 
 namespace lingo
 {
-
-// -------------------------------------------------------------------------- //
-//                                Lines
-
-// A line of text is the sequence of characters from column
-// 0 up to its newline.
-//
-// The members of this class are public to allow them to be
-// updated by a character stream during processing.
-class Line
-{
-public:
-  Line(int n, int c, char const* f, char const* l)
-    : num(n), off(c), first(f), last(l)
-  { }
-
-  int number() const { return num; }
-  int offset() const { return off; }
-
-  char const* begin() const { return first; }
-  char const* end() const   { return last; }
-
-  int         num;    // Tjhe line number
-  int         off;    // The character offset
-  char const* first;
-  char const* last;
-};
-
-
-// A line map associates an offset in the source code with
-// it's underlying line of text.
-struct Line_map : std::map<int, Line>
-{
-  Line const& line(int n) const;
-};
-
-
 
 // -------------------------------------------------------------------------- //
 //                                Files
@@ -81,7 +36,7 @@ using Path = boost::filesystem::path;
 // file information with lines.
 //
 // TODO: Use std::filesystem when it becomes standard.
-class File
+class File : public Buffer
 {
   friend class File_manager;
 
@@ -93,26 +48,10 @@ public:
   
   int index() const { return index_; }
 
-  Line_map&       lines()       { return lines_; }
-  Line_map const& lines() const { return lines_; }
-
-  Line const& line(int n) const { return lines().line(n); }
-
-  // Iterators
-  char const* begin() const { return text_.c_str(); }
-  char const* end() const   { return begin() + text_.size(); }
-
 private:
   Path        path_;
-  std::string text_;
-  Line_map    lines_;
   int         index_;
 };
-
-
-// Streaming
-std::ostream& operator<<(std::ostream&, File const&);
-
 
 
 // -------------------------------------------------------------------------- //
@@ -131,8 +70,8 @@ public:
   File& file(int);
 
 private:
-  using File_list     = std::vector<File*>;
-  using File_map      = std::unordered_map<std::string, int>;
+  using File_list = std::vector<File*>;
+  using File_map  = std::unordered_map<std::string, int>;
 
   File_list files_;
   File_map  lookup_;

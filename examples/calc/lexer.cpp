@@ -8,8 +8,8 @@
 
 #include <cassert>
 #include <cctype>
-#include <iostream>
 #include <string>
+#include <iostream>
 
 namespace calc
 {
@@ -101,9 +101,9 @@ token(Lexer& lex, Character_stream& cs)
   default:
     if (is_decimal_digit(cs.peek()))
       return lex_decimal_integer(lex, cs, loc);
-    
+
     // Diagnose the unrecognized character and consume it.
-    error(loc, "unrecognized character '{}'", cs.get());
+    error(cs, loc, "unrecognized character '{}'", cs.get());
   }
   return {};
 }

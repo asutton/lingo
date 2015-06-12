@@ -14,11 +14,12 @@ add_library(lingo
   string.cpp
   integer.cpp
   location.cpp
+  buffer.cpp
   file.cpp
-  character.cpp
   error.cpp
   print.cpp
   debug.cpp
+  character.cpp
   symbol.cpp
   token.cpp
   algorithm.cpp

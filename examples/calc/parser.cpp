@@ -38,9 +38,9 @@ parse_primary_expression(Parser& p, Token_stream& toks)
   // If the expression was none of the above, the program is ill-formed.
   Location loc = toks.location();
   if (toks.eof())
-    error(loc, "exected primary-expression, got end-of-file");
+    error(p, loc, "exected primary-expression, got end-of-file");
   else
-    error(loc, "expected primary-expression, got '{}'", toks.peek());
+    error(p, loc, "expected primary-expression, got '{}'", toks.peek());
   return p.on_error();
 }
 
@@ -228,25 +228,34 @@ Parser::on_binary_term(Token const* tok, Expr* e1, Expr* e2)
   }
 }
 
-
-void
-Parser::on_expected_got(Location loc, Token const& tok, char const* str)
+Error*
+Parser::on_expected(char const* str)
 {
-  error(loc, "expected '{}' but got '{}'", str, tok);
+  error(*this, Location::none, "expected '{}' but got end-of-file", str);
+  return get_error();
 }
 
 
-void
-Parser::on_expected_eof(Location loc, char const* str)
+Error*
+Parser::on_expected(Location loc, char const* str, Token const& tok)
 {
-  error(loc, "expected '{}' but got eof", str);
+  error(*this, loc, "expected '{}' but got '{}'", str, tok);
+  return get_error();
+}
+
+
+Error*
+Parser::on_expected(Location loc, char const* str)
+{
+  error(*this, loc, "expected '{}'", str);
+  return get_error();
 }
 
 
 Expr* 
-parse(Token_stream& ts)
+parse(Buffer& buf, Token_stream& ts)
 {
-  Parser p;
+  Parser p(buf);
   return p(ts);
 }
 

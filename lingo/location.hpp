@@ -7,40 +7,21 @@
 // The location module provides facilities for representing
 // locations in source code.
 
-#include "lingo/file.hpp"
-
-#include <cstdint>
 #include <iosfwd>
 
 namespace lingo
 {
 
-// A source code location is a 32-bit integer that encodes the
-// file and offset of a source code location. The first 12 bytes
-// indicate the file index in the file manager, and the remaining
-// 20 give its offset in the source file.
+class Buffer;
+class File;
+class Line;
+
+// The location class is an opaque reference to a location within
+// a source code buffer. The interpretation of a location object
+// requires the bufer from which it is created.
 //
-// NOTE: Ths places a hard limit of 20MB source files.
-struct Location_id
-{
-  int file   : 12;
-  int offset : 20;
-
-  bool operator==(Location_id id)  const
-  { 
-    return file == id.file && offset == id.offset; 
-  }
-
-  bool operator!=(Location_id id) const
-  {
-    return !(*this == id);
-  }
-};
-
-
-// The location provides an interface to a location data. Locations 
-// can be contextually converted to bool, to determine whether or 
-// not they are "pinned" to an underlying source location.
+// Internally, this is simply the offset of a character within
+// the buffer. The buffer is responsible for associating 
 class Location
 {
 public:
@@ -48,36 +29,49 @@ public:
   // a source file.
   static Location none;
 
-  Location()
-    : loc_{0, 0}
+  Location(int n = 0)
+    : loc_(n)
   { }
 
-  Location(File const*, int);
+  // Returns the offset into a buffer.
+  int offset() const { return loc_; }
 
   explicit operator bool() const { return (*this == none); }
-
-  File const& file() const;
-  Line const& line() const;
-  int         line_number() const;
-  int         column_number() const;
 
   bool operator==(Location l) const { return loc_ == l.loc_; }
   bool operator!=(Location l) const { return loc_ != l.loc_; }
 
 private:
-  Location_id loc_;
+  int loc_;
 };
 
 
-// Return the line number of the current location.
-inline int
-Location::line_number() const
+// A Bound location associates a location reference with its
+// originating buffer. Bound locations are returned from
+// the location() method of a buffer.
+struct Bound_location
 {
-  return line().number();
-}
+  Bound_location(Buffer const& b, Location l)
+    : buf_(b), loc_(l)
+  { }
+  
+  bool is_valid() const { return loc_ != Location::none; }
+  bool is_file_location() const;
+
+  Buffer const& buffer() const { return buf_; }
+  
+  File const& file() const;
+  Line const& line() const;
+  
+  int line_no() const;
+  int column_no() const;
+
+  Buffer const&  buf_;
+  Location      loc_;
+};
 
 
-std::ostream& operator<<(std::ostream&, Location);
+std::ostream& operator<<(std::ostream&, Bound_location const&);
 
 
 } // namespace lingo

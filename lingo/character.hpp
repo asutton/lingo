@@ -4,12 +4,14 @@
 #ifndef LINGO_CHARACTER_HPP
 #define LINGO_CHARACTER_HPP
 
-#include "location.hpp"
+#include "lingo/location.hpp"
+#include "lingo/buffer.hpp"
+#include "lingo/string.hpp"
 
 namespace lingo
 {
 
-class File;
+class Buffer;
 
 
 // A character stream provides a sequence of characters and has
@@ -31,12 +33,16 @@ class Character_stream
 public:
   using value_type = char;
 
-  Character_stream(File* file, char const* f, char const* l)
-    : file_(file), base_(f), first_(f), last_(l), line_(start_line(1))
+  Character_stream(Buffer& b, char const* f, char const* l)
+    : buf_(b), base_(f), first_(f), last_(l), line_(start_line())
   { }
 
-  Character_stream(File* f, std::string const& s)
-    : Character_stream(f, s.data(), s.data() + s.size())
+  Character_stream(Buffer& b, String const& s)
+    : Character_stream(b, s.data(), s.data() + s.size())
+  { }
+
+  Character_stream(Buffer& b)
+    : Character_stream(b, b.begin(), b.end())
   { }
 
   // Stream control
@@ -51,16 +57,18 @@ public:
   char const* end()       { return last_; }
   char const* end() const { return last_; }
 
-  // Returns the source location of the the current character.
-  Location location() const { return {file_, offset()}; }
+  // Locations
+  Location       location() const { return offset(); }
+
+  Buffer const& buffer() const { return buf_; }
 
 private:
   int offset() const { return first_ - base_; }
   
   Line* new_line();
-  Line* start_line(int);
+  Line* start_line();
 
-  File*         file_;  // The stream's source file
+  Buffer&       buf_;  // The stream's source file
   char const*   base_;  // The beginning of the stream
   char const*   first_; // Current character pointer
   char const*   last_;  // Past the end of the character buffer

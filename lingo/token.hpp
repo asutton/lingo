@@ -127,6 +127,47 @@ std::ostream& operator<<(std::ostream&, Token);
 
 
 // -------------------------------------------------------------------------- //
+//                              Token stream
+
+
+// A token stream provides a sequence of tokens and has a very 
+// simple streaming interface consisting of only 5 functions:
+// peek(), get(), and eof(), begin(), and end(). Character streams
+// are the input to lexical analyzers.
+class Token_stream
+{
+public:
+  using value_type = Token;
+
+  Token_stream(Token const* f, Token const* l)
+    : first_(f), last_(l)
+  { }
+
+  Token_stream(Token_list const& toks)
+    : Token_stream(toks.data(), toks.data() + toks.size())
+  { }
+
+  // Stream control
+  bool eof() const { return first_ == last_; }
+  Token const& peek() const;
+  Token        peek(int) const;
+  Token const& get();
+
+  // Iterators
+  Token const* begin()       { return first_; }
+  Token const* begin() const { return first_; }
+  Token const* end()       { return last_; }
+  Token const* end() const { return last_; }
+
+  // Returns the source location of the the current token.
+  Location location() { return eof() ? Location{} : peek().location(); }
+
+  Token const* first_; // Current character pointer
+  Token const* last_;  // Past the end of the character buffer
+};
+
+
+// -------------------------------------------------------------------------- //
 //                              Token sets
 
 // A token set defines hooks between the general token

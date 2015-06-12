@@ -30,30 +30,33 @@ int main()
     if (line.empty())
       continue;
 
-    // Character_stream cs = line;
-    // Token_list toks = lex(cs);
-    // if (error_count()) {
-    //   reset_diagnostics();
-    //   continue;
-    // }
+    // Construct a buffer for the line.
+    Buffer buf(line);
+
+    Character_stream cs(buf);
+    Token_list toks = lex(cs);
+    if (error_count()) {
+      reset_diagnostics();
+      continue;
+    }
 
     // for (Token const& tok : toks)
     //   debug(tok);
     
-    // Token_stream ts = toks;
-    // Expr* expr = parse(ts);
-    // if (error_count()) {
-    //   reset_diagnostics();
-    //   continue;
-    // }
+    Token_stream ts(toks);
+    Expr* expr = parse(buf, ts);
+    if (error_count()) {
+      reset_diagnostics();
+      continue;
+    }
 
-    // // FIXME: This is an error. Why didn't we fail before.
-    // if (!expr) {
-    //   std::cout << "internal error: parsing failed\n";
-    //   continue;
-    // }
+    // FIXME: This is an error. Why didn't we fail before.
+    if (!expr) {
+      std::cout << "internal error: parsing failed\n";
+      continue;
+    }
 
-    // std::cout << expr << " == " << evaluate(expr) << '\n';
+    std::cout << expr << " == " << evaluate(expr) << '\n';
   }
 
   gc().collect();

@@ -426,9 +426,9 @@ expect_if(Context& cxt, Stream& s, P pred, char const* cond)
     return iter;
   } else {
     if (!s.eof())
-      cxt.on_expected_got(s.location(), s.peek(), cond);
+      cxt.on_expected(s.location(), cond, s.peek());
     else
-      cxt.on_expected_eof(s.location(), cond);
+      cxt.on_expected(cond);
     return {};
   }
 }

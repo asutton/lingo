@@ -15,6 +15,10 @@
 namespace lingo
 {
 
+// A string is a sequence of characters.
+using String = std::string;
+
+
 // A view of a string in a source file. A string view is
 // represented as a pair of pointers into text owned by
 // another object.

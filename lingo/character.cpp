@@ -16,7 +16,6 @@
 namespace lingo
 {
 
-
 // Returns a reference to the current character. Note
 // that the stream must not be at the end of the file.
 char const&
@@ -78,23 +77,19 @@ Character_stream::get()
 // lines. What happens if we copy the character stream. There
 // should only be one line map.
 Line*
-Character_stream::start_line(int num)
+Character_stream::start_line()
 {
-  Line line(num, offset(), first_, nullptr);
-  auto ins = file_->lines().insert({offset(), line});
-  return &ins.first->second;
+  return &buf_.start_line(offset(), first_);
 }
 
 
+// When processing a new line character, finish the current
+// line and set up a new one.
 Line*
 Character_stream::new_line()
 {
-  // Terminate the previous line so that the newline is
-  // not included in the string.
-  line_->last = first_;
-
-  // And start the new line.
-  return start_line(line_->number() + 1);
+  buf_.finish_line(*line_, first_);
+  return start_line();
 }
 
 

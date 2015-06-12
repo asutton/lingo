@@ -10,20 +10,11 @@
 namespace lingo
 {
 
-// Returns the line number for the character offset. Behavior
-// is undefined if n is not within the line map.
-Line const&
-Line_map::line(int n) const
-{
-  lingo_assert(lower_bound(n) != end());
-  return lower_bound(n)->second;
-}
-
 
 // Construct file with the given index. This will cache the 
 // text of the file.
 File::File(Path const& p, int n)
-  : path_(p), text_(), lines_(), index_(n)
+  : Buffer(), path_(p), index_(n)
 {
   std::ifstream f(path_.native());
 
@@ -34,13 +25,6 @@ File::File(Path const& p, int n)
   std::istreambuf_iterator<char> first = f;
   std::istreambuf_iterator<char> last;
   text_.assign(first, last);
-}
-
-
-std::ostream&
-operator<<(std::ostream& os, File const& f)
-{
-  return os << f.path();
 }
 
 

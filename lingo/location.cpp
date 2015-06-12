@@ -2,56 +2,69 @@
 // All rights reserved
 
 #include "location.hpp"
+#include "buffer.hpp"
 #include "file.hpp"
+#include "error.hpp"
 
 #include <iostream>
 
 namespace lingo
 {
 
-
-Location::Location(File const* f, int n)
-  : loc_{f->index(), n}
-{ }
+// Static values.
+Location Location::none { };
 
 
-
-// Returns the file associated with the location.
-File const&
-Location::file() const
+bool
+Bound_location::is_file_location() const
 {
-  return file_manager().file(loc_.file);
+  return dynamic_cast<File const*>(&buf_);
 }
 
 
+File const& 
+Bound_location::file() const
+{
+  lingo_assert(is_file_location());
+  return dynamic_cast<File const&>(buf_);
+}
 
+
+// Return the line of text represented by this location.
 Line const&
-Location::line() const
+Bound_location::line() const
 {
-  return file().line(loc_.offset);
+  return buf_.line(loc_);
 }
 
-int
-Location::column_number() const
+
+// Returns the line number for this location.
+int 
+Bound_location::line_no() const
 {
-  return loc_.offset - line().offset();
+  return buf_.line_no(loc_);
+}
+
+
+// Returns the column number for this location.
+int 
+Bound_location::column_no() const
+{
+  return buf_.column_no(loc_);
 }
 
 
 std::ostream& 
-operator<<(std::ostream& os, Location loc)
+operator<<(std::ostream& os, Bound_location const& loc)
 {
-  if (loc == Location::none)
+  if (!loc.is_valid())
     return os;
 
-  return os << loc.file() 
-            << ':' << loc.line_number() 
-            << ':' << loc.column_number();
+  if (loc.is_file_location())
+    os << loc.file().path() << ":";
+
+  return os << loc.line_no() << ':' << loc.column_no();
 }
-
-
-// Static values.
-Location Location::none { };
 
 
 } // namespace lingo

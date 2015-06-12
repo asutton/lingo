@@ -85,7 +85,7 @@ std::ostream& default_print_stream();
 void print_chars(Printer&, char);
 void print_chars(Printer&, char const*);
 void print_chars(Printer&, char const*, char const*);
-void print_chars(Printer&, std::string const&);
+void print_chars(Printer&, String const&);
 void print_value(Printer&, std::intmax_t);
 void print_value(Printer&, double);
 void print_space(Printer&);
@@ -122,7 +122,7 @@ print(Printer& p, char const* s)
 
 // Print the string `s`.
 inline void 
-print(Printer& p, std::string const& s)
+print(Printer& p, String const& s)
 {
   print_chars(p, s);
 }
@@ -169,7 +169,7 @@ print(Printer& p, double n)
 //
 // Requires that `print(p, x)` is well-formed.
 template<typename T, typename P>
-inline std::string
+inline String
 to_string(T const& x, P print)
 {
   std::stringstream ss;
@@ -184,7 +184,7 @@ to_string(T const& x, P print)
 //
 // Requires that `T` is a Printable type.
 template<typename T>
-inline std::string
+inline String
 to_string(T const& x)
 {
   std::stringstream ss;
@@ -202,7 +202,7 @@ to_string(T const& x)
 // printing facilities), except that it is adapted to
 // handle Node pointers.
 template<typename... Args>
-inline std::string
+inline String
 to_string(char const* msg, Args const&... args)
 {
   return format(msg, to_string(args)...);

@@ -12,6 +12,7 @@
 // addition to?) keeping them for later. 
 
 #include "lingo/location.hpp"
+#include "lingo/buffer.hpp"
 #include "lingo/print.hpp"
 
 #include <string>
@@ -71,13 +72,13 @@ enum Diagnostic_kind
 // note occurring at a particular location.
 struct Diagnostic
 {
-  Diagnostic(Diagnostic_kind k, Location l, const std::string& m)
+  Diagnostic(Diagnostic_kind k, Bound_location l, String const& m)
     : kind(k), loc(l), msg(m)
   { }
 
   Diagnostic_kind kind;
-  Location        loc;
-  std::string     msg;
+  Bound_location  loc;
+  String          msg;
 };
 
 
@@ -108,7 +109,7 @@ public:
 
 private:
   bool suppress_; // True if diagnostics are temporarily suppressed.
-  int errs_;      // Actual error count
+  int  errs_;     // Actual error count
 };
 
 
@@ -122,35 +123,58 @@ void reset_diagnostics();
 int error_count();
 
 
-void error(Location, std::string const&);
-void warning(Location, std::string const&);
-void note(Location, std::string const&);
+void error(Bound_location, String const&);
+void warning(Bound_location, String const&);
+void note(Bound_location, String const&);
 
 
 // Emit an error diagnostic.
 template<typename... Ts>
 inline void
-error(Location loc, char const* msg, const Ts&... args)
+error(Buffer const& buf, Location loc, char const* msg, Ts const&... args)
 {
-  error(loc, format(msg, to_string(args)...));
+  error(buf.location(loc), format(msg, to_string(args)...));
+}
+
+
+template<typename Stream, typename... Ts>
+inline void
+error(Stream& stream, Location loc, char const* msg, Ts const&... args)
+{
+  error(stream.buffer(), loc, msg, args...);
 }
 
 
 // Emit a warning diagnostic.
 template<typename... Ts>
 inline void
-warning(Location loc, char const* msg, const Ts&... args)
+warning(Buffer& buf, Location loc, char const* msg, Ts const&... args)
 {
-  warning(loc, format(msg, to_string(args)...));
+  warning(buf.location(loc), format(msg, to_string(args)...));
 }
 
+
+template<typename Stream, typename... Ts>
+inline void
+warning(Stream& stream, Location loc, char const* msg, Ts const&... args)
+{
+  warning(stream.buffer(), loc, msg, args...);
+}
 
 // Emit a diagnostic note.
 template<typename... Ts>
 inline void
-note(Location loc, char const* msg, const Ts&... args)
+note(Buffer& buf, Location loc, char const* msg, Ts const&... args)
 {
-  note(loc, format(msg, to_string(args)...));
+  note(buf.location(loc), format(msg, to_string(args)...));
+}
+
+
+template<typename Stream, typename... Ts>
+inline void
+note(Stream& stream, Location loc, char const* msg, Ts const&... args)
+{
+  note(stream.buffer(), loc, msg, args...);
 }
 
 

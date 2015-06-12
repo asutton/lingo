@@ -13,47 +13,6 @@
 namespace lingo
 {
 
-
-// -------------------------------------------------------------------------- //
-//                              Token stream
-
-
-// A token stream provides a sequence of tokens and has a very 
-// simple streaming interface consisting of only 5 functions:
-// peek(), get(), and eof(), begin(), and end(). Character streams
-// are the input to lexical analyzers.
-struct Token_stream
-{
-  using value_type = Token;
-
-  Token_stream(Token const* f, Token const* l)
-    : first(f), last(l)
-  { }
-
-  Token_stream(Token_list const& toks)
-    : Token_stream(toks.data(), toks.data() + toks.size())
-  { }
-
-  // Stream control
-  bool eof() const { return first == last; }
-  Token const& peek() const;
-  Token        peek(int) const;
-  Token const& get();
-
-  // Iterators
-  Token const* begin()       { return first; }
-  Token const* begin() const { return first; }
-  Token const* end()       { return last; }
-  Token const* end() const { return last; }
-
-  // Returns the source location of the the current token.
-  Location location() { return eof() ? Location{} : peek().location(); }
-
-  Token const* first; // Current character pointer
-  Token const* last;  // Past the end of the character buffer
-};
-
-
 // -------------------------------------------------------------------------- //
 //                            Token classifiers
 
@@ -148,8 +107,7 @@ parse_expected(Parser& p, Stream& s, Rule rule, char const* msg)
   if (auto result = rule(p, s))
     return result;
   else {
-    error(s.location(), "expected {}", msg);
-    return p.on_error();
+    return p.on_expected(s.location(), msg);
   }
   return {};
 }
@@ -171,8 +129,7 @@ parse_enclosed(Parser& p, Stream& s, Token_kind k1, Token_kind k2, Rule rule, ch
       if (expect_if(p, s, is_token(k2), get_token_spelling(k2)))
         return enc;
     } else {
-      error(left->location(), "expected {} after '{}'", msg, *left);
-      return p.on_error();
+      return p.on_expected(s.location(), msg);
     }
   }
   return {};
@@ -239,8 +196,7 @@ parse_prefix_term(Parser& p, Stream& s, Token token, Rule rule, char const* msg)
     if (auto* term = parse_prefix_term(p, s, token, rule, msg)) {
       return p.on_unary_term(op, term);
     } else {
-      error(op->location(), "expected {} after '{}'", msg, *op);
-      return p.on_error();
+      return p.on_expected(s.location(), msg);
     }
   }
   return rule(p, s);
@@ -270,12 +226,10 @@ parse_left_binary_term(Parser& p, Stream& s, Token token, Rule rule, char const*
 {
   if (auto* expr1 = rule(p, s)) {
     while (auto* tok = token(p, s)) {
-      if (auto* expr2 = rule(p, s)) {
+      if (auto* expr2 = rule(p, s)) 
         expr1 = p.on_binary_term(tok, expr1, expr2);
-      } else {
-        error(tok->location(), "expected {} after '{}'", msg, *tok);
-        return p.on_error();
-      }
+      else 
+        return p.on_expected(tok->location(), msg, *tok);
     }
     return expr1;
   }

@@ -124,7 +124,7 @@ error_count()
 // Construct a new error diagnostic for the given source
 // location.
 void
-error(Location loc, std::string const& msg)
+error(Bound_location loc, String const& msg)
 {
   diags_.top()->emit({error_diag, loc, msg});
 }
@@ -137,7 +137,7 @@ error(Location loc, std::string const& msg)
 // errors, with some additional information about how to
 // turn those off.
 void
-warning(Location loc, std::string const& msg)
+warning(Bound_location loc, String const& msg)
 {
   diags_.top()->emit({warning_diag, loc, msg});
 }

@@ -244,4 +244,34 @@ operator<<(std::ostream& os, Token tok)
 }
 
 
+// -------------------------------------------------------------------------- //
+//                              Token stream
+
+
+Token const& 
+Token_stream::peek() const
+{
+  assert(!eof());
+  return *first_;
+}
+
+
+Token 
+Token_stream::peek(int n) const
+{
+  assert(n <= (last_ - first_));
+  return *(first_ + n);
+}
+
+
+Token const& 
+Token_stream::get()
+{
+  assert(!eof());
+  Token const& tok = *first_;  
+  ++first_;
+  return tok;
+}
+
+
 } // namespace lingo
