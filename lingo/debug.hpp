@@ -101,6 +101,14 @@ debug_str(T const& x)
 }
 
 
+// Used in the debug function below.
+struct Debug_render
+{
+  template<typename T>
+  void operator()(Printer& p, T const& x) const { debug(p, x); }
+};
+
+
 // Write the formatted debug message followed by a newline.
 // For example:
 //
@@ -113,8 +121,7 @@ inline void
 debug(char const* msg, Args const&... args)
 {
   Printer p(default_debug_stream());
-  auto render = [] (Printer& p, auto const& x) { debug(p, x); };
-  print_chars(p, format(msg, to_string(args, render)...));
+  print_chars(p, format(msg, to_string(args, Debug_render())...));
   print_newline(p);
 }
 
