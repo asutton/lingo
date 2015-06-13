@@ -32,27 +32,50 @@ using Token_kind = int;
 constexpr Token_kind error_tok      = 0; // not a valid token
 
 // Common punctuation tokens
-constexpr Token_kind lparen_tok     = 1; // (
-constexpr Token_kind rparen_tok     = 2; // )
-constexpr Token_kind lbrace_tok     = 3; // {
-constexpr Token_kind rbrace_tok     = 4; // }
-constexpr Token_kind lbrack_tok     = 5; // ]
-constexpr Token_kind rbrack_tok     = 6; // [
-constexpr Token_kind comma_tok      = 7; // ,
-constexpr Token_kind semicolon_tok  = 8; // ;
-constexpr Token_kind colon_tok      = 9; // :
+constexpr Token_kind lparen_tok     = 1;  // (
+constexpr Token_kind rparen_tok     = 2;  // )
+constexpr Token_kind lbrace_tok     = 3;  // {
+constexpr Token_kind rbrace_tok     = 4;  // }
+constexpr Token_kind lbrack_tok     = 5;  // ]
+constexpr Token_kind rbrack_tok     = 6;  // [
+
+constexpr Token_kind dot_tok        = 7;  // .
+constexpr Token_kind comma_tok      = 8;  // ,
+constexpr Token_kind semicolon_tok  = 9;  // ;
+constexpr Token_kind colon_tok      = 10; // :
+constexpr Token_kind equal_tok      = 11; // =
+constexpr Token_kind plus_tok       = 12; // +
+constexpr Token_kind minus_tok      = 13; // -
+constexpr Token_kind star_tok       = 14; // *
+constexpr Token_kind slash_tok      = 15; // /
+constexpr Token_kind percent_tok    = 16; // %
+constexpr Token_kind amp_tok        = 17; // &
+constexpr Token_kind bar_tok        = 18; // |
+constexpr Token_kind caret_tok      = 19; // ^
+constexpr Token_kind tilde_tok      = 20; // ~
+constexpr Token_kind bang_tok       = 21; // !
+constexpr Token_kind lt_tok         = 22; // <
+constexpr Token_kind gt_tok         = 23; // >
+
+constexpr Token_kind minus_gt       = 24; // ->
+constexpr Token_kind eq_gt          = 25; // =>
+constexpr Token_kind lt_lt_tok      = 26; // <<
+constexpr Token_kind gt_gt_tok      = 27; // >>
+constexpr Token_kind eq_eq_tok      = 28; // ==
+constexpr Token_kind bang_eq_tok    = 29; // !=
+constexpr Token_kind lt_eq_tok      = 30; // <=
+constexpr Token_kind gt_eq_tok      = 31; // >=
+constexpr Token_kind amp_amp_tok    = 32; // &&
+constexpr Token_kind bar_bar_tok    = 33; // ||
+constexpr Token_kind dot_dot_tok    = 34; // ..
 
 // Common value classes
-constexpr Token_kind identifier_tok          = 10; // identifiers (like C)
-constexpr Token_kind boolean_tok             = 11; // true | false
-constexpr Token_kind binary_integer_tok      = 12; // 0b[:binary-digit:]*
-constexpr Token_kind decimal_integer_tok     = 13; // [:decimal-digit:]*
-constexpr Token_kind octal_integer_tok       = 14; // 0o[:octal-digit:]*
-constexpr Token_kind hexadecimal_integer_tok = 15; // 0x[:hexadecimal-digit]*
-
-// Last token value. All application specific tokens
-// must start with this value.
-constexpr Token_kind max_tok = 15;
+constexpr Token_kind identifier_tok          = 50; // identifiers (like C)
+constexpr Token_kind boolean_tok             = 51; // true | false
+constexpr Token_kind binary_integer_tok      = 52; // 0b[:binary-digit:]*
+constexpr Token_kind decimal_integer_tok     = 53; // [:decimal-digit:]*
+constexpr Token_kind octal_integer_tok       = 54; // 0o[:octal-digit:]*
+constexpr Token_kind hexadecimal_integer_tok = 55; // 0x[:hexadecimal-digit]*
 
 
 char const* get_token_name(Token_kind);
@@ -116,6 +139,7 @@ using Token_list = std::vector<Token>;
 
 bool    as_boolean(Token);
 Integer as_integer(Token);
+
 
 // -------------------------------------------------------------------------- //
 //                              Printing

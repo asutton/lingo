@@ -60,10 +60,37 @@ get_token_name(Token_kind k)
   case rbrace_tok: return "rbrace_tok";
   case rbrack_tok: return "rbrack_tok";
   case lbrack_tok: return "lbrack_tok";
+  
+  case dot_tok: return "dot_tok";
   case comma_tok: return "comma_tok";
   case semicolon_tok: return "semicolon_tok";
   case colon_tok: return "colon_tok";
-  
+  case equal_tok: return "equal_tok";
+  case plus_tok: return "plus_tok";
+  case minus_tok: return "minus_tok";
+  case star_tok: return "star_tok";
+  case slash_tok: return "slash_tok";
+  case percent_tok: return "percent_tok";
+  case amp_tok: return "amp_tok";
+  case bar_tok: return "bar_tok";
+  case caret_tok: return "caret_tok";
+  case tilde_tok: return "tilde_tok";
+  case bang_tok: return "bang_tok";
+  case lt_tok: return "lt_tok";
+  case gt_tok: return "gt_tok";
+
+  case minus_gt: return "minus_gt";
+  case eq_gt: return "eq_gt";
+  case lt_lt_tok: return "lt_lt_tok";
+  case gt_gt_tok: return "gt_gt_tok";
+  case eq_eq_tok: return "eq_eq_tok";
+  case bang_eq_tok: return "bang_eq_tok";
+  case lt_eq_tok: return "lt_eq_tok";
+  case gt_eq_tok: return "gt_eq_tok";
+  case amp_amp_tok: return "amp_amp_tok";
+  case bar_bar_tok: return "bar_bar_tok";
+  case dot_dot_tok: return "dot_dot_tok";
+
   case identifier_tok: return "identifier_tok";
   case boolean_tok: return "boolean_tok";
   case binary_integer_tok: return "binary_integer_tok";
