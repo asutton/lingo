@@ -26,6 +26,11 @@ void
 init_tokens()
 {
   install_token_set(toks_);
+  install_token("+", plus_tok);
+  install_token("-", minus_tok);
+  install_token("*", star_tok);
+  install_token("/", slash_tok);
+  install_token("%", percent_tok);
 }
 
 
@@ -126,49 +131,49 @@ Lexer::operator()(Character_stream& cs)
 Token
 Lexer::on_lparen(Location loc, char const* str)
 {
-  return Token(loc, lparen_tok, str, 1);
+  return Token(loc, str, 1);
 }
 
 
 Token
 Lexer::on_rparen(Location loc, char const* str)
 {
-  return Token(loc, rparen_tok, str, 1);
+  return Token(loc, str, 1);
 }
 
 
 Token
 Lexer::on_plus(Location loc, char const* str)
 {
-  return Token(loc, plus_tok, str, 1);
+  return Token(loc, str, 1);
 }
 
 
 Token
 Lexer::on_minus(Location loc, char const* str)
 {
-  return Token(loc, minus_tok, str, 1);
+  return Token(loc, str, 1);
 }
 
 
 Token
 Lexer::on_star(Location loc, char const* str)
 {
-  return Token(loc, star_tok, str, 1);
+  return Token(loc, str, 1);
 }
 
 
 Token
 Lexer::on_slash(Location loc, char const* str)
 {
-  return Token(loc, slash_tok, str, 1);
+  return Token(loc, str, 1);
 }
 
 
 Token
 Lexer::on_percent(Location loc, char const* str)
 {
-  return Token(loc, percent_tok, str, 1);
+  return Token(loc, str, 1);
 }
 
 

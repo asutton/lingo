@@ -65,7 +65,7 @@ get_binding(Symbol const& s)
 // Insert a symbol as having the given kind. If the symbol already
 // exists, do nothing and return its index.
 Symbol&
-Symbol_table::insert(String_view s, Symbol_kind k)
+Symbol_table::insert(String_view s, Symbol_descriptor k)
 {
   auto iter = map_.find(s);
   if (iter == map_.end()) {
@@ -95,14 +95,14 @@ Symbol_table::insert(String_view s, Symbol_kind k)
 
 
 Symbol& 
-Symbol_table::insert(char const* s, Symbol_kind k)
+Symbol_table::insert(char const* s, Symbol_descriptor k)
 {
   return insert(String_view(s), k);
 }
 
 
 Symbol& 
-Symbol_table::insert(char const* f, char const* l, Symbol_kind k)
+Symbol_table::insert(char const* f, char const* l, Symbol_descriptor k)
 {
   return insert(String_view(f, l), k);
 }
@@ -133,26 +133,6 @@ Symbol_table&
 symbols()
 {
   return sym_;
-}
-
-
-// Returns the symbol correspondng to `str`, inserting a new
-// symbol if it is not already present.
-Symbol&
-get_symbol(char const* str)
-{
-  Symbol_table& syms = symbols();
-  return syms.insert(str, 0);
-}
-
-
-// Returns the symbol correspondng to the string in `[first, last)`.
-// Insert the symbol if it does not exist.
-Symbol&
-get_symbol(char const* first, char const* last)
-{
-  Symbol_table& syms = symbols();
-  return syms.insert(first, last, 0);
 }
 
 

@@ -44,6 +44,43 @@ uninstall_token_set(Token_set& toks)
 }
 
 
+
+namespace
+{
+
+// A helper function for creating symbols.
+Symbol*
+make_symbol(char const* str, Token_kind k)
+{
+  Symbol& sym = get_symbol(str);
+  sym.desc = {unspecified_sym, k};
+  return &sym;
+}
+
+
+// A helper function for creating symbols.
+Symbol*
+make_symbol(char const* first, char const* last, Token_kind k)
+{
+  Symbol& sym = get_symbol(first, last);
+  sym.desc = {unspecified_sym, k};
+  return &sym;
+}
+
+
+} // namespace
+
+
+// Install a token. This associates the given spelling with its
+// name in the symbol table. Every token with a fixed set of values
+// must be installed prior to lookup.
+void
+install_token(char const* str, Token_kind k)
+{
+  make_symbol(str, k);
+}
+
+
 // -------------------------------------------------------------------------- //
 //                              Token kinds
 
@@ -152,33 +189,33 @@ operator<<(std::ostream& os, Token_kind k)
 
 // Initialize a token with the given kind and having the text
 // given by the characters in [str, str + len).
+Token::Token(Location loc, char const* str, int len)
+  : Token(loc, str, str + len)
+{ }
+
+
+// Initialize a token with the given kind and having the
+// text given by the characters in [first, last).
+Token::Token(Location loc, char const* first, char const* last)
+  : loc_(loc)
+{
+  sym_ = &get_symbol(first, last);
+  kind_ = reinterpret_cast<Token_kind>(sym_->desc.token);
+}
+
+
+// Initialize a token with the given kind and having the text
+// given by the characters in [str, str + len).
 Token::Token(Location loc, Token_kind k, char const* str, int len)
-  : loc_(loc), kind_(k), sym_(&get_symbol(str, str + len))
+  : Token(loc, k, str, str + len)
 { }
 
 
 // Initialize a token with the given kind and having the
 // text given by the characters in [first, last).
 Token::Token(Location loc, Token_kind k, char const* first, char const* last)
-  : loc_(loc), kind_(k), sym_(&get_symbol(first, last))
-{ 
-}
-
-
-// Returns a string view of the token's original spelling.
-String_view
-Token::rep() const
-{
-  return symbol().str;
-}
-
-
-// Return a string representation of the token.
-std::string
-Token::str() const
-{
-  return rep().str();
-}
+  : loc_(loc), kind_(k), sym_(make_symbol(first, last, k))
+{ }
 
 
 // -------------------------------------------------------------------------- //

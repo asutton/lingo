@@ -5,6 +5,7 @@
 #define LINGO_TOKEN_HPP
 
 #include "lingo/location.hpp"
+#include "lingo/symbol.hpp"
 #include "lingo/string.hpp"
 #include "lingo/integer.hpp"
 #include "lingo/print.hpp"
@@ -107,6 +108,9 @@ public:
     : loc_(), kind_(error_tok)
   { }
 
+  Token(Location, char const*, int);
+  Token(Location, char const*, char const*);
+
   Token(Location, Token_kind, char const*, int);
   Token(Location, Token_kind, char const*, char const*);
 
@@ -115,9 +119,11 @@ public:
   char const*   token_spelling() const { return get_token_spelling(kind_); }
   Location      location() const       { return loc_; }
   Token_kind    kind() const           { return kind_; }
+  
+  // Symbol
   Symbol const& symbol() const         { return *sym_; }
-  String_view   rep() const;
-  std::string   str() const;
+  String_view   rep() const            { return symbol().str; }
+  String        str() const            { return rep().str(); }
 
   // Contextually convertible to bool.
   // True when this is not an error token.
@@ -214,6 +220,7 @@ struct Token_set
 void install_token_set(Token_set&);
 void uninstall_token_set(Token_set&);
 
+void install_token(char const*, Token_kind);
 
 } // namespace lingo
 

@@ -51,7 +51,6 @@ struct Symbol_data
   Symbol_data()
     : bind(nullptr) { }
   
-  int      kw;    // The keyword token kind
   Binding* bind;  // An identifier binding
 };
 
@@ -59,18 +58,18 @@ struct Symbol_data
 // -------------------------------------------------------------------------- //
 //                                  Symbols
 
-
-// The symbol kind is a classifier for the symbol. 
-// Specific values are typically defind by the lexer.
-//
-// FIXME: We need stronger guarantees about the
-// kind of symbol so we can actually check the kind
-// when referring through symbol data.
+// Determines the kinds of attributes associated with the symbol.
 using Symbol_kind = int;
+constexpr int unspecified_sym = 0;
 
-constexpr Symbol_kind unspcified_sym = 0;
-constexpr Symbol_kind keyword_sym    = 1;
-constexpr Symbol_kind identifier_sym = 2;
+
+// The symbol descriptor contains information about a symbol
+// in the symbol table.
+struct Symbol_descriptor
+{
+  int kind    : 8;  // The kind of keyword (see above)
+  int token   : 16; // An associated token kind
+};
 
 
 // A Symbol represents a lexeme saved in the symbol table and
@@ -91,21 +90,21 @@ struct Symbol
 {
   ~Symbol();
 
-  Symbol(String_view s, Symbol_kind k)
-    : str(s), kind(k)
+  Symbol(String_view s, Symbol_descriptor d)
+    : str(s), desc(d)
   { }
 
-  Symbol(char const* s, Symbol_kind k)
-    : str(s), kind(k)
+  Symbol(char const* s, Symbol_descriptor d)
+    : str(s), desc(d)
   { }
 
-  Symbol(char const* f, char const* l, Symbol_kind k)
-    : str(f, l), kind(k)
+  Symbol(char const* f, char const* l, Symbol_descriptor d)
+    : str(f, l), desc(d)
   { }
 
-  String_view str;   // The string view
-  Symbol_kind kind;  // The kind of token
-  Symbol_data data;  // Supplemental data
+  String_view       str;  // The string view
+  Symbol_descriptor desc; // The kind of token
+  Symbol_data       data; // Supplemental data
 };
 
 
@@ -146,9 +145,9 @@ class Symbol_table
   using Map = std::unordered_map<String_view, Symbol*, Hash, Eq>;
 
 public:
-  Symbol& insert(String_view, Symbol_kind);
-  Symbol& insert(char const*, Symbol_kind);
-  Symbol& insert(char const*, char const*, Symbol_kind);
+  Symbol& insert(String_view, Symbol_descriptor);
+  Symbol& insert(char const*, Symbol_descriptor);
+  Symbol& insert(char const*, char const*, Symbol_descriptor);
 
   Symbol* lookup(String_view) const;
 
@@ -161,18 +160,33 @@ private:
 
 
 Symbol_table& symbols();
-Symbol&       get_symbol(char const*);
-Symbol&       get_symbol(char const*, char const*);
+
+
+// Returns the symbol correspondng to `str`, inserting a new
+// symbol if it is not already present.
+inline Symbol&
+get_symbol(char const* str)
+{
+  return symbols().insert(str, {});
+}
+
+
+// Returns the symbol correspondng to the string in `[first, last)`.
+// Insert the symbol if it does not exist.
+inline Symbol&
+get_symbol(char const* first, char const* last)
+{
+  return symbols().insert(first, last, {});
+}
 
 
 // Return a new string, interned in the symbol table. 
-// Note that `str` must have a lifetime longer than the 
-// symbol table.
 inline String_view
 get_symbol_string(char const* str)
 {
   return get_symbol(str).str;
 }
+
 
 } // namespace lingo
 
