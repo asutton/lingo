@@ -2,7 +2,7 @@
 # Bypass the usual cppformat build and build the
 # source into this tree.
 set(contrib_src
-  ${CMAKE_SOURCE_DIR}/cppformat/format.cc
+  ${PROJECT_SOURCE_DIR}/cppformat/format.cc
 )
 
 

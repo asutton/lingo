@@ -22,7 +22,6 @@ find_package(Boost 1.55.0 REQUIRED
   COMPONENTS system filesystem)
 
 
-
 # Build configuration.
 include_directories(. ${GMP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
