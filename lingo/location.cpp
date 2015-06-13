@@ -12,7 +12,7 @@ namespace lingo
 {
 
 // Static values.
-Location Location::none { };
+Location Location::none;
 
 
 bool

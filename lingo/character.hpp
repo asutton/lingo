@@ -58,8 +58,9 @@ public:
   char const* end() const { return last_; }
 
   // Locations
-  Location       location() const { return offset(); }
+  Location location() const { return Location(offset()); }
 
+  // Buffer
   Buffer const& buffer() const { return buf_; }
 
 private:

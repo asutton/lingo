@@ -29,7 +29,11 @@ public:
   // a source file.
   static Location none;
 
-  Location(int n = 0)
+  Location()
+    : loc_(-1)
+  { }
+
+  explicit Location(int n)
     : loc_(n)
   { }
 
