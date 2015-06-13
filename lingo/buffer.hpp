@@ -101,6 +101,10 @@ public:
   char const* begin() const { return text_.c_str(); }
   char const* end() const   { return begin() + text_.size(); }
 
+  // String representation
+  String_view   rep() const { return {begin(), end()}; }
+  String const& str() const { return text_; }
+
 protected:
   String   text_;
 };
