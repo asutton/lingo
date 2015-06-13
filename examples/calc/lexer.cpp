@@ -116,18 +116,6 @@ token(Lexer& lex, Character_stream& cs)
 } // namespace
 
 
-// Returns the next token in the stream.
-Token
-Lexer::operator()(Character_stream& cs)
-{
-  if (Token tok = token(*this, cs)) {
-    tokens.push_back(tok);
-    return tok;
-  }
-  return {};
-}
-
-
 Token
 Lexer::on_lparen(Location loc, char const* str)
 {
@@ -184,13 +172,15 @@ Lexer::on_decimal_integer(Location loc, char const* first, char const* last)
 }
 
 
+// Lex all tokens in the character stream.
 Token_list 
 lex(Character_stream& cs)
 {
-  Lexer lfn;
-  while (!cs.eof()) 
-    lfn(cs);
-  return lfn.tokens;
+  Lexer lexer;
+  Token_list toks;
+  if (Token tok = token(lexer, cs))
+    toks.push_back(tok);
+  return toks;
 }
 
 

@@ -51,18 +51,13 @@ void init_tokens();
 //                              Lexing
 
 
-// The Lexer is a function that maps a character stream into
-// tokens. Each call to an object of this type returns the
-// next token in the stream in the underlying character stream.
-//
-// Each successive token is cached by the lexer.
+// The Lexer is a facility that translates sequences of
+// characters into tokens. This is primarily a callback
+// interface for the lexing function for the language.
 struct Lexer
 {
   using argument_type = char;
   using result_type = Token;
-
-  // Lexical analysis.
-  Token operator()(Character_stream&);
 
   // Semantic actions.
   Token on_lparen(Location, char const*);
@@ -75,8 +70,6 @@ struct Lexer
   Token on_percent(Location, char const*);
 
   Token on_decimal_integer(Location, char const*, char const*);
-
-  Token_list tokens;
 };
 
 

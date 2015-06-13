@@ -344,14 +344,14 @@ match_range(Stream& s, P pred)
 
 
 // -------------------------------------------------------------------------- //
-//                            Discard element
+//                            Get n elements
 
-// Discard all elements in the stream that satisfy the given
+// Get n elements in the stream that satisfy the given
 // predicate until reachin the first that does not. Returns
 // an iterator to the first element discarded.
 template<typename Stream>
 inline Iterator_type<Stream>
-discard_n(Stream& s, int n)
+get_n(Stream& s, int n)
 {
   auto iter = s.begin();
   while (!s.eof() && n != 0)
@@ -359,6 +359,9 @@ discard_n(Stream& s, int n)
   return iter;
 }
 
+
+// -------------------------------------------------------------------------- //
+//                              Discard if
 
 // Discard all elements in the stream that satisfy the given
 // predicate until reachin the first that does not. Returns

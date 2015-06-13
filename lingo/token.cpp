@@ -152,24 +152,51 @@ get_token_spelling(Token_kind k)
 {
   switch (k)
   {
-  // Spellable tokens.
   case error_tok: return "<error>";
+
   case lparen_tok: return "(";
   case rparen_tok: return ")";
   case lbrace_tok: return "{";
   case rbrace_tok: return "}";
   case rbrack_tok: return "[";
   case lbrack_tok: return "]";
+  
+  case dot_tok: return ".";
   case comma_tok: return ",";
   case semicolon_tok: return ";";
   case colon_tok: return ":";
-  
-  // Non-spellable tokens.
+  case equal_tok: return "=";
+  case plus_tok: return "+";
+  case minus_tok: return "-";
+  case star_tok: return "*";
+  case slash_tok: return "/";
+  case percent_tok: return "%";
+  case amp_tok: return "&";
+  case bar_tok: return "|";
+  case caret_tok: return "^";
+  case tilde_tok: return "~";
+  case bang_tok: return "!";
+  case lt_tok: return "<";
+  case gt_tok: return ">";
+
+  case minus_gt: return "->";
+  case eq_gt: return "=>";
+  case lt_lt_tok: return "<<";
+  case gt_gt_tok: return ">>";
+  case eq_eq_tok: return "==";
+  case bang_eq_tok: return "!=";
+  case lt_eq_tok: return "<=";
+  case gt_eq_tok: return ">=";
+  case amp_amp_tok: return "&&";
+  case bar_bar_tok: return "||";
+  case dot_dot_tok: return "..";
+
   case identifier_tok: return "identifier";
-  case binary_integer_tok: return "binary integer";
-  case decimal_integer_tok: return "decimal integer";
-  case octal_integer_tok: return "octal integer";
-  case hexadecimal_integer_tok: return "hexadecimal integer";
+  case boolean_tok: return "boolean-value";
+  case binary_integer_tok: return "binary-integer";
+  case decimal_integer_tok: return "decimal-integer";
+  case octal_integer_tok: return "octal-integer";
+  case hexadecimal_integer_tok: return "hexadecimal-integer";
 
   default:
     if (toks_)
@@ -187,15 +214,15 @@ operator<<(std::ostream& os, Token_kind k)
 }
 
 
-// Initialize a token with the given kind and having the text
-// given by the characters in [str, str + len).
+// Initialize a token whose symbol is the string [str, str + len).
+// The token kind is taken from the symbol table.
 Token::Token(Location loc, char const* str, int len)
   : Token(loc, str, str + len)
 { }
 
 
-// Initialize a token with the given kind and having the
-// text given by the characters in [first, last).
+// Initialize a token whose symbol is the string [str, str + len).
+// The token kind is taken from the symbol table.
 Token::Token(Location loc, char const* first, char const* last)
   : loc_(loc)
 {
