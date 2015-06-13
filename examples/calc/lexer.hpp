@@ -25,8 +25,6 @@ constexpr Token_kind star_tok    = 102;
 constexpr Token_kind slash_tok   = 103;
 constexpr Token_kind percent_tok = 104;
 
-constexpr Token_kind minus_minus_tok = 200;
-
 char const* get_token_name(Token_kind);
 char const* get_token_spelling(Token_kind);
 

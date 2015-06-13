@@ -37,7 +37,7 @@ char const* get_node_name(Kind);
 
 // Adapt the generic node-kinding template to this node type.
 template<Kind K>
-using Node_kind = Kind_of<Kind, K>;
+using Node_kind = Kind_base<Kind, K>;
 
 
 // -------------------------------------------------------------------------- //
