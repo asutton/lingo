@@ -13,8 +13,7 @@
 // we differentiate between ints and reals, and allow unquoted
 // identifiers as strings.
 //
-// TODO: Move this into examples. Also, in-memory parsing doesn't
-// actually work.
+// TODO: Move this into examples.
 
 #include "lingo/node.hpp"
 #include "lingo/integer.hpp"
@@ -49,7 +48,7 @@ char const* get_node_name(Kind);
 
 // Partial specialization of the kinding facility.
 template<Kind K>
-using Kind_of = lingo::Kind_of<Kind, K>;
+using Kind_of = Kind_base<Kind, K>;
 
 
 // Declarations

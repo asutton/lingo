@@ -17,7 +17,7 @@ namespace lingo
 // of node models. This provides a static representation of the 
 // node kind and a static `is` function for dynamic type testing.
 template<typename T, T K>
-struct Kind_of
+struct Kind_base
 {
   static constexpr T node_kind = K;
 
