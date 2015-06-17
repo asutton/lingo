@@ -58,8 +58,8 @@ constexpr Token_kind bang_tok       = 21; // !
 constexpr Token_kind lt_tok         = 22; // <
 constexpr Token_kind gt_tok         = 23; // >
 
-constexpr Token_kind minus_gt       = 24; // ->
-constexpr Token_kind eq_gt          = 25; // =>
+constexpr Token_kind minus_gt_tok   = 24; // ->
+constexpr Token_kind eq_gt_tok      = 25; // =>
 constexpr Token_kind lt_lt_tok      = 26; // <<
 constexpr Token_kind gt_gt_tok      = 27; // >>
 constexpr Token_kind eq_eq_tok      = 28; // ==
@@ -197,6 +197,9 @@ public:
 };
 
 
+void debug(Printer&, Token_stream const&);
+
+
 // -------------------------------------------------------------------------- //
 //                              Token sets
 
@@ -221,6 +224,7 @@ void install_token_set(Token_set&);
 void uninstall_token_set(Token_set&);
 
 void install_token(char const*, Token_kind);
+void install_tokens(std::initializer_list<std::pair<char const*, Token_kind>>);
 
 } // namespace lingo
 

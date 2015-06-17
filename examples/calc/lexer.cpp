@@ -26,11 +26,15 @@ void
 init_tokens()
 {
   install_token_set(toks_);
-  install_token("+", plus_tok);
-  install_token("-", minus_tok);
-  install_token("*", star_tok);
-  install_token("/", slash_tok);
-  install_token("%", percent_tok);
+  install_tokens({
+    { "(", lparen_tok },
+    { ")", rparen_tok },
+    { "+", plus_tok },
+    { "-", minus_tok },
+    { "*", star_tok },
+    { "/", slash_tok },
+    { "%", percent_tok },
+  });
 }
 
 
@@ -74,7 +78,7 @@ namespace
 
 // A helper function to consume whitespace.
 inline void
-discard_whitespace(Character_stream& cs)
+whitespace(Character_stream& cs)
 {
   using namespace lingo;
   auto pred = [](Character_stream& s) { return next_element_if(s, is_space); };
@@ -86,29 +90,29 @@ discard_whitespace(Character_stream& cs)
 Token
 token(Lexer& lex, Character_stream& cs)
 {
-  // Consume all whitespace before a token.
-  discard_whitespace(cs);
-  if (cs.eof())
-    return {};
+  whitespace(cs);
 
-  // Match the current token.
-  Location loc = cs.location();
-  switch (cs.peek()) {
-  case '(': return lex.on_lparen(loc, &cs.get());
-  case ')': return lex.on_rparen(loc, &cs.get());
+  while (!cs.eof()) {
+    // Match the current token.
+    Location loc = cs.location();
+    switch (cs.peek()) {
+    case '(': return lex.on_lparen(loc, &cs.get());
+    case ')': return lex.on_rparen(loc, &cs.get());
 
-  case '+': return lex.on_plus(loc, &cs.get());
-  case '-': return lex.on_minus(loc, &cs.get());
-  case '*': return lex.on_star(loc, &cs.get());
-  case '/': return lex.on_slash(loc, &cs.get());
-  case '%': return lex.on_percent(loc, &cs.get());
+    case '+': return lex.on_plus(loc, &cs.get());
+    case '-': return lex.on_minus(loc, &cs.get());
+    case '*': return lex.on_star(loc, &cs.get());
+    case '/': return lex.on_slash(loc, &cs.get());
+    case '%': return lex.on_percent(loc, &cs.get());
 
-  default:
-    if (is_decimal_digit(cs.peek()))
-      return lex_decimal_integer(lex, cs, loc);
+    default:
+      // TODO: Unfold into cases.
+      if (is_decimal_digit(cs.peek()))
+        return lex_decimal_integer(lex, cs, loc);
 
-    // Diagnose the unrecognized character and consume it.
-    error(loc, "unrecognized character '{}'", cs.get());
+      // Diagnose the unrecognized character and consume it.
+      error(loc, "unrecognized character '{}'", cs.get());
+    }
   }
   return {};
 }
@@ -178,7 +182,7 @@ lex(Character_stream& cs)
 {
   Lexer lexer;
   Token_list toks;
-  if (Token tok = token(lexer, cs))
+  while (Token tok = token(lexer, cs))
     toks.push_back(tok);
   return toks;
 }

@@ -81,6 +81,21 @@ install_token(char const* str, Token_kind k)
 }
 
 
+// Install a sequence of tokens. For example:
+//
+//    install_tokens({
+//      { "(", lparen_tok},
+//      { "}", rparen_tok}
+//    });
+void
+install_tokens(std::initializer_list<std::pair<char const*, Token_kind>> list)
+{
+  for (auto p : list)
+    install_token(p.first, p.second);
+}
+
+
+
 // -------------------------------------------------------------------------- //
 //                              Token kinds
 
@@ -116,8 +131,8 @@ get_token_name(Token_kind k)
   case lt_tok: return "lt_tok";
   case gt_tok: return "gt_tok";
 
-  case minus_gt: return "minus_gt";
-  case eq_gt: return "eq_gt";
+  case minus_gt_tok: return "minus_gt_tok";
+  case eq_gt_tok: return "eq_gt_tok";
   case lt_lt_tok: return "lt_lt_tok";
   case gt_gt_tok: return "gt_gt_tok";
   case eq_eq_tok: return "eq_eq_tok";
@@ -179,8 +194,8 @@ get_token_spelling(Token_kind k)
   case lt_tok: return "<";
   case gt_tok: return ">";
 
-  case minus_gt: return "->";
-  case eq_gt: return "=>";
+  case minus_gt_tok: return "->";
+  case eq_gt_tok: return "=>";
   case lt_lt_tok: return "<<";
   case gt_gt_tok: return ">>";
   case eq_eq_tok: return "==";
@@ -222,12 +237,15 @@ Token::Token(Location loc, char const* str, int len)
 
 
 // Initialize a token whose symbol is the string [str, str + len).
-// The token kind is taken from the symbol table.
+// The token kind is taken from the symbol table. If a symbol
+// corresponding to the spelling of this token has not been installed,
+// behavior is undefined.
 Token::Token(Location loc, char const* first, char const* last)
   : loc_(loc)
 {
   sym_ = &get_symbol(first, last);
   kind_ = reinterpret_cast<Token_kind>(sym_->desc.token);
+  lingo_alert(kind_ != 0, "uninstalled token '{}'", sym_->str);
 }
 
 
@@ -362,6 +380,17 @@ Token_stream::get()
   Token const& tok = *first_;  
   ++first_;
   return tok;
+}
+
+
+void
+debug(Printer& p, Token_stream const& toks)
+{
+  for (auto iter = toks.begin(); iter != toks.end(); ++iter) {
+    debug(p, *iter);
+    print(p, " ");
+  }
+
 }
 
 

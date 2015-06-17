@@ -41,9 +41,8 @@ int main()
       continue;
     }
 
-    // for (Token const& tok : toks)
-    //   debug(tok);
-    
+    // debug(toks);
+
     Token_stream ts(toks);
     Expr* expr = parse(buf, ts);
     if (error_count()) {

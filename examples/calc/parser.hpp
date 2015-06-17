@@ -32,6 +32,9 @@ struct Parser
   Expr* on_unary_term(Token const*, Expr*);
   Expr* on_binary_term(Token const*, Expr*, Expr*);
 
+  Expr* on_enclosure(Token const*, Token const*);
+  Expr* on_enclosure(Token const*, Token const*, Expr*);
+
   Error* on_expected(char const*);
   Error* on_expected(Location, char const*);
   Error* on_expected(Location, char const*, Token const&);

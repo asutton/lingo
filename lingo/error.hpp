@@ -25,11 +25,17 @@
   lingo::abort("{}:{}: " msg, __FUNCTION__, __LINE__, args)
 
 
-// Expands ot a call to the assertion function and inserts
+// Expands to a call to the assertion function and inserts
 // the function and line at which the assertion is called.
 #define lingo_assert(cond)                                       \
   if (!(cond))                                                   \
     lingo::abort("{}:{}: assertion failed '{}'", __PRETTY_FUNCTION__, __LINE__, #cond)
+
+
+// Like lingo_assert, but allows the inclusion of a message.
+#define lingo_alert(cond, msg, args...)                          \
+  if (!(cond))                                                   \
+    lingo::abort("{}:{}: " msg, __PRETTY_FUNCTION__, __LINE__, args)
 
 
 namespace lingo

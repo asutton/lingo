@@ -3,12 +3,16 @@
 #include "lexer.hpp"
 #include "ast.hpp"
 
+#include "lingo/token.hpp"
 #include "lingo/memory.hpp"
 
 #include <iostream>
 
 namespace calc
 {
+
+using lingo::print;
+using lingo::debug;
 
 namespace
 {
@@ -31,7 +35,7 @@ parse_primary_expression(Parser& p, Token_stream& toks)
 {
   if (Token const* tok = match_if(toks, is_token(decimal_integer_tok)))
     return p.on_int_expr(tok);
-  
+
   if (next_token_is(toks, lparen_tok))
     return parse_paren_enclosed(p, toks, parse_expression, "expression");
 
@@ -140,7 +144,6 @@ parse_additive_operator(Parser& p, Token_stream& toks)
   if (Token const* tok = match_if(toks, is_additive_operator))
     return tok;
   return nullptr;
-
 }
 
 
@@ -161,7 +164,6 @@ parse_additive_expression(Parser& p, Token_stream& toks)
 // -------------------------------------------------------------------------- //
 //                           Expression parser
 
-
 // Parse an expression. 
 Expr*
 parse_expression(Parser& p, Token_stream& toks)
@@ -174,7 +176,6 @@ parse_expression(Parser& p, Token_stream& toks)
 
 // -------------------------------------------------------------------------- //
 //                            Parser function
-
 
 // Execute the parsing function.
 Expr*
@@ -227,6 +228,24 @@ Parser::on_binary_term(Token const* tok, Expr* e1, Expr* e2)
     lingo_unreachable("invalid binary operator '{}'", tok->token_name());
   }
 }
+
+
+// Do not allow empty parens.
+Expr*
+Parser::on_enclosure(Token const* left, Token const* right)
+{
+  error(left->location(), "empty nested expression");
+  return get_error();
+}
+
+
+// Just return the enclosed expression.
+Expr*
+Parser::on_enclosure(Token const* left, Token const* right, Expr* mid)
+{
+  return mid;
+}
+
 
 Error*
 Parser::on_expected(char const* str)

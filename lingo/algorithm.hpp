@@ -39,6 +39,11 @@ template<typename T>
 using Result_type = typename T::result_type;
 
 
+// Yields the return type of the given call expression.
+template<typename Call>
+using Result_of = typename std::result_of<Call>::type;
+
+
 // A Range is a pair of iterators.
 template<typename I>
 struct Range
