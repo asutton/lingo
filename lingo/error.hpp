@@ -137,11 +137,13 @@ error(Buffer const& buf, Location loc, char const* msg, Ts const&... args)
 }
 
 
-template<typename Stream, typename... Ts>
+// Emit an error diagnostic using the current buffer to resolve
+// the source code location.
+template<typename... Ts>
 inline void
-error(Stream& stream, Location loc, char const* msg, Ts const&... args)
+error(Location loc, char const* msg, Ts const&... args)
 {
-  error(stream.buffer(), loc, msg, args...);
+  error(input_buffer(), loc, msg, args...);
 }
 
 
@@ -154,12 +156,15 @@ warning(Buffer& buf, Location loc, char const* msg, Ts const&... args)
 }
 
 
-template<typename Stream, typename... Ts>
+// Emit a warning diagnostic using the current buffer to resolve
+// the source code location.
+template<typename... Ts>
 inline void
-warning(Stream& stream, Location loc, char const* msg, Ts const&... args)
+warning(Location loc, char const* msg, Ts const&... args)
 {
-  warning(stream.buffer(), loc, msg, args...);
+  warning(input_buffer(), loc, msg, args...);
 }
+
 
 // Emit a diagnostic note.
 template<typename... Ts>
@@ -170,11 +175,13 @@ note(Buffer& buf, Location loc, char const* msg, Ts const&... args)
 }
 
 
-template<typename Stream, typename... Ts>
+// Emit a note diagnostic using the current buffer to resolve
+// the source code location.
+template<typename... Ts>
 inline void
-note(Stream& stream, Location loc, char const* msg, Ts const&... args)
+note(Location loc, char const* msg, Ts const&... args)
 {
-  note(stream.buffer(), loc, msg, args...);
+  note(input_buffer(), loc, msg, args...);
 }
 
 

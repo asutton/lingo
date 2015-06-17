@@ -123,7 +123,7 @@ template<typename Stream, typename P>
 inline Range_over<Stream>
 match_integer_in_base(Stream& s, P pred)
 {
-  auto first = discard_n(s, 2);
+  auto first = get_n(s, 2);
   auto range = match_range_after_first(s, pred);
   if (range)
     return {first, range.end()};
@@ -180,6 +180,43 @@ lex_hexadecimal_integer(Lexer& lex, Stream& s, Location loc)
   }
   return lex.on_hexadecimal_integer(loc, range.begin(), range.end());
 }
+
+
+// Lex a numeric literal.
+//
+// TODO: If we know that we start with 0, then we can skip the
+// first comparison. This could be two algorithms.
+//
+// TODO: Repeated comparisons for nth_element may repeatedly
+// check for eof. This could be optimized.
+//
+// TODO: Add support for floating point values.
+template<typename Lexer, typename Stream>
+inline Result_type<Lexer>
+lex_number(Lexer& l, Stream& s, Location loc)
+{
+  if (s.peek() == '0') {
+    if (nth_element_is(s, 1, 'b'))
+      return lex_binary_integer(l, s, loc);
+    if (nth_element_is(s, 1, 'o'))
+      return lex_octal_integer(l, s, loc);
+    if (nth_element_is(s, 1, 'x'))
+      return lex_hexadecimal_integer(l, s, loc);
+  }
+  return lex_decimal_integer(l, s, loc);
+}
+
+template<typename Lexer, typename Stream>
+inline Result_type<Lexer>
+lex_identifier(Lexer& l, Stream& s, Location loc)
+{
+  auto first = s.begin();
+  while (!s.eof() && is_ident_tail(s.peek()))
+    s.get();
+  return l.on_identifier(loc, first, s.begin());
+}
+
+
 
 
 } // namespace lingo

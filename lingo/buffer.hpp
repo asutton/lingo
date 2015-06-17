@@ -110,6 +110,33 @@ protected:
 };
 
 
+// -------------------------------------------------------------------------- //
+//                               Input buffer
+
+
+Buffer& input_buffer();
+void    set_input(Buffer&);
+
+// The input guard sets the given buffer to be the current input.
+// When the guard goes out of scope, the previous input buffer
+// is restored.
+struct Input_guard
+{
+  Input_guard(Buffer& buf)
+    : prev(input_buffer())
+  {
+    set_input(buf); 
+  }
+
+  ~Input_guard()
+  {
+    set_input(prev);
+  }
+
+  Buffer& prev;
+};
+
+
 } // namespace
 
 #endif

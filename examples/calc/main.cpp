@@ -32,6 +32,7 @@ int main()
 
     // Construct a buffer for the line.
     Buffer buf(line);
+    Input_guard guard(buf);
 
     Character_stream cs(buf);
     Token_list toks = lex(cs);

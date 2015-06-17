@@ -53,6 +53,30 @@ Line_map::column_no(Location loc) const
   return loc.offset() - line(loc).offset() + 1;
 }
 
+namespace
+{
+
+Buffer* input_ = nullptr;
+
+} // namespace
+
+
+// Returns the current input buffer. This is null if
+// there is no current input buffer.
+Buffer&
+input_buffer()
+{
+  return *input_;
+}
+
+
+// Set the current input buffer. The previous buffer
+// is not saved. See the Input_guard class.
+void
+set_input(Buffer& buf)
+{
+  input_ = &buf;
+}
 
 
 } // namespace

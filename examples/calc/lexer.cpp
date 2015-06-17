@@ -108,7 +108,7 @@ token(Lexer& lex, Character_stream& cs)
       return lex_decimal_integer(lex, cs, loc);
 
     // Diagnose the unrecognized character and consume it.
-    error(cs, loc, "unrecognized character '{}'", cs.get());
+    error(loc, "unrecognized character '{}'", cs.get());
   }
   return {};
 }
