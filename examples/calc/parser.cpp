@@ -1,3 +1,5 @@
+// Copyright (c) 2015 Andrew Sutton
+// All rights reserved
 
 #include "parser.hpp"
 #include "lexer.hpp"
@@ -37,7 +39,7 @@ parse_primary_expression(Parser& p, Token_stream& toks)
     return p.on_int_expr(tok);
 
   if (next_token_is(toks, lparen_tok))
-    return parse_paren_enclosed(p, toks, parse_expression, "expression");
+    return parse_paren_enclosed(p, toks, parse_expression);
 
   // If the expression was none of the above, the program is ill-formed.
   Location loc = toks.location();
@@ -78,7 +80,7 @@ parse_prefix_expression(Parser& p, Token_stream& toks)
 {
   auto op = parse_prefix_operator;
   auto sub = parse_primary_expression;
-  return parse_prefix_term(p, toks, op, sub, "prefix-expression");
+  return parse_prefix(p, toks, op, sub);
 }
 
 
@@ -131,7 +133,7 @@ parse_multiplicative_expression(Parser& p, Token_stream& toks)
 {
   auto op = parse_multiplicative_operator;
   auto sub = parse_prefix_expression;
-  return parse_left_binary_term(p, toks, op, sub, "prefix-expression");
+  return parse_left_infix(p, toks, op, sub);
 }
 
 
@@ -157,7 +159,7 @@ parse_additive_expression(Parser& p, Token_stream& toks)
 {
   auto op = parse_additive_operator;
   auto sub = parse_multiplicative_expression;
-  return parse_left_binary_term(p, toks, op, sub, "multiplicative-expression");
+  return parse_left_infix(p, toks, op, sub);
 }
 
 
@@ -177,15 +179,6 @@ parse_expression(Parser& p, Token_stream& toks)
 // -------------------------------------------------------------------------- //
 //                            Parser function
 
-// Execute the parsing function.
-Expr*
-Parser::operator()(Token_stream& toks)
-{
-  if (toks.eof())
-    return nullptr;
-  return parse_expression(*this, toks);
-}
-
 
 Expr*
 Parser::on_error()
@@ -202,7 +195,7 @@ Parser::on_int_expr(Token const* tok)
 
 
 Expr*
-Parser::on_unary_term(Token const* tok, Expr* e)
+Parser::on_prefix(Token const* tok, Expr* e)
 {
   Location loc = tok->location();
   switch (tok->kind()) {
@@ -215,7 +208,7 @@ Parser::on_unary_term(Token const* tok, Expr* e)
 
 
 Expr*
-Parser::on_binary_term(Token const* tok, Expr* e1, Expr* e2)
+Parser::on_infix(Token const* tok, Expr* e1, Expr* e2)
 {
   Location loc = tok->location();
   switch (tok->kind()) {
@@ -272,10 +265,25 @@ Parser::on_expected(Location loc, char const* str)
 
 
 Expr* 
-parse(Buffer& buf, Token_stream& ts)
+parse(Token_stream& ts)
 {
-  Parser p(buf);
-  return p(ts);
+  Parser p;
+  if (ts.eof())
+    return nullptr;
+  else
+    return parse_expression(p, ts);
+}
+
+
+// Initialize the grammar production rules.
+void
+init_grammar()
+{
+  install_grammar(parse_primary_expression, "primary-expression");
+  install_grammar(parse_prefix_expression, "prefix-expression");
+  install_grammar(parse_multiplicative_expression, "multiplicative-expression");
+  install_grammar(parse_additive_expression, "additive-expression");
+  install_grammar(parse_expression, "expression");
 }
 
 

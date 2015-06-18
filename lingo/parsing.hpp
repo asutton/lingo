@@ -8,10 +8,38 @@
 #include "lingo/algorithm.hpp"
 #include "lingo/error.hpp"
 
-#include <iostream>
-
 namespace lingo
 {
+
+// -------------------------------------------------------------------------- //
+//                         Grammar production names
+//
+// These functions provide support for associating the names of
+// grammatical productions with the functions that implement them.
+
+
+
+void install_grammar(void(*)(), char const*);
+char const* get_grammar_name(void*);
+
+
+// Install a grammar name for the given function.
+template<typename T, typename... Args>
+inline void 
+install_grammar(T(*fn)(Args...), char const* name)
+{
+  return install_grammar(reinterpret_cast<void(*)()>(fn), name);
+}
+
+
+// Lookup a name for the given rule.
+template<typename T, typename... Args>
+inline char const* 
+get_grammar_name(T(*fn)(Args...))
+{
+  return get_grammar_name(reinterpret_cast<void(*)()>(fn));
+}
+
 
 // -------------------------------------------------------------------------- //
 //                            Token classifiers
@@ -121,17 +149,26 @@ expect_token(Parser& p, Stream& s, Token_kind k)
 }
 
 
+template<typename Stream>
+inline Iterator_type<Stream>
+require_token(Stream& s, Token_kind k)
+{
+  lingo_alert(next_token_is(s, k), "required token '{}'", get_token_spelling(k));
+  return match_if(s, is_token(k));
+}
+
+
 // -------------------------------------------------------------------------- //
 //                           Parser combinators
 
 template<typename Parser, typename Stream, typename Rule>
 Result_type<Parser>
-parse_expected(Parser& p, Stream& s, Rule rule, char const* msg)
+parse_expected(Parser& p, Stream& s, Rule rule)
 {
   if (auto result = rule(p, s))
     return result;
   else {
-    return p.on_expected(s.location(), msg);
+    return p.on_expected(s.location(), get_grammar_name(rule));
   }
   return {};
 }
@@ -154,7 +191,7 @@ parse_expected(Parser& p, Stream& s, Rule rule, char const* msg)
 // the second when the inner term is parsed.
 template<typename Parser, typename Stream, typename Grammar>
 inline Result_type<Parser>
-parse_enclosed(Parser& p, Stream& s, Token_kind k1, Token_kind k2, Grammar rule, char const* msg)
+parse_enclosed(Parser& p, Stream& s, Token_kind k1, Token_kind k2, Grammar rule)
 {
   if (auto left = expect_token(p, s, k1)) {
     // Match the empty enclosure.
@@ -168,7 +205,7 @@ parse_enclosed(Parser& p, Stream& s, Token_kind k1, Token_kind k2, Grammar rule,
       else
         return p.on_error();
     } else {
-      return p.on_expected(s.location(), msg);
+      return p.on_expected(s.location(), get_grammar_name(rule));
     }
   }
   return {};
@@ -180,9 +217,9 @@ parse_enclosed(Parser& p, Stream& s, Token_kind k1, Token_kind k2, Grammar rule,
 //    paren-enclosed ::= '(' [rule] ')'
 template<typename Parser, typename Stream, typename Grammar>
 inline Result_type<Parser>
-parse_paren_enclosed(Parser& p, Stream& s, Grammar rule, char const* msg)
+parse_paren_enclosed(Parser& p, Stream& s, Grammar rule)
 {
-  return parse_enclosed(p, s, lparen_tok, rparen_tok, rule, msg);
+  return parse_enclosed(p, s, lparen_tok, rparen_tok, rule);
 }
 
 
@@ -191,9 +228,9 @@ parse_paren_enclosed(Parser& p, Stream& s, Grammar rule, char const* msg)
 //    brace-enclosed ::= '{' rule '}'
 template<typename Parser, typename Stream, typename Grammar>
 inline Result_type<Parser>
-parse_brace_enclosed(Parser& p, Stream& s, Grammar rule, char const* msg)
+parse_brace_enclosed(Parser& p, Stream& s, Grammar rule)
 {
-  return parse_enclosed(p, s, lbrace_tok, rbrace_tok, rule, msg);
+  return parse_enclosed(p, s, lbrace_tok, rbrace_tok, rule);
 }
 
 
@@ -202,13 +239,13 @@ parse_brace_enclosed(Parser& p, Stream& s, Grammar rule, char const* msg)
 //    bracket-enclosed ::= '[' rule ']'
 template<typename Parser, typename Stream, typename Grammar>
 inline Result_type<Parser>
-parse_bracket_enclosed(Parser& p, Stream& s, Grammar rule, char const* msg)
+parse_bracket_enclosed(Parser& p, Stream& s, Grammar rule)
 {
-  return parse_enclosed(p, s, lbrack_tok, rbrack_tok, rule, msg);
+  return parse_enclosed(p, s, lbrack_tok, rbrack_tok, rule);
 }
 
 
-// Parse a prefix term. A prefix term (often called a unary term)
+// Parse a prefix term. A prefix term (or unary, in some grammars) 
 // has the following form:
 //
 //    prefix-term ::= rule | token prefix-term
@@ -218,20 +255,16 @@ parse_bracket_enclosed(Parser& p, Stream& s, Grammar rule, char const* msg)
 // the next higher precedence in the grammar.
 //
 // For any grammar that uses this production, the parser must
-// define a handler, `p.on_unary_term(op, term)`.
-//
-// To support disagnostics, `msg` is the name of the grammar
-// production that invokes this parsing function.
-template<typename Parser, typename Stream, typename Token, typename Rule>
+// define a handler, `p.on_prefix_term(op, term)`.
+template<typename Parser, typename Stream, typename Op, typename Rule>
 Result_type<Parser>
-parse_prefix_term(Parser& p, Stream& s, Token token, Rule rule, char const* msg)
+parse_prefix(Parser& p, Stream& s, Op op, Rule rule)
 {
-  if (auto* op = token(p, s)) {
-    if (auto* term = parse_prefix_term(p, s, token, rule, msg)) {
-      return p.on_unary_term(op, term);
-    } else {
-      return p.on_expected(s.location(), msg);
-    }
+  if (Token const* tok = op(p, s)) {
+    if (auto term = parse_prefix(p, s, op, rule))
+      return p.on_prefix(tok, term);
+    else
+      return p.on_expected(s.location(), get_grammar_name(rule));
   }
   return rule(p, s);
 }
@@ -256,14 +289,14 @@ parse_prefix_term(Parser& p, Stream& s, Token token, Rule rule, char const* msg)
 // production associated with `rule`.
 template<typename Parser, typename Stream, typename Op, typename Rule>
 Result_type<Parser>
-parse_left_binary_term(Parser& p, Stream& s, Op op, Rule rule, char const* msg)
+parse_left_infix(Parser& p, Stream& s, Op op, Rule rule)
 {
   if (Result_type<Parser> expr1 = rule(p, s)) {
     while (Token const* tok = op(p, s)) {
       if (Result_type<Parser> expr2 = rule(p, s)) 
-        expr1 = p.on_binary_term(tok, expr1, expr2);
+        expr1 = p.on_infix(tok, expr1, expr2);
       else 
-        return p.on_expected(tok->location(), msg, *tok);
+        return p.on_expected(tok->location(), get_grammar_name(rule), *tok);
     }
     return expr1;
   }
@@ -309,15 +342,14 @@ right_binary(Parser& p, T token, P production)
 //
 //    p.on_sequence(v)
 //
-// where v is a vector of parsed elements. Note that the result of 
-// the sub-rule 
+// where v is a vector of parsed elements. 
 template<typename Parser, typename Stream, typename Grammar>
 Result_type<Parser>
-parse_sequence(Parser& p, Token_stream& ts, Grammar rule)
+parse_sequence(Parser& p, Stream& s, Grammar rule)
 {
   std::vector<Result_type<Parser>> seq;
-  while (!ts.eof()) {
-    Result_type<Parser> elem = rule(p, ts);
+  while (!s.eof()) {
+    Result_type<Parser> elem = rule(p, s);
     if (!elem || is_error(elem))
       return elem;
     seq.push_back(elem);
@@ -335,19 +367,18 @@ parse_sequence(Parser& p, Token_stream& ts, Grammar rule)
 // aggregate initializers).
 template<typename Parser, typename Stream, typename Grammar>
 Result_type<Parser>
-parse_list(Parser& p, Stream& ts, Grammar rule)
+parse_list(Parser& p, Stream& s, Grammar rule, char const* msg)
 {
   std::vector<Result_type<Parser>> list;
-  while (!ts.eof()) {
-    Result_type<Parser> elem = rule(p, ts);
-    if (!elem || is_error(elem))
+  do {
+    Location loc = s.location();
+    Result_type<Parser> elem = rule(p, s);
+    if (!elem)
+      return p.on_expected(loc, msg);
+    if (is_error(elem))
       return elem;
     list.push_back(elem);
-
-    if (!expect_token(p, ts))
-      return p.on_error();
-    consume(p);
-  }
+  } while (match_token(s, comma_tok));
   return p.on_list(std::move(list));
 }
 

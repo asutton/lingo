@@ -1,5 +1,5 @@
-
-#include <iostream>
+// Copyright (c) 2015 Andrew Sutton
+// All rights reserved
 
 #include "lexer.hpp"
 #include "parser.hpp"
@@ -7,6 +7,8 @@
 
 #include "lingo/error.hpp"
 #include "lingo/memory.hpp"
+
+#include <iostream>
 
 using namespace lingo;
 using namespace calc;
@@ -24,6 +26,7 @@ int main()
 {
   init_diagnostics();
   init_tokens();
+  init_grammar();
 
   std::string line;
   while (prompt(line)) {
@@ -44,7 +47,7 @@ int main()
     // debug(toks);
 
     Token_stream ts(toks);
-    Expr* expr = parse(buf, ts);
+    Expr* expr = parse(ts);
     if (error_count()) {
       reset_diagnostics();
       continue;
@@ -57,6 +60,7 @@ int main()
     }
 
     std::cout << expr << " == " << evaluate(expr) << '\n';
+
   }
 
   gc().collect();
