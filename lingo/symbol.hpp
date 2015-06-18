@@ -150,6 +150,8 @@ public:
   Symbol& insert(char const*, char const*, Symbol_descriptor);
 
   Symbol* lookup(String_view) const;
+  Symbol* lookup(char const*) const;
+  Symbol* lookup(char const*, char const*) const;
 
   void clear();
 
@@ -157,6 +159,34 @@ private:
   List syms_;
   Map  map_;
 };
+
+
+inline Symbol&
+Symbol_table::insert(char const* s, Symbol_descriptor k)
+{
+  return insert(String_view(s), k);
+}
+
+
+inline Symbol& 
+Symbol_table::insert(char const* f, char const* l, Symbol_descriptor k)
+{
+  return insert(String_view(f, l), k);
+}
+
+
+inline Symbol*
+Symbol_table::lookup(char const* s) const
+{
+  return lookup(String_view(s));
+}
+
+
+inline Symbol* 
+Symbol_table::lookup(char const* f, char const* l) const
+{
+  return lookup(String_view(f, l));
+}
 
 
 Symbol_table& symbols();
@@ -180,11 +210,41 @@ get_symbol(char const* first, char const* last)
 }
 
 
+// Returns the symbol corresponding to the stirng `s`. Insert
+// the symbol if it does not exist.
+inline Symbol&
+get_symbol(String_view s)
+{
+  return symbols().insert(s.begin(), s.end(), {});
+}
+
+
 // Return a new string, interned in the symbol table. 
 inline String_view
 get_symbol_string(char const* str)
 {
   return get_symbol(str).str;
+}
+
+
+inline Symbol*
+lookup_symbol(char const* s)
+{
+  return symbols().lookup(s);
+}
+
+
+inline Symbol*
+lookup_symbol(char const* first, char const* last)
+{
+  return symbols().lookup(first, last);
+}
+
+
+inline Symbol*
+lookup_symbol(String_view s)
+{
+  return symbols().lookup(s);
 }
 
 

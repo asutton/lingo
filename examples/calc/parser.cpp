@@ -36,7 +36,7 @@ Expr*
 parse_primary_expression(Parser& p, Token_stream& toks)
 {
   if (Token const* tok = match_if(toks, is_token(decimal_integer_tok)))
-    return p.on_int_expr(tok);
+    return p.on_int_expression(tok);
 
   if (next_token_is(toks, lparen_tok))
     return parse_paren_enclosed(p, toks, parse_expression);
@@ -80,7 +80,7 @@ parse_prefix_expression(Parser& p, Token_stream& toks)
 {
   auto op = parse_prefix_operator;
   auto sub = parse_primary_expression;
-  return parse_prefix(p, toks, op, sub);
+  return parse_prefix_expression(p, toks, op, sub);
 }
 
 
@@ -133,7 +133,7 @@ parse_multiplicative_expression(Parser& p, Token_stream& toks)
 {
   auto op = parse_multiplicative_operator;
   auto sub = parse_prefix_expression;
-  return parse_left_infix(p, toks, op, sub);
+  return parse_left_infix_expression(p, toks, op, sub);
 }
 
 
@@ -159,7 +159,7 @@ parse_additive_expression(Parser& p, Token_stream& toks)
 {
   auto op = parse_additive_operator;
   auto sub = parse_multiplicative_expression;
-  return parse_left_infix(p, toks, op, sub);
+  return parse_left_infix_expression(p, toks, op, sub);
 }
 
 
@@ -188,14 +188,14 @@ Parser::on_error()
 
 
 Expr*
-Parser::on_int_expr(Token const* tok)
+Parser::on_int_expression(Token const* tok)
 {
   return gc().make<Int>(tok->location(), as_integer(*tok));
 }
 
 
 Expr*
-Parser::on_prefix(Token const* tok, Expr* e)
+Parser::on_prefix_expression(Token const* tok, Expr* e)
 {
   Location loc = tok->location();
   switch (tok->kind()) {
@@ -208,7 +208,7 @@ Parser::on_prefix(Token const* tok, Expr* e)
 
 
 Expr*
-Parser::on_infix(Token const* tok, Expr* e1, Expr* e2)
+Parser::on_infix_expression(Token const* tok, Expr* e1, Expr* e2)
 {
   Location loc = tok->location();
   switch (tok->kind()) {

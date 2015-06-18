@@ -94,20 +94,6 @@ Symbol_table::insert(String_view s, Symbol_descriptor k)
 }
 
 
-Symbol& 
-Symbol_table::insert(char const* s, Symbol_descriptor k)
-{
-  return insert(String_view(s), k);
-}
-
-
-Symbol& 
-Symbol_table::insert(char const* f, char const* l, Symbol_descriptor k)
-{
-  return insert(String_view(f, l), k);
-}
-
-
 Symbol*
 Symbol_table::lookup(String_view s) const
 {

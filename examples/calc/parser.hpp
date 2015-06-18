@@ -24,15 +24,14 @@ struct Parser
   using argument_type = Token;
   using result_type = Expr*;
 
-  Expr* on_error();
-  Expr* on_int_expr(Token const*);
-
-  Expr* on_prefix(Token const*, Expr*);
-  Expr* on_infix(Token const*, Expr*, Expr*);
+  Expr* on_int_expression(Token const*);
+  Expr* on_prefix_expression(Token const*, Expr*);
+  Expr* on_infix_expression(Token const*, Expr*, Expr*);
 
   Expr* on_enclosure(Token const*, Token const*);
   Expr* on_enclosure(Token const*, Token const*, Expr*);
 
+  Expr* on_error();
   Error* on_expected(char const*);
   Error* on_expected(Location, char const*);
   Error* on_expected(Location, char const*, Token const&);

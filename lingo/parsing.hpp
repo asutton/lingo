@@ -258,11 +258,11 @@ parse_bracket_enclosed(Parser& p, Stream& s, Grammar rule)
 // define a handler, `p.on_prefix_term(op, term)`.
 template<typename Parser, typename Stream, typename Op, typename Rule>
 Result_type<Parser>
-parse_prefix(Parser& p, Stream& s, Op op, Rule rule)
+parse_prefix_expression(Parser& p, Stream& s, Op op, Rule rule)
 {
   if (Token const* tok = op(p, s)) {
-    if (auto term = parse_prefix(p, s, op, rule))
-      return p.on_prefix(tok, term);
+    if (Result_type<Parser> term = parse_prefix_expression(p, s, op, rule))
+      return p.on_prefix_expression(tok, term);
     else
       return p.on_expected(s.location(), get_grammar_name(rule));
   }
@@ -289,12 +289,12 @@ parse_prefix(Parser& p, Stream& s, Op op, Rule rule)
 // production associated with `rule`.
 template<typename Parser, typename Stream, typename Op, typename Rule>
 Result_type<Parser>
-parse_left_infix(Parser& p, Stream& s, Op op, Rule rule)
+parse_left_infix_expression(Parser& p, Stream& s, Op op, Rule rule)
 {
   if (Result_type<Parser> expr1 = rule(p, s)) {
     while (Token const* tok = op(p, s)) {
       if (Result_type<Parser> expr2 = rule(p, s)) 
-        expr1 = p.on_infix(tok, expr1, expr2);
+        expr1 = p.on_infix_expression(tok, expr1, expr2);
       else 
         return p.on_expected(tok->location(), get_grammar_name(rule), *tok);
     }
@@ -304,34 +304,25 @@ parse_left_infix(Parser& p, Stream& s, Op op, Rule rule)
 }
 
 
-#if 0
 // Parse a right associative binary expression. There are two
 // arguments: a token recognizer and the immediate sub-production.
 //
 // TODO: Make this iterative?
-template<typename Parser, typename T, typename P>
-Parse
-right_binary(Parser& p, T token, P production)
+template<typename Parser, typename Stream, typename Op, typename Grammar>
+Result_type<Parser>
+parse_right_infix_expression(Parser& p, Stream& s, Op op, Grammar rule)
 {
-  // A helper function for recursing.
-  auto recurse = [&](Parser& p) -> Parse { 
-    return right_binary(p, token, production);
-  };
-
-  if (Parse expr1 = production(p)) {
-    if (Token const* tok = token(p)) {
-      if (Parse expr2 = recurse(p)) {
-        expr1 = on_binary_expression(*tok, expr1, expr2);
-      } else {
-        error(p, "expected '{}' after '{}'", production_name(production), *tok);
-        return {};
-      }
+  if (Result_type<Parser> expr1 = rule(p, s)) {
+    if (Token const* tok = op(p, s)) {
+      if (Result_type<Parser> expr2 = parse_right_infix_expression(p, s, op, rule))
+        expr1 = p.on_infix_expression(tok, expr1, expr2);
+      else
+        return p.on_expected(tok->location(), get_grammar_name(rule), *tok);
     }
     return expr1;
   }
   return {};
 }
-#endif
 
 
 // Parse a sequence of terms with no intervening tokens.
@@ -350,7 +341,7 @@ parse_sequence(Parser& p, Stream& s, Grammar rule)
   std::vector<Result_type<Parser>> seq;
   while (!s.eof()) {
     Result_type<Parser> elem = rule(p, s);
-    if (!elem || is_error(elem))
+    if (!elem || p.is_error(elem))
       return elem;
     seq.push_back(elem);
   }
@@ -367,15 +358,15 @@ parse_sequence(Parser& p, Stream& s, Grammar rule)
 // aggregate initializers).
 template<typename Parser, typename Stream, typename Grammar>
 Result_type<Parser>
-parse_list(Parser& p, Stream& s, Grammar rule, char const* msg)
+parse_list(Parser& p, Stream& s, Grammar rule)
 {
   std::vector<Result_type<Parser>> list;
   do {
     Location loc = s.location();
     Result_type<Parser> elem = rule(p, s);
     if (!elem)
-      return p.on_expected(loc, msg);
-    if (is_error(elem))
+      return p.on_expected(loc, get_grammar_name(rule));
+    if (p.is_error(elem))
       return elem;
     list.push_back(elem);
   } while (match_token(s, comma_tok));

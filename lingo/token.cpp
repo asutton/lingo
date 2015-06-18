@@ -243,9 +243,10 @@ Token::Token(Location loc, char const* str, int len)
 Token::Token(Location loc, char const* first, char const* last)
   : loc_(loc)
 {
-  sym_ = &get_symbol(first, last);
+  lingo_alert(lookup_symbol(first, last), 
+              "uninstalled token '{}'", String_view(first, last));
+  sym_ = lookup_symbol(first, last);
   kind_ = reinterpret_cast<Token_kind>(sym_->desc.token);
-  lingo_alert(kind_ != 0, "uninstalled token '{}'", sym_->str);
 }
 
 
