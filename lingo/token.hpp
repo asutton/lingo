@@ -83,6 +83,14 @@ char const* get_token_name(Token_kind);
 char const* get_token_spelling(Token_kind);
 
 
+// Returns true if `k` is one of the integer tokens.
+inline bool
+is_integer(Token_kind k)
+{
+  return binary_integer_tok <= k && k <= hexadecimal_integer_tok;
+}
+
+
 std::ostream& operator<<(std::ostream&, Token_kind);
 
 
@@ -145,6 +153,15 @@ using Token_list = std::vector<Token>;
 
 bool    as_boolean(Token);
 Integer as_integer(Token);
+String  as_string(Token);
+
+
+// Returns true if the token is an integer.
+inline bool
+is_integer(Token const& k)
+{
+  return is_integer(k.kind());
+}
 
 
 // -------------------------------------------------------------------------- //

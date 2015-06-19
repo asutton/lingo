@@ -286,13 +286,6 @@ as_boolean(Token tok)
 namespace
 {
 
-// Returns true if `k` is an intger token kind.
-inline bool
-is_integer(Token_kind k)
-{
-  return binary_integer_tok <= k && k <= hexadecimal_integer_tok;
-}
-
 
 // Retursn the base of an integer token.
 inline int
@@ -321,6 +314,15 @@ as_integer(Token tok)
 {
   return Integer(tok.str(), get_integer_base(tok));
 }
+
+
+// Return the string representation of the token.
+String
+as_string(Token tok)
+{
+  return tok.str();
+}
+
 
 // -------------------------------------------------------------------------- //
 //                           Pretty printing
