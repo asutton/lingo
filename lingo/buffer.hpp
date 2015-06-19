@@ -112,10 +112,18 @@ protected:
 
 // -------------------------------------------------------------------------- //
 //                               Input buffer
+//
+// It's often useful to have lexers and parsers simply update a global
+// input location for the purpose of simplifying diagnostics. This
+// prevents languages from having to continually pass these tokens
+// through the interface.
 
 
 Buffer& input_buffer();
-void    set_input(Buffer&);
+Location input_location();
+
+void set_input_buffer(Buffer&);
+void set_input_location(Location);
 
 // The input guard sets the given buffer to be the current input.
 // When the guard goes out of scope, the previous input buffer
@@ -125,12 +133,12 @@ struct Input_guard
   Input_guard(Buffer& buf)
     : prev(input_buffer())
   {
-    set_input(buf); 
+    set_input_buffer(buf); 
   }
 
   ~Input_guard()
   {
-    set_input(prev);
+    set_input_buffer(prev);
   }
 
   Buffer& prev;

@@ -22,20 +22,20 @@
 // Expands to a call to the unreachable function and inserts
 // the function and line at which the insertion is called.
 #define lingo_unreachable(msg, args...) \
-  lingo::abort("{}:{}: " msg, __FUNCTION__, __LINE__, args)
+  ::lingo::abort("{}:{}: " msg, __FUNCTION__, __LINE__, args)
 
 
 // Expands to a call to the assertion function and inserts
 // the function and line at which the assertion is called.
 #define lingo_assert(cond)                                       \
   if (!(cond))                                                   \
-    lingo::abort("{}:{}: assertion failed '{}'", __PRETTY_FUNCTION__, __LINE__, #cond)
+    ::lingo::abort("{}:{}: assertion failed '{}'", __PRETTY_FUNCTION__, __LINE__, #cond)
 
 
 // Like lingo_assert, but allows the inclusion of a message.
 #define lingo_alert(cond, msg, args...)                          \
   if (!(cond))                                                   \
-    lingo::abort("{}:{}: " msg, __PRETTY_FUNCTION__, __LINE__, args)
+    ::lingo::abort("{}:{}: " msg, __PRETTY_FUNCTION__, __LINE__, args)
 
 
 namespace lingo
@@ -153,6 +153,15 @@ error(Location loc, char const* msg, Ts const&... args)
 }
 
 
+// Emit an error diagnostic at the current input location.
+template<typename... Ts>
+inline void
+error(char const* msg, Ts const&... args)
+{
+  error(input_buffer(), input_location(), msg, args...);
+}
+
+
 // Emit a warning diagnostic.
 template<typename... Ts>
 inline void
@@ -172,6 +181,15 @@ warning(Location loc, char const* msg, Ts const&... args)
 }
 
 
+// Emit a warning diagnostic at the current input location.
+template<typename... Ts>
+inline void
+warning(char const* msg, Ts const&... args)
+{
+  warning(input_buffer(), input_location(), msg, args...);
+}
+
+
 // Emit a diagnostic note.
 template<typename... Ts>
 inline void
@@ -188,6 +206,15 @@ inline void
 note(Location loc, char const* msg, Ts const&... args)
 {
   note(input_buffer(), loc, msg, args...);
+}
+
+
+// Emit an informational diagnostic at the current input location.
+template<typename... Ts>
+inline void
+note(char const* msg, Ts const&... args)
+{
+  note(input_buffer(), input_location(), msg, args...);
 }
 
 

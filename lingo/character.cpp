@@ -48,6 +48,9 @@ Character_stream::get()
 {
   lingo_assert(!eof());
 
+  // Save the current location as the input location.
+  set_input_location(location());
+
   char const*c = first_;
 
   // Move to the next character.

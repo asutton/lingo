@@ -42,11 +42,10 @@ parse_primary_expression(Parser& p, Token_stream& toks)
     return parse_paren_enclosed(p, toks, parse_expression);
 
   // If the expression was none of the above, the program is ill-formed.
-  Location loc = toks.location();
   if (toks.eof())
-    error(loc, "exected primary-expression, got end-of-file");
+    error(Location::none, "exected primary-expression, got end-of-file");
   else
-    error(loc, "expected primary-expression, got '{}'", toks.peek());
+    error("expected primary-expression, got '{}'", toks.peek());
   return p.on_error();
 }
 

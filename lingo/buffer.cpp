@@ -57,6 +57,7 @@ namespace
 {
 
 Buffer* input_ = nullptr;
+Location loc_;
 
 } // namespace
 
@@ -70,12 +71,28 @@ input_buffer()
 }
 
 
+/* Returns the current input location. */
+Location
+input_location()
+{
+  return loc_;
+}
+
+
 // Set the current input buffer. The previous buffer
 // is not saved. See the Input_guard class.
 void
-set_input(Buffer& buf)
+set_input_buffer(Buffer& buf)
 {
   input_ = &buf;
+}
+
+
+// Set the current input location.
+void
+set_input_location(Location loc)
+{
+  loc_ = loc;
 }
 
 

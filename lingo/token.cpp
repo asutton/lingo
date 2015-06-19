@@ -378,6 +378,11 @@ Token const&
 Token_stream::get()
 {
   assert(!eof());
+
+  // Save the token's location as the input location.
+  set_input_location(location());
+
+  // Advance the token, return the previous value.
   Token const& tok = *first_;  
   ++first_;
   return tok;
