@@ -71,6 +71,14 @@ operator!=(String_view const& a, String_view const& b)
 std::ostream& operator<<(std::ostream&, String_view);
 
 
+// Create a view of the underlying string.
+inline String_view
+make_view(String const& s)
+{
+  return {s.c_str(), s.c_str() + s.size()};
+}
+
+
 // This hash function is used by the symbol table to hash
 // string views.
 struct String_view_hash

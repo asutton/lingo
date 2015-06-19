@@ -332,7 +332,7 @@ as_string(Token tok)
 void 
 print(Printer& p, Token tok)
 {
-  print(p, tok.rep());
+  print(p, tok.str());
 }
 
 
@@ -341,7 +341,7 @@ void
 debug(Printer& p, Token tok)
 {
   print(p, '<');
-  print(p, tok.rep());
+  print(p, tok.str());
   print(p, '>');
 }
 
@@ -350,9 +350,7 @@ debug(Printer& p, Token tok)
 std::ostream&
 operator<<(std::ostream& os, Token tok)
 {
-  Printer p(os);
-  print(p, tok.rep());
-  return os;
+  return os << tok.str();
 }
 
 

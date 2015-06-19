@@ -128,6 +128,14 @@ print(Printer& p, String const& s)
 }
 
 
+// Print the string pointed to by `s`.
+inline void 
+print(Printer& p, String const* s)
+{
+  print_chars(p, *s);
+}
+
+
 // Print the string view `s`.
 inline void
 print(Printer& p, String_view s)

@@ -128,10 +128,10 @@ public:
   Location      location() const       { return loc_; }
   Token_kind    kind() const           { return kind_; }
   
-  // Symbol
-  Symbol const& symbol() const         { return *sym_; }
-  String_view   rep() const            { return symbol().str; }
-  String        str() const            { return rep().str(); }
+  // Symbol/text representation
+  Symbol const& symbol() const { return *sym_; }
+  String const& str() const    { return symbol().str; }
+  String const* ptr() const    { return &str(); }
 
   // Contextually convertible to bool.
   // True when this is not an error token.

@@ -17,11 +17,6 @@ namespace lingo
 // TODO: Check that the symbol has the appropriate kind before 
 // accessing its bindings or other (eventual) attributes.
 
-Symbol::~Symbol()
-{
-  delete str.begin();
-}
-
 
 // Push a new binding onto the symbol.
 void
@@ -69,24 +64,12 @@ Symbol_table::insert(String_view s, Symbol_descriptor k)
 {
   auto iter = map_.find(s);
   if (iter == map_.end()) {
-    // Allocate a new string to store in the symbol
-    // table. This lets us add entries without worrying
-    // about the source of the input (and whether or not
-    // it goes out of scope).
-    //
-    // TODO: Use a sequential allocator for this table.
-    // That would make memory management trivial. See 
-    // the Symbol destructor.
-    char* str = new char[s.size()];
-    std::strncpy(str, s.begin(), s.size());
-    String_view v(str, str + s.size());
-
     // Create/insert a new symbol for the given string.
-    syms_.emplace_back(v, k);
+    syms_.emplace_back(s.str(), k);
     Symbol* sym = &syms_.back();
 
     // Insert the string into the lookup table.
-    map_.insert({v, sym});
+    map_.insert({sym->view(), sym});
     return *sym;
   } else {
     return *iter->second;

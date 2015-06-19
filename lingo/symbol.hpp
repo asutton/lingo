@@ -88,21 +88,13 @@ struct Symbol_descriptor
 // table, revisit the destructor.
 struct Symbol
 {
-  ~Symbol();
-
-  Symbol(String_view s, Symbol_descriptor d)
+  Symbol(String const& s, Symbol_descriptor d)
     : str(s), desc(d)
   { }
 
-  Symbol(char const* s, Symbol_descriptor d)
-    : str(s), desc(d)
-  { }
+  String_view view() const { return make_view(str); }
 
-  Symbol(char const* f, char const* l, Symbol_descriptor d)
-    : str(f, l), desc(d)
-  { }
-
-  String_view       str;  // The string view
+  String            str;  // The string view
   Symbol_descriptor desc; // The kind of token
   Symbol_data       data; // Supplemental data
 };
@@ -215,18 +207,30 @@ get_symbol(char const* first, char const* last)
 inline Symbol&
 get_symbol(String_view s)
 {
-  return symbols().insert(s.begin(), s.end(), {});
+  return symbols().insert(s, {});
 }
 
 
-// Return a new string, interned in the symbol table. 
-inline String_view
+// Returns the symbol corresponding to the stirng `s`. Insert
+// the symbol if it does not exist.
+inline Symbol&
+get_symbol(String const& s)
+{
+  return symbols().insert(make_view(s), {});
+}
+
+
+// Return a new string, interned in the symbol table and
+// return its string representation.
+inline String const&
 get_symbol_string(char const* str)
 {
   return get_symbol(str).str;
 }
 
 
+// Return a the symbol for the given string or nullptr if the
+// symbol is not in the table.
 inline Symbol*
 lookup_symbol(char const* s)
 {
@@ -234,6 +238,8 @@ lookup_symbol(char const* s)
 }
 
 
+// Return a the symbol for the given string or nullptr if the
+// symbol is not in the table.
 inline Symbol*
 lookup_symbol(char const* first, char const* last)
 {
@@ -241,10 +247,21 @@ lookup_symbol(char const* first, char const* last)
 }
 
 
+// Return a the symbol for the given string or nullptr if the
+// symbol is not in the table.
 inline Symbol*
 lookup_symbol(String_view s)
 {
   return symbols().lookup(s);
+}
+
+
+// Return a the symbol for the given string or nullptr if the
+// symbol is not in the table.
+inline Symbol*
+lookup_symbol(String const& s)
+{
+  return symbols().lookup(make_view(s));
 }
 
 

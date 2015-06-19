@@ -61,9 +61,17 @@ debug(Printer& p, char const* s)
 
 // Debug print a string.
 inline void
-debug(Printer& p, std::string const& s)
+debug(Printer& p, String const& s)
 {
   print_chars(p, s);
+}
+
+
+// Debug print a string.
+inline void
+debug(Printer& p, String const* s)
+{
+  print_chars(p, *s);
 }
 
 
@@ -91,7 +99,7 @@ debug(T const& x)
 // Return a string containing the debug output for the
 // element x.
 template<typename T>
-inline std::string
+inline String
 debug_str(T const& x)
 {
   std::stringstream ss;
