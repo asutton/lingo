@@ -11,7 +11,6 @@
 #include "lingo/print.hpp"
 #include "lingo/debug.hpp"
 
-#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -122,6 +121,8 @@ public:
   Token(Location, Token_kind, char const*, int);
   Token(Location, Token_kind, char const*, char const*);
 
+  Token(Location, Symbol&);
+
   // Observers
   char const*   token_name() const     { return get_token_name(kind_); }
   char const*   token_spelling() const { return get_token_spelling(kind_); }
@@ -136,6 +137,10 @@ public:
   // Contextually convertible to bool.
   // True when this is not an error token.
   explicit operator bool() const { return kind_ != error_tok; }
+
+  // Token builders.
+  static Token make_identifier(Location loc, Symbol& sym);
+  static Token make_integer(Location loc, Symbol& sym, Token_kind);
 
 private:
   Location   loc_;

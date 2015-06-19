@@ -48,12 +48,33 @@ uninstall_token_set(Token_set& toks)
 namespace
 {
 
+
+// Returns the symbol kind associated with the token kind.
+Symbol_kind
+get_symbol_kind(Token_kind k)
+{
+  switch (k) {
+  case identifier_tok: 
+    return identifier_sym;
+
+  case binary_integer_tok:
+  case octal_integer_tok:
+  case decimal_integer_tok:
+  case hexadecimal_integer_tok:
+    return integer_sym;
+
+  default: 
+    return language_sym;
+  }
+}
+
+
 // A helper function for creating symbols.
 Symbol*
 make_symbol(char const* str, Token_kind k)
 {
   Symbol& sym = get_symbol(str);
-  sym.desc = {unspecified_sym, k};
+  sym.desc = {get_symbol_kind(k), k};
   return &sym;
 }
 
@@ -63,7 +84,7 @@ Symbol*
 make_symbol(char const* first, char const* last, Token_kind k)
 {
   Symbol& sym = get_symbol(first, last);
-  sym.desc = {unspecified_sym, k};
+  sym.desc = {get_symbol_kind(k), k};
   return &sym;
 }
 
@@ -75,9 +96,9 @@ make_symbol(char const* first, char const* last, Token_kind k)
 // name in the symbol table. Every token with a fixed set of values
 // must be installed prior to lookup.
 void
-install_token(char const* str, Token_kind k)
+install_token(char const* str, Token_kind tk)
 {
-  make_symbol(str, k);
+  make_symbol(str, tk);
 }
 
 
@@ -93,7 +114,6 @@ install_tokens(std::initializer_list<std::pair<char const*, Token_kind>> list)
   for (auto p : list)
     install_token(p.first, p.second);
 }
-
 
 
 // -------------------------------------------------------------------------- //
@@ -262,6 +282,33 @@ Token::Token(Location loc, Token_kind k, char const* str, int len)
 Token::Token(Location loc, Token_kind k, char const* first, char const* last)
   : loc_(loc), kind_(k), sym_(make_symbol(first, last, k))
 { }
+
+
+// Initialize a token with the properties of the given symbol.
+Token::Token(Location loc, Symbol& sym)
+  : loc_(loc), kind_(sym.desc.token), sym_(&sym)
+{
+}
+
+
+Token
+Token::make_identifier(Location loc, Symbol& sym)
+{
+  sym.desc.kind = identifier_sym;
+  sym.desc.token = identifier_tok;
+  return Token(loc, sym);
+}
+
+
+// TODO: Assign the integer interpretation of the given token.
+Token
+Token::make_integer(Location loc, Symbol& sym, Token_kind k)
+{
+  lingo_assert(is_integer(k));
+  sym.desc.kind = integer_sym;
+  sym.desc.token = k;
+  return Token(loc, sym);
+}
 
 
 // -------------------------------------------------------------------------- //

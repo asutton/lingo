@@ -59,16 +59,24 @@ struct Symbol_data
 //                                  Symbols
 
 // Determines the kinds of attributes associated with the symbol.
+//
+// TODO: Add extra attributes for other stuff?
 using Symbol_kind = int;
 constexpr int unspecified_sym = 0;
+constexpr int language_sym    = 1; // Defined by the language (no attributes)
+constexpr int integer_sym     = 2; // Has an integer attribute
+constexpr int real_sym        = 3; // Has a real-valued attribute
+constexpr int identifier_sym  = 4; // Has a binding attribute
 
 
 // The symbol descriptor contains information about a symbol
 // in the symbol table.
+//
+// NOTE: The bitfields can be rebalanced at need.
 struct Symbol_descriptor
 {
-  int kind    : 8;  // The kind of keyword (see above)
-  int token   : 16; // An associated token kind
+  int kind  : 8;  // The kind of keyword (see above)
+  int token : 24; // An associated token kind
 };
 
 
@@ -112,6 +120,18 @@ operator!=(Symbol const& a, Symbol const& b)
 {
   return a.str != b.str;
 }
+
+
+// Returns true if the symbol is one defined by the core
+// language. Note that core language symbols have only
+// one possible spelling (although multiple spellings may
+// be associated with the same token kind).
+inline bool
+is_language_symbol(Symbol const& s)
+{
+  return s.desc.kind == language_sym;
+}
+
 
 
 void push_binding(Symbol&, void*);
