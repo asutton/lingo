@@ -38,16 +38,22 @@ struct sexpr
 std::ostream& default_debug_stream();
 
 
-// A dummy function that provides a name for an
-// overload set.
-void debug(Printer& p, void*) = delete;
-
-
-// Debug print the integral value n.
-inline void 
-debug(Printer& p, std::intmax_t n)
+// Debug print the integral value `n`.
+template<typename T>
+inline typename std::enable_if<std::is_integral<T>::value, void>::type
+debug(Printer& p, T n)
 {
-  print_value(p, n);
+  print_value(p, (intmax_t)n);
+}
+
+
+// Debug print the integer representation of the enumerated
+// value `n`.
+template<typename T>
+inline typename std::enable_if<std::is_enum<T>::value, void>::type
+debug(Printer& p, T n)
+{
+  print_value(p, (intmax_t)n);
 }
 
 
