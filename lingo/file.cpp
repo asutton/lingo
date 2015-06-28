@@ -52,7 +52,7 @@ File_manager::open(Path const& p)
 {
   Path real = canonical(p);
   auto ins = lookup_.insert({p.native(), 0});
-  if (!ins.second) {
+  if (ins.second) {
     File* file = new File(real, files_.size());
     files_.push_back(file);
     ins.first->second = file->index();
