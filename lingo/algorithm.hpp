@@ -359,8 +359,10 @@ inline Iterator_type<Stream>
 get_n(Stream& s, int n)
 {
   auto iter = s.begin();
-  while (!s.eof() && n != 0)
+  while (!s.eof() && n != 0) {
+    s.get();
     --n;
+  }
   return iter;
 }
 
