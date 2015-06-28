@@ -83,7 +83,7 @@ is_ident_head(char c)
 inline bool
 is_ident_tail(char c)
 {
-  return is_ident_tail(c) || is_decimal_digit(c);
+  return is_ident_head(c) || is_decimal_digit(c);
 }
 
 
