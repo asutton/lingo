@@ -81,6 +81,73 @@ as(U const* u)
 }
 
 
+// -------------------------------------------------------------------------- //
+//                            Special values
+//
+// The following functions define special values of node pointers.
+
+
+// Construct a node pointer that acts as an error value.
+// The type of the node is explicitly given as a template
+// argument.
+template<typename T>
+inline T* 
+make_error()
+{
+  return (T*)0x01;
+}
+
+
+// Returns true if `t` is null.
+template<typename T>
+inline bool
+is_null(T const* p)
+{
+  return p == nullptr;
+}
+
+
+// Returns true if `t` is null.
+template<typename T>
+inline bool
+is_error(T const* p)
+{
+  return p == make_error<T>();
+}
+
+
+// Returns true if p is neither null nor an error.
+template<typename T>
+inline bool
+is_node(T const* p)
+{
+  return !is_null(p) && !is_error(p);
+}
+
+
+// The Maybe template is typically used to declare node 
+// pointers within condition declarations.
+//
+//    if (Maybe<Var_decl> var = ...)
+//
+// This class contextually evaluates to `true` whenever
+// it is initialized to a non-null, non-error value. 
+template<typename T>
+struct Maybe
+{
+  Maybe(T* p)
+    : ptr(p)
+  { }
+
+  explicit operator bool() const { is_node(ptr); }
+
+  T*       operator*()       { return ptr; }
+  T const* operator*() const { return ptr; }
+
+  T* ptr;
+};
+
+
 } // namespace lingo
 
 
