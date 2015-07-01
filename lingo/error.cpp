@@ -37,6 +37,12 @@ namespace
 // The diagnostic stack.
 std::stack<Diagnostic_context*> diags_;
 
+
+// The root diagnostic context. Note that this self-registers
+// as the top diagnostic context. 
+Diagnostic_context root_;
+
+
 } // namespace
 
 
@@ -88,10 +94,11 @@ Diagnostic_context::emit()
 
 
 // Initialize the root diagnostic context.
+//
+// FIXME: This should go aways.
 void
 init_diagnostics()
 {
-  static Diagnostic_context root_;
 }
 
 
