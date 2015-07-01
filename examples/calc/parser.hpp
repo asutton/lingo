@@ -13,7 +13,6 @@ namespace calc
 using namespace lingo;
 
 struct Expr;
-struct Error;
 
 
 // The parser is responsible for transforming a stream of tokens
@@ -32,9 +31,9 @@ struct Parser
   Expr* on_enclosure(Token const*, Token const*, Expr*);
 
   Expr* on_error();
-  Error* on_expected(char const*);
-  Error* on_expected(Location, char const*);
-  Error* on_expected(Location, char const*, Token const&);
+  Expr* on_expected(char const*);
+  Expr* on_expected(Location, char const*);
+  Expr* on_expected(Location, char const*, Token const&);
 };
 
 void init_grammar();

@@ -20,7 +20,6 @@ using namespace lingo;
 // Different classes of expressions.
 enum Kind
 {
-  error_expr, // errors
   int_expr,   // n, integer literals
   add_expr,   // n1 + n2
   sub_expr,   // n1 - n2
@@ -98,17 +97,6 @@ struct Binary : Expr, Node_kind<K>
 };
 
 
-// An error expression represents a failure to parse
-// a term in the language. Error nodes are used to suppress
-// redundant warnings about parse errors. 
-struct Error : Expr, Node_kind<error_expr>
-{
-  Error()
-    : Expr(node_kind)
-  { }
-};
-
-
 // An integer literal.
 struct Int : Expr, Node_kind<int_expr>
 {
@@ -174,7 +162,7 @@ struct Pos : Unary<pos_expr>
 // -------------------------------------------------------------------------- //
 //                               Node accessors
 
-Error* get_error();
+Expr* get_error();
 
 
 // -------------------------------------------------------------------------- //

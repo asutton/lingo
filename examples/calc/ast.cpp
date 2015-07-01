@@ -32,19 +32,11 @@ get_node_name(Kind k)
 // -------------------------------------------------------------------------- //
 //                               Node accessors
 
-
-namespace
+// Returs an error expression.
+Expr* 
+get_error()
 {
-
-Singleton_factory<Error> error_;
-
-} // namespace
-
-
-// Returs the singleton a
-Error* get_error()
-{
-  return error_.make();
+  return make_error_node<Expr>();
 }
 
 
@@ -134,9 +126,11 @@ evaluate(Expr const* e)
 void
 mark(Expr* e)
 {
-  lingo_assert(e);
+  if (!e)
+    return;
+  if (is_error_node(e))
+    return;
   switch (e->kind()) {
-  case error_expr: return; // Error is not gc-allocated.
   case int_expr: return mark_unary(cast<Int>(e));
   case add_expr: return mark_binary(cast<Add>(e));
   case sub_expr: return mark_binary(cast<Sub>(e));
@@ -202,7 +196,6 @@ int
 precedence(Expr const* e)
 {
   switch (e->kind()) {
-  case error_expr: 
   case int_expr:
     return 0;
 
@@ -279,9 +272,8 @@ print_unary(Printer& p, T const* e)
 void 
 print(Printer& p, Expr const* e)
 {
-  lingo_assert(e);
+  lingo_assert(is_valid_node(e));
   switch (e->kind()) {
-  case error_expr: return print(p, "<error>");
   case int_expr: return print_int(p, cast<Int>(e));
   case add_expr: return print_binary(p, cast<Add>(e));
   case sub_expr: return print_binary(p, cast<Sub>(e));
@@ -305,9 +297,13 @@ debug(Printer& p, Expr const* e)
     debug(p, "<null>");
     return;
   }
+
+  if (is_error_node(e)) {
+    debug(p, "<error>");
+    return;
+  }
   
   switch (e->kind()) {
-  case error_expr: return debug(p, "<error>");
   case int_expr: return debug_unary(p, cast<Int>(e));
   case add_expr: return debug_binary(p, cast<Add>(e));
   case sub_expr: return debug_binary(p, cast<Sub>(e));

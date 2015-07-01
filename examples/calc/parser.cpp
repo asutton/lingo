@@ -239,7 +239,7 @@ Parser::on_enclosure(Token const* left, Token const* right, Expr* mid)
 }
 
 
-Error*
+Expr*
 Parser::on_expected(char const* str)
 {
   error(Location::none, "expected '{}' but got end-of-file", str);
@@ -247,7 +247,7 @@ Parser::on_expected(char const* str)
 }
 
 
-Error*
+Expr*
 Parser::on_expected(Location loc, char const* str, Token const& tok)
 {
   error(loc, "expected '{}' but got '{}'", str, tok);
@@ -255,7 +255,7 @@ Parser::on_expected(Location loc, char const* str, Token const& tok)
 }
 
 
-Error*
+Expr*
 Parser::on_expected(Location loc, char const* str)
 {
   error(loc, "expected '{}'", str);
