@@ -92,36 +92,27 @@ as(U const* u)
 // argument.
 template<typename T>
 inline T* 
-make_error()
+make_error_node()
 {
   return (T*)0x01;
 }
 
 
-// Returns true if `t` is null.
+// Returns true if `t` is an error node.
 template<typename T>
 inline bool
-is_null(T const* p)
+is_error_node(T const* t)
 {
-  return p == nullptr;
+  return t == make_error_node<T>();
 }
 
 
-// Returns true if `t` is null.
+// Returns true if `t` is neither null nor an error.
 template<typename T>
 inline bool
-is_error(T const* p)
+is_valid_node(T const* t)
 {
-  return p == make_error<T>();
-}
-
-
-// Returns true if p is neither null nor an error.
-template<typename T>
-inline bool
-is_node(T const* p)
-{
-  return !is_null(p) && !is_error(p);
+  return t && !is_error_node(t);
 }
 
 
@@ -132,6 +123,8 @@ is_node(T const* p)
 //
 // This class contextually evaluates to `true` whenever
 // it is initialized to a non-null, non-error value. 
+//
+// TODO: This should be a specialization of std::optional.
 template<typename T>
 struct Maybe
 {
@@ -139,7 +132,7 @@ struct Maybe
     : ptr(p)
   { }
 
-  explicit operator bool() const { is_node(ptr); }
+  explicit operator bool() const { return is_valid_node(ptr); }
 
   T*       operator*()       { return ptr; }
   T const* operator*() const { return ptr; }
