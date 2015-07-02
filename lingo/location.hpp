@@ -71,7 +71,7 @@ struct Bound_location
   int column_no() const;
 
   Buffer const&  buf_;
-  Location      loc_;
+  Location       loc_;
 };
 
 

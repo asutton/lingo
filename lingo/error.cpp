@@ -27,7 +27,11 @@ operator<<(std::ostream& os, Diagnostic_kind k)
 std::ostream&
 operator<<(std::ostream& os, Diagnostic const& diag)
 {
-  return os << diag.kind << ':' << diag.loc << ": " << diag.msg;
+  os << diag.kind << ':';
+  if (diag.loc.is_valid())
+    os << diag.loc << ": ";
+  os << ' ' << diag.msg;
+  return os;
 }
 
 
@@ -149,5 +153,15 @@ warning(Bound_location loc, String const& msg)
   diags_.top()->emit({warning_diag, loc, msg});
 }
 
+
+// Emit a note diagnostic.
+//
+// TODO: Allow the attachment of notes to other diagnostic 
+// objects, allowing them to be nested rather than flat.
+void 
+note(Bound_location loc, String const& msg)
+{
+  diags_.top()->emit({note_diag, loc, msg});
+}
 
 } // namespace lingo
