@@ -91,6 +91,11 @@ struct Collectable
 // of those nodes.
 
 
+// Catch node pointers that do not have overloads.
+inline void
+mark(void const*) { }
+
+
 // Do not mark arithmetic values.
 template<typename T>
 inline typename std::enable_if<std::is_arithmetic<T>::value>::type
@@ -121,9 +126,10 @@ mark(Token const&) { }
 // Mark an empty node.
 template<typename T>
 inline void 
-mark_nullary(T* t)
+mark_nullary(T const* t)
 {
-  if (Collectable* c = dynamic_cast<Collectable*>(t))
+  T* nc = const_cast<T*>(t);
+  if (Collectable* c = dynamic_cast<Collectable*>(nc))
     c->marked = true;
 }
 
@@ -131,7 +137,7 @@ mark_nullary(T* t)
 // Mark a unary node.
 template<typename T>
 inline void 
-mark_unary(T* t)
+mark_unary(T const* t)
 {
   mark_nullary(t);
   mark(t->first);
@@ -141,7 +147,7 @@ mark_unary(T* t)
 // Mark a binary node.
 template<typename T>
 inline void 
-mark_binary(T* t)
+mark_binary(T const* t)
 {
   mark_unary(t);
   mark(t->second);
@@ -151,7 +157,7 @@ mark_binary(T* t)
 // Mark a ternary node.
 template<typename T>
 inline void 
-mark_ternary(T* t)
+mark_ternary(T const* t)
 {
   mark_binary(t);
   mark(t->third);
