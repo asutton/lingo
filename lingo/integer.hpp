@@ -67,12 +67,15 @@ public:
   Integer& abs();
   Integer& comp();
 
-  // Observers
+  // Sign
   int sign() const;
   bool is_positive() const;
   bool is_negative() const;
   bool is_nonpositive() const;
   bool is_nonnegative() const;
+
+  // Truth value
+  bool truth_value() const;
 
   int bits() const;
   int base() const;

@@ -211,6 +211,16 @@ Integer::is_nonnegative() const
 }
 
 
+// Returns the truth value interpretation of the integer 
+// value. The truth value of 0 is `false`, and the
+// truth value of all non-zero integers is `true`.
+inline bool
+Integer::truth_value() const
+{
+  return *this != 0;
+}
+
+
 // Returns the number of bits in the integer representation.
 inline int
 Integer::bits() const 
