@@ -9,6 +9,7 @@
 // file and affiliated data (e.g., bindings).
 
 #include "lingo/string.hpp"
+#include "lingo/integer.hpp"
 
 #include <cstring>
 #include <list>
@@ -25,17 +26,11 @@ namespace lingo
 // kinds of information: type, value, etc. This information
 // is represented as a pointer within the binding object.
 //
-// An identifier maybe bound to different types or values
-// in different scopes. Each new binding results in a
-// list with a pointer to the previous entry.
+// An implementation shuld derive from this class to provide
+// name bindings.
 struct Binding 
 {
-  Binding(void* p)
-    : info(p), prev(nullptr)
-  { }
-
-  void*    info;
-  Binding* prev;
+  Binding* prev = nullptr;
 };
 
 
@@ -44,14 +39,20 @@ struct Binding
 
 // Information associated with a symbol. This includes the kind
 // of token, and token-specific data.
-//
-// TODO: The binding must a union. Improve this data structure.
-struct Symbol_data
+union Symbol_data
 {
-  Symbol_data()
-    : bind(nullptr) { }
+  Symbol_data() = default;
+
+  Symbol_data(Binding* b)
+    : bind(b) 
+  { }
+
+  Symbol_data(Integer const& z)
+    : zval(new Integer(z))
+  { }
   
-  Binding* bind;  // An identifier binding
+  Binding* bind; // An name binding
+  Integer* zval; // An integer interpretation
 };
 
 
@@ -133,10 +134,9 @@ is_language_symbol(Symbol const& s)
 }
 
 
-
-void push_binding(Symbol&, void*);
-void pop_binding(Symbol&);
-void* get_binding(Symbol const&);
+void push_binding(Symbol&, Binding*);
+Binding* pop_binding(Symbol&);
+Binding* get_binding(Symbol&);
 
 
 // -------------------------------------------------------------------------- //

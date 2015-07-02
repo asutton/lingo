@@ -3,6 +3,7 @@
 
 #include "lingo/symbol.hpp"
 #include "lingo/print.hpp"
+#include "lingo/error.hpp"
 
 #include <cassert>
 #include <cstring>
@@ -20,37 +21,37 @@ namespace lingo
 
 // Push a new binding onto the symbol.
 void
-push_binding(Symbol& s, void* p)
+push_binding(Symbol& s, Binding* b)
 {
-  Binding* bind = new Binding(p);
+  lingo_assert(s.desc.kind == identifier_sym);
   Binding*& orig = s.data.bind;
   if (orig)
-    bind->prev = orig;
-  orig = bind;
+    b->prev = orig;
+  orig = b;
 }
 
 
-// Pop a binding from the symbol.
-void
+// Pop a binding from the symbol. This does not delete
+// the binding.
+Binding*
 pop_binding(Symbol& s)
 {
-  assert(s.data.bind);
+  lingo_assert(s.desc.kind == identifier_sym);
+  lingo_assert(s.data.bind);
   Binding*& orig = s.data.bind;
-  Binding* bind = orig;
+  Binding* b = orig;
   orig = orig->prev;
-  delete bind;
+  return b;
 }
 
 
 // Get the binding associated with the symbol. If there
 // is no binding for this symbol, this returns nullptr.
-void*
-get_binding(Symbol const& s)
+Binding*
+get_binding(Symbol& s)
 {
-  if (s.data.bind)
-    return s.data.bind->info;
-  else
-    return nullptr;
+  lingo_assert(s.desc.kind == identifier_sym);
+  return s.data.bind;
 }
 
 
