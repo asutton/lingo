@@ -88,11 +88,15 @@ struct Diagnostic
 };
 
 
-// A diagnostic context is a record of all diagnostic messages
-// that have been emitted as part some processing phase.
+// A diagnostic context is a record of all diagnostic messages that
+// have been emitted as part some processing phase. 
 //
-// Note diagnostics may be suppressed until later. This helps
+// Note that diagnostics may be suppressed until later. This helps
 // to allow tentative processing.
+//
+// When a diagnostic context is declared (as a variable), it becomes
+// the active diagnostic context. When the declaration goes out of 
+// scope, the previous context becomes active.
 class Diagnostic_context : std::vector<Diagnostic>
 {
 public:
