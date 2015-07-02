@@ -90,9 +90,6 @@ is_integer(Token_kind k)
 }
 
 
-std::ostream& operator<<(std::ostream&, Token_kind);
-
-
 // -------------------------------------------------------------------------- //
 //                            Token class
 

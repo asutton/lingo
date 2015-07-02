@@ -38,7 +38,7 @@ Integer::operator=(Integer const& x)
 
 // Construct an integer with the value n.
 inline
-Integer::Integer(long n, int b)
+Integer::Integer(std::intmax_t n, int b)
   : base_(b)
 { 
   mpz_init_set_si(value_, n); 

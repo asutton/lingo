@@ -40,8 +40,8 @@ public:
   Integer(const Integer&);
   Integer& operator=(const Integer&);
 
-  // Value initialization.
-  Integer(long, int = 10);
+  // Value initialization. Allows implicit conversion.
+  Integer(std::intmax_t, int = 10);
 
   // String initialization
   Integer(std::string const&, int = 10);
@@ -86,33 +86,33 @@ private:
 };
 
 // Equality
-bool operator==(const Integer&, const Integer&);
-bool operator!=(const Integer&, const Integer&);
+bool operator==(Integer const&, Integer const&);
+bool operator!=(Integer const&, Integer const&);
 
 // Ordering
-bool operator<(const Integer&, const Integer&);
-bool operator>(const Integer&, const Integer&);
-bool operator<=(const Integer&, const Integer&);
-bool operator>=(const Integer&, const Integer&);
+bool operator<(Integer const&, Integer const&);
+bool operator>(Integer const&, Integer const&);
+bool operator<=(Integer const&, Integer const&);
+bool operator>=(Integer const&, Integer const&);
 
 // Arithmetic
-Integer operator+(const Integer&, const Integer&);
-Integer operator-(const Integer&, const Integer&);
-Integer operator*(const Integer&, const Integer&);
-Integer operator/(const Integer&, const Integer&);
-Integer operator%(const Integer&, const Integer&);
-Integer operator-(const Integer&);
-Integer operator+(const Integer&);
+Integer operator+(Integer const&, Integer const&);
+Integer operator-(Integer const&, Integer const&);
+Integer operator*(Integer const&, Integer const&);
+Integer operator/(Integer const&, Integer const&);
+Integer operator%(Integer const&, Integer const&);
+Integer operator-(Integer const&);
+Integer operator+(Integer const&);
 
 
 // Bit manipulation
-Integer operator&(const Integer&, const Integer&);
-Integer operator|(const Integer&, const Integer&);
-Integer operator^(const Integer&, const Integer&);
-Integer operator~(const Integer&);
+Integer operator&(Integer const&, Integer const&);
+Integer operator|(Integer const&, Integer const&);
+Integer operator^(Integer const&, Integer const&);
+Integer operator~(Integer const&);
 
-Integer operator<<(const Integer&, const Integer&);
-Integer operator>>(const Integer&, const Integer&);
+Integer operator<<(Integer const&, Integer const&);
+Integer operator>>(Integer const&, Integer const&);
 
 
 // Streaming

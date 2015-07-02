@@ -242,13 +242,6 @@ get_token_spelling(Token_kind k)
 }
 
 
-std::ostream& 
-operator<<(std::ostream& os, Token_kind k)
-{
-  return os << get_token_spelling(k);
-}
-
-
 // Initialize a token whose symbol is the string [str, str + len).
 // The token kind is taken from the symbol table.
 Token::Token(Location loc, char const* str, int len)
