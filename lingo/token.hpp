@@ -128,8 +128,8 @@ public:
   
   // Symbol/text representation
   Symbol const& symbol() const { return *sym_; }
-  String const& str() const    { return symbol().str; }
-  String const* ptr() const    { return &str(); }
+  String const& str() const    { return sym_->str; }
+  String const* key() const    { return &sym_->str; }
 
   // Contextually convertible to bool.
   // True when this is not an error token.

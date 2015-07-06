@@ -5,6 +5,7 @@
 #define LINGI_UTIL_DEBUG_HPP
 
 #include "lingo/print.hpp"
+#include "lingo/node.hpp"
 
 #include <iosfwd>
 #include <sstream>
@@ -102,19 +103,6 @@ debug(T const& x)
 }
 
 
-// Return a string containing the debug output for the
-// element x.
-template<typename T>
-inline String
-debug_str(T const& x)
-{
-  std::stringstream ss;
-  Printer p(ss);
-  debug(p, x);
-  return ss.str();
-}
-
-
 // Used in the debug function below.
 struct Debug_render
 {
@@ -163,11 +151,19 @@ debug_newline(Printer& p, T const& x)
 }
 
 
-// Print the word '(null)'.
+// Print the word '<null>'.
 inline void
 debug_null(Printer& p)
 {
-  print_chars(p, "(null)");
+  print_chars(p, "<null>");
+}
+
+
+// Print the word '<error>'.
+inline void
+debug_error(Printer& p)
+{
+  print_chars(p, "<error>");
 }
 
 
@@ -244,8 +240,8 @@ debug_naked_list(Printer& p, T const* list)
 // Debug print a nullary node. This simply prints
 // out the node name.
 template<typename T>
-inline void
-debug_nullary(Printer& p, T const* node)
+inline typename std::enable_if<is_nullary_node<T>()>::type
+debug(Printer& p, T const* node)
 {
   sexpr<T> s(p, node, false);
 }
@@ -253,8 +249,8 @@ debug_nullary(Printer& p, T const* node)
 
 // Debug print a unary node.
 template<typename T>
-inline void
-debug_unary(Printer& p, T const* node)
+inline typename std::enable_if<is_unary_node<T>()>::type
+debug(Printer& p, T const* node)
 {
   sexpr<T> s(p, node);
   debug(p, node->first);
@@ -263,8 +259,8 @@ debug_unary(Printer& p, T const* node)
 
 // Debug print a binary node.
 template<typename T>
-inline void
-debug_binary(Printer& p, T const* node)
+inline typename std::enable_if<is_binary_node<T>()>::type
+debug(Printer& p, T const* node)
 {
   sexpr<T> s(p, node);
   debug_space(p, node->first);
@@ -274,13 +270,27 @@ debug_binary(Printer& p, T const* node)
 
 // Debug print a ternary node.
 template<typename T>
-inline void
-debug_ternary(Printer& p, T const* node)
+inline typename std::enable_if<is_ternary_node<T>()>::type
+debug(Printer& p, T const* node)
 {
   sexpr<T> s(p, node);
   debug_space(p, node->first);
   debug_space(p, node->second);
   debug(p, node->third);
+}
+
+
+// Debug print a k-ary node
+template<typename T>
+inline typename std::enable_if<is_kary_node<T>()>::type
+debug(Printer& p, T const* node)
+{
+  sexpr<T> s(p, node);
+  for (auto iter = node->begin(); iter != node->end(); ++iter) {
+    debug(p, *iter);
+    if (std::next(iter) != node->end())
+      print_space(p);
+  }
 }
 
 

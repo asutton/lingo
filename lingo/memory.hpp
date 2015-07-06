@@ -4,7 +4,7 @@
 #ifndef LINGO_MEMORY_HPP
 #define LINGO_MEMORY_HPP
 
-#include "lingo/debug.hpp"
+#include "lingo/node.hpp"
 
 #include <list>
 #include <set>
@@ -123,10 +123,9 @@ inline void
 mark(Token const&) { }
 
 
-// Mark an empty node.
 template<typename T>
-inline void 
-mark_nullary(T const* t)
+inline void
+mark_this(T const* t)
 {
   T* nc = const_cast<T*>(t);
   if (Collectable* c = dynamic_cast<Collectable*>(nc))
@@ -134,42 +133,54 @@ mark_nullary(T const* t)
 }
 
 
+// Mark a nullary node.
+template<typename T>
+inline typename std::enable_if<is_nullary_node<T>()>::type
+mark(T const* t)
+{
+  mark_this(t);
+}
+
+
 // Mark a unary node.
 template<typename T>
-inline void 
-mark_unary(T const* t)
+inline typename std::enable_if<is_unary_node<T>()>::type
+mark(T const* t)
 {
-  mark_nullary(t);
+  mark_this(t);
   mark(t->first);
 }
 
 
 // Mark a binary node.
 template<typename T>
-inline void 
-mark_binary(T const* t)
+inline typename std::enable_if<is_binary_node<T>()>::type
+mark(T const* t)
 {
-  mark_unary(t);
+  mark_this(t);
+  mark(t->first);
   mark(t->second);
 }
 
 
 // Mark a ternary node.
 template<typename T>
-inline void 
-mark_ternary(T const* t)
+inline typename std::enable_if<is_ternary_node<T>()>::type
+mark(T const* t)
 {
-  mark_binary(t);
+  mark_this(t);
+  mark(t->first);
+  mark(t->second);
   mark(t->third);
 }
 
 
 // Mark a k-ary node.
 template<typename T>
-inline void
-mark_kary(T const* t)
+inline typename std::enable_if<is_kary_node<T>()>::type
+mark(T const* t)
 {
-  mark_nullary(t);
+  mark_this(t);
   for (auto const* p : *t)
     mark(p);
 }

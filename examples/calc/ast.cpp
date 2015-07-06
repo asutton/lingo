@@ -131,14 +131,14 @@ mark(Expr* e)
   if (is_error_node(e))
     return;
   switch (e->kind()) {
-  case int_expr: return mark_unary(cast<Int>(e));
-  case add_expr: return mark_binary(cast<Add>(e));
-  case sub_expr: return mark_binary(cast<Sub>(e));
-  case mul_expr: return mark_binary(cast<Mul>(e));
-  case div_expr: return mark_binary(cast<Div>(e));
-  case mod_expr: return mark_binary(cast<Mod>(e));
-  case neg_expr: return mark_unary(cast<Neg>(e));
-  case pos_expr: return mark_unary(cast<Pos>(e));
+  case int_expr: return mark(cast<Int>(e));
+  case add_expr: return mark(cast<Add>(e));
+  case sub_expr: return mark(cast<Sub>(e));
+  case mul_expr: return mark(cast<Mul>(e));
+  case div_expr: return mark(cast<Div>(e));
+  case mod_expr: return mark(cast<Mod>(e));
+  case neg_expr: return mark(cast<Neg>(e));
+  case pos_expr: return mark(cast<Pos>(e));
   
   default:
     lingo_unreachable("unevaluated node '{}'", e->node_name());
@@ -304,14 +304,14 @@ debug(Printer& p, Expr const* e)
   }
   
   switch (e->kind()) {
-  case int_expr: return debug_unary(p, cast<Int>(e));
-  case add_expr: return debug_binary(p, cast<Add>(e));
-  case sub_expr: return debug_binary(p, cast<Sub>(e));
-  case mul_expr: return debug_binary(p, cast<Mul>(e));
-  case div_expr: return debug_binary(p, cast<Div>(e));
-  case mod_expr: return debug_binary(p, cast<Mod>(e));
-  case neg_expr: return debug_unary(p, cast<Neg>(e));
-  case pos_expr: return debug_unary(p, cast<Pos>(e));
+  case int_expr: return debug(p, cast<Int>(e));
+  case add_expr: return debug(p, cast<Add>(e));
+  case sub_expr: return debug(p, cast<Sub>(e));
+  case mul_expr: return debug(p, cast<Mul>(e));
+  case div_expr: return debug(p, cast<Div>(e));
+  case mod_expr: return debug(p, cast<Mod>(e));
+  case neg_expr: return debug(p, cast<Neg>(e));
+  case pos_expr: return debug(p, cast<Pos>(e));
 
   default:
     lingo_unreachable("unhandled node '{}'", e->node_name());

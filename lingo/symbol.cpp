@@ -12,48 +12,6 @@
 namespace lingo
 {
 
-// -------------------------------------------------------------------------- //
-//                             Symbols
-//
-// TODO: Check that the symbol has the appropriate kind before 
-// accessing its bindings or other (eventual) attributes.
-
-
-// Push a new binding onto the symbol.
-void
-push_binding(Symbol& s, Binding* b)
-{
-  lingo_assert(s.desc.kind == identifier_sym);
-  Binding*& orig = s.data.bind;
-  if (orig)
-    b->prev = orig;
-  orig = b;
-}
-
-
-// Pop a binding from the symbol. This does not delete
-// the binding.
-Binding*
-pop_binding(Symbol& s)
-{
-  lingo_assert(s.desc.kind == identifier_sym);
-  lingo_assert(s.data.bind);
-  Binding*& orig = s.data.bind;
-  Binding* b = orig;
-  orig = orig->prev;
-  return b;
-}
-
-
-// Get the binding associated with the symbol. If there
-// is no binding for this symbol, this returns nullptr.
-Binding*
-get_binding(Symbol& s)
-{
-  lingo_assert(s.desc.kind == identifier_sym);
-  return s.data.bind;
-}
-
 
 // -------------------------------------------------------------------------- //
 //                           Symbol table

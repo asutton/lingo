@@ -20,43 +20,6 @@ namespace lingo
 {
 
 // -------------------------------------------------------------------------- //
-//                         Identifier bindings
-
-// A binding associates the use of a name with different
-// kinds of information: type, value, etc. This information
-// is represented as a pointer within the binding object.
-//
-// An implementation shuld derive from this class to provide
-// name bindings.
-struct Binding 
-{
-  Binding* prev = nullptr;
-};
-
-
-// -------------------------------------------------------------------------- //
-//                           Symbol data
-
-// Information associated with a symbol. This includes the kind
-// of token, and token-specific data.
-union Symbol_data
-{
-  Symbol_data() = default;
-
-  Symbol_data(Binding* b)
-    : bind(b) 
-  { }
-
-  Symbol_data(Integer const& z)
-    : zval(new Integer(z))
-  { }
-  
-  Binding* bind; // An name binding
-  Integer* zval; // An integer interpretation
-};
-
-
-// -------------------------------------------------------------------------- //
 //                                  Symbols
 
 // Determines the kinds of attributes associated with the symbol.
@@ -105,7 +68,6 @@ struct Symbol
 
   String            str;  // The string view
   Symbol_descriptor desc; // The kind of token
-  Symbol_data       data; // Supplemental data
 };
 
 
@@ -133,10 +95,6 @@ is_language_symbol(Symbol const& s)
   return s.desc.kind == language_sym;
 }
 
-
-void push_binding(Symbol&, Binding*);
-Binding* pop_binding(Symbol&);
-Binding* get_binding(Symbol&);
 
 
 // -------------------------------------------------------------------------- //
@@ -240,12 +198,13 @@ get_symbol(String const& s)
 }
 
 
-// Return a new string, interned in the symbol table and
-// return its string representation.
-inline String const&
-get_symbol_string(char const* str)
+// Return a pointer to a unique representation of the
+// given string. Inserts a symbol into the symbol table
+// where appropreate.
+inline String const*
+get_string(char const* str)
 {
-  return get_symbol(str).str;
+  return &get_symbol(str).str;
 }
 
 
