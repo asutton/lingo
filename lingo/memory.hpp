@@ -164,6 +164,17 @@ mark_ternary(T const* t)
 }
 
 
+// Mark a k-ary node.
+template<typename T>
+inline void
+mark_kary(T const* t)
+{
+  mark_nullary(t);
+  for (auto const* p : *t)
+    mark(p);
+}
+
+
 // The garbage factory class tracks each object that it allocates.
 // At various phases of execution, the collect() function can be
 // used to reclaim unreferenced memory.
