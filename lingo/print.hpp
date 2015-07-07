@@ -275,12 +275,15 @@ print_paren_enclosed(Printer& p, T const& x)
 
 // Print a nested Range of Printable values as
 // a comma-separated sequence of terms.
+//
+// TODO: This should only be defined on non-node
+// ranges.
 template<typename T>
 inline void
-print_list(Printer& p, T const* range)
+print_list(Printer& p, T const& range)
 {
-  auto first = range->begin();
-  auto last = range->end();
+  auto first = range.begin();
+  auto last = range.end();
   
   // Don't print anything for empty ranges.
   if (first == last)
@@ -293,7 +296,6 @@ print_list(Printer& p, T const* range)
     ++first;
   }
 }
-
 
 // Print a nested Range of Printable values.
 //
