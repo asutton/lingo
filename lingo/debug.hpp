@@ -200,9 +200,6 @@ debug_nested_list(Printer& p, T const* list)
 
   indent(p);
   print_newline(p);
-  print_chars(p, '(');
-  indent(p);
-  print_newline(p);
   auto first = list->begin();
   auto last = list->end();
   while (first != last) {
@@ -212,9 +209,6 @@ debug_nested_list(Printer& p, T const* list)
       debug(p, *first);
     ++first;
   }
-  undent(p);
-  print_newline(p);
-  print_chars(p, ')');
   undent(p);
   print_newline(p);
 }

@@ -53,10 +53,11 @@ struct Printer
 
   ~Printer();
 
-  std::ostream& os;
-  int depth;
-  bool needs_space;
-  bool needs_newline;
+  std::ostream& os;   // The underlying output stream
+  char last;          // Last character written
+  int depth;          // Indentation depth
+  bool needs_space;   // Set to true to offset a printed term by space
+  bool needs_newline; // Set to true to require a newline after printing
 };
 
 
