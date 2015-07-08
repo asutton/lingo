@@ -10,7 +10,7 @@
 #include <iosfwd>
 #include <sstream>
 #include <iterator>
-#include <stdexcept>
+#include <vector>
 
 namespace lingo
 {
@@ -171,11 +171,11 @@ debug_error(Printer& p)
 // line of text.
 template<typename T>
 void
-debug_flat_list(Printer& p, T const* list)
+debug_flat_list(Printer& p, T const& list)
 {
   print_chars(p, '(');
-  auto first = list->begin();
-  auto last = list->end();
+  auto first = list.begin();
+  auto last = list.end();
   while (first != last) {
     if (std::next(first) != last)
       debug_space(p, *first);
@@ -191,17 +191,17 @@ debug_flat_list(Printer& p, T const* list)
 // appears, indented, on a new line.
 template<typename T>
 void
-debug_nested_list(Printer& p, T const* list)
+debug_nested_list(Printer& p, T const& list)
 {
-  if (list->empty()) {
+  if (list.empty()) {
     print_chars(p, "()");
     return;
   }
 
   indent(p);
   print_newline(p);
-  auto first = list->begin();
-  auto last = list->end();
+  auto first = list.begin();
+  auto last = list.end();
   while (first != last) {
     if (std::next(first) != last)
       debug_newline(p, *first);
@@ -285,6 +285,14 @@ debug(Printer& p, T const* node)
     if (std::next(iter) != node->end())
       print_space(p);
   }
+}
+
+
+template<typename T>
+void
+debug(Printer& p, std::vector<T const*> const& v)
+{
+  debug_flat_list(p, v);
 }
 
 
