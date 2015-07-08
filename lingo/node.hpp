@@ -367,16 +367,15 @@ is_valid_node(T const* t)
 template<typename T>
 struct Maybe
 {
-  Maybe(T* p)
+  Maybe(T const* p)
     : ptr(p)
   { }
 
   explicit operator bool() const { return is_valid_node(ptr); }
 
-  T*       operator*()       { return ptr; }
   T const* operator*() const { return ptr; }
 
-  T* ptr;
+  T const* ptr;
 };
 
 

@@ -123,6 +123,16 @@ inline void
 mark(Token const&) { }
 
 
+// Mark a sequence of node pointers.
+template<typename T>
+inline void
+mark(std::vector<T const*> const& v)
+{
+  for (T const* t : v)
+    mark(t);
+}
+
+
 template<typename T>
 inline void
 mark_this(T const* t)

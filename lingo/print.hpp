@@ -318,10 +318,6 @@ print_nested(Printer& p, T const& range)
   while (first != last) {
     if (std::next(first) != last) {
       print(p, *first);
-
-      // FIXME: This shouldn't be here.
-      print(p, ',');
-      
       print_newline(p);
     } else {
       print(p, *first);
