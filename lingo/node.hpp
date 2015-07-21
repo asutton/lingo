@@ -27,6 +27,26 @@ struct Kind_base
 
 
 // -------------------------------------------------------------------------- //
+//                        Generic terms
+
+
+// The Term template provides a facility for making an arbitrary
+// type model the requirements of a node. This is useful for 
+// defining terms that do not fall into other categegories (types,
+// expressions, declarations, statments, etc).
+//
+// The "kind" of the node can be specified by the integer template
+// argument N, but it is rarely useful to define it as anything
+// other.
+template<int N = 0>
+struct Term : Kind_base<int, N>
+{
+  char const* node_name() const { return "<unspecified term>"; }
+  int kind() const              { return N; }
+};
+
+
+// -------------------------------------------------------------------------- //
 //                        Dynamic type information
 
 
