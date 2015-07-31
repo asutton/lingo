@@ -128,8 +128,7 @@ public:
   
   // Symbol/text representation
   Symbol const& symbol() const { return *sym_; }
-  String const& str() const    { return sym_->str; }
-  String const* key() const    { return &sym_->str; }
+  String const* str() const    { return &sym_->str; }
 
   // Contextually convertible to bool.
   // True when this is not an error token.
@@ -153,9 +152,9 @@ using Token_list = std::vector<Token>;
 // -------------------------------------------------------------------------- //
 //                              Elaboration
 
-bool    as_boolean(Token);
-Integer as_integer(Token);
-String  as_string(Token);
+bool           as_boolean(Token);
+Integer        as_integer(Token);
+String const&  as_string(Token);
 
 
 // Returns true if the token is an integer.

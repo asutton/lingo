@@ -352,15 +352,15 @@ get_integer_base(Token tok)
 Integer 
 as_integer(Token tok)
 {
-  return Integer(tok.str(), get_integer_base(tok));
+  return Integer(*tok.str(), get_integer_base(tok));
 }
 
 
 // Return the string representation of the token.
-String
+String const&
 as_string(Token tok)
 {
-  return tok.str();
+  return *tok.str();
 }
 
 

@@ -5,6 +5,7 @@
 #define LINGO_NODE_HPP
 
 #include <cassert>
+#include <vector>
 #include <type_traits>
 
 // This module provides defines a node abstraction for various
@@ -13,6 +14,9 @@
 
 namespace lingo
 {
+
+class Token;
+
 
 // The Kind_of class is a helper class that supports the definition 
 // of node models. This provides a static representation of the 
@@ -47,6 +51,41 @@ struct Term : Kind_base<int, N>
 
 
 // -------------------------------------------------------------------------- //
+//                            Special values
+//
+// The following functions define special values of node pointers.
+
+
+// Construct a node pointer that acts as an error value.
+// The type of the node is explicitly given as a template
+// argument.
+template<typename T>
+inline T* 
+make_error_node()
+{
+  return (T*)0x01;
+}
+
+
+// Returns true if `t` is an error node.
+template<typename T>
+inline bool
+is_error_node(T const* t)
+{
+  return t == make_error_node<T>();
+}
+
+
+// Returns true if `t` is neither null nor an error.
+template<typename T>
+inline bool
+is_valid_node(T const* t)
+{
+  return t && !is_error_node(t);
+}
+
+
+// -------------------------------------------------------------------------- //
 //                        Dynamic type information
 
 
@@ -62,15 +101,16 @@ is(U const* u)
 
 // Statically cast a pointer to a Node of type T to a 
 // pointer to a Node of type U. This is not a checked
-// operation.
+// operation (except in debug mode).
 //
-// TODO: Support checking by making node kind
-// a static property of all node classes. 
+// Note that this allows null and error nodes to be
+// interpreted as nodes of the given type (as their
+// values are considered common to all).
 template<typename T, typename U>
 inline T* 
 cast(U* u)
 {
-  assert(is<T>(u));
+  assert(is_valid_node(u) ? is<T>(u) : true);
   return static_cast<T*>(u);
 }
 
@@ -79,7 +119,7 @@ template<typename T, typename U>
 inline T const*
 cast(U const* u)
 {
-  assert(is<T>(u));
+  assert(is_valid_node(u) ? is<T>(u) : true);
   return static_cast<T const*>(u);
 }
 
@@ -341,53 +381,46 @@ is_kary_node()
 
 
 // -------------------------------------------------------------------------- //
-//                            Special values
+//                             Sequences
+
+
+// A sequence is a generic sequence of some kind of term.
 //
-// The following functions define special values of node pointers.
-
-
-// Construct a node pointer that acts as an error value.
-// The type of the node is explicitly given as a template
-// argument.
+// TODO: Store any other information in here?
 template<typename T>
-inline T* 
-make_error_node()
+struct Sequence : std::vector<T const*>
 {
-  return (T*)0x01;
-}
+  using std::vector<T const*>::vector;
+
+  Sequence() = default;
+
+  explicit Sequence(std::nullptr_t)
+    : valid(false)
+  { }
+
+  explicit operator bool() const { return valid; }
+
+  static Sequence empty() { return Sequence{}; }
+  static Sequence error() { return Sequence(nullptr); }
+
+  bool valid = true;
+};
 
 
-// Returns true if `t` is an error node.
-template<typename T>
-inline bool
-is_error_node(T const* t)
-{
-  return t == make_error_node<T>();
-}
-
-
-// Returns true if `t` is neither null nor an error.
-template<typename T>
-inline bool
-is_valid_node(T const* t)
-{
-  return t && !is_error_node(t);
-}
-
+// -------------------------------------------------------------------------- //
+//                        Reqiured nodes
 
 // The Maybe template is typically used to declare node 
 // pointers within condition declarations.
 //
-//    if (Maybe<Var_decl> var = ...)
+//    if (Required<Var_decl> var = ...)
 //
 // This class contextually evaluates to `true` whenever
 // it is initialized to a non-null, non-error value. 
-//
-// TODO: This should be a specialization of std::optional.
 template<typename T>
-struct Maybe
+struct Required
 {
-  Maybe(T const* p)
+  Required(T const* p)
     : ptr(p)
   { }
 
@@ -396,6 +429,65 @@ struct Maybe
   T const* operator*() const { return ptr; }
 
   T const* ptr;
+};
+
+template<typename T>
+struct Required<Sequence<T>>
+{
+  Required(Sequence<T>& s)
+    : seq(std::move(s))
+  { }
+
+  Required(Sequence<T> const& s)
+    : seq(s)
+  { }
+
+  // Contextually evaluates to true when the sequence is
+  // non-empty and valid.
+  explicit operator bool() const { return !seq.empty() && (bool)seq; }
+
+  Sequence<T> const& operator*() const { return seq; }
+
+  Sequence<T> seq;
+};
+
+
+// -------------------------------------------------------------------------- //
+//                        Optional results
+
+// The Optional template is typically used to declare node 
+// pointers within condition declarations.
+//
+//    if (Maybe<Var_decl> var = ...)
+//
+// This class contextually evaluates to `true` whenever
+// it is a non-error value. Note that the term may be empty.
+template<typename T>
+struct Optional
+{
+  Optional(T const* p)
+    : ptr(p)
+  { }
+
+  explicit operator bool() const { return !is_error_node(ptr); }
+
+  T const* operator*() const { return ptr; }
+
+  T const* ptr;
+};
+
+template<typename T>
+struct Optional<Sequence<T>>
+{
+  Optional(Sequence<T> const& s)
+    : seq(s)
+  { }
+
+  explicit operator bool() const { return (bool)seq; }
+
+  Sequence<T> const& operator*() const { return seq; }
+
+  Sequence<T> const& seq;
 };
 
 

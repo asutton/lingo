@@ -47,7 +47,7 @@ int main()
     // debug(toks);
 
     Token_stream ts(toks);
-    Expr* expr = parse(ts);
+    Expr const* expr = parse(ts);
     if (error_count()) {
       reset_diagnostics();
       continue;

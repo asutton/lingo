@@ -20,25 +20,22 @@ struct Expr;
 // tokens. This supports the resolution of source code locations.
 struct Parser
 {
-  using argument_type = Token;
-  using result_type = Expr*;
+  Expr const* on_int_expression(Token const*);
+  Expr const* on_prefix_expression(Token const*, Expr const*);
+  Expr const* on_infix_expression(Token const*, Expr const*, Expr const*);
 
-  Expr* on_int_expression(Token const*);
-  Expr* on_prefix_expression(Token const*, Expr*);
-  Expr* on_infix_expression(Token const*, Expr*, Expr*);
+  Expr const* on_enclosure(Token const*, Token const*);
+  Expr const* on_enclosure(Token const*, Token const*, Expr const*);
 
-  Expr* on_enclosure(Token const*, Token const*);
-  Expr* on_enclosure(Token const*, Token const*, Expr*);
-
-  Expr* on_error();
-  Expr* on_expected(char const*);
-  Expr* on_expected(Location, char const*);
-  Expr* on_expected(Location, char const*, Token const&);
+  Expr const* on_error();
+  Expr const* on_expected(char const*);
+  Expr const* on_expected(Location, char const*);
+  Expr const* on_expected(Location, char const*, Token const&);
 };
 
 void init_grammar();
 
-Expr* parse(Token_stream&);
+Expr const* parse(Token_stream&);
 
 } // nammespace calc
 

@@ -129,6 +129,18 @@ next_token_in_range(Stream& s, Token_kind first, Token_kind last)
 //                            Token matching
 
 
+// Just return the next token, or nullptr if past the end.
+template<typename Stream>
+inline Iterator_type<Stream>
+get_token(Stream& s)
+{
+  if (s.eof())
+    return nullptr;
+  else
+    return &s.get();
+}
+
+
 // Return a pointer to the next token if it has kind 'k'. Otherwise,
 // returns a null pointer.
 template<typename Stream>
@@ -161,9 +173,24 @@ require_token(Stream& s, Token_kind k)
 // -------------------------------------------------------------------------- //
 //                           Parser combinators
 
+// Strip information from the return type of a rule.
+template<typename T>
+using get_term_type = 
+  typename std::remove_const<
+    typename std::remove_pointer<T>::type
+  >::type;
+
+
 template<typename Parser, typename Stream, typename Rule>
-Result_type<Parser>
+inline auto
+term_type(Parser& p, Stream& s, Rule rule)
+  -> get_term_type<decltype(rule(p, s))>;
+
+
+template<typename Parser, typename Stream, typename Rule>
+inline auto
 parse_expected(Parser& p, Stream& s, Rule rule)
+  -> decltype(term_type(p, s, rule))
 {
   if (auto result = rule(p, s))
     return result;
@@ -182,33 +209,39 @@ parse_expected(Parser& p, Stream& s, Rule rule)
 // enclose grammar production. Note that an empty enclosure
 // is allowed.
 //
-// The parser must define the following operations:
-//
-//    p.on_enclosure(loc, loc)
-//    p.on_enclosure(loc, loc, term)
-//
-// The first is invoked when the parsing an empty enclosure, and
-// the second when the inner term is parsed.
+// FIXME: Pass token data back to the caller. A simple struct
+// as an argument should suffice.
 template<typename Parser, typename Stream, typename Grammar>
-inline Result_type<Parser>
+inline auto
 parse_enclosed(Parser& p, Stream& s, Token_kind k1, Token_kind k2, Grammar rule)
+  -> decltype(rule(p, s))
 {
-  if (auto left = expect_token(p, s, k1)) {
+  using Term = decltype(term_type(p, s, rule));
+  
+  if (auto left = require_token(s, k1)) {
+    
     // Match the empty enclosure.
     if (auto right = match_token(s, k2))
-      return p.on_enclosure(left, right);
+      return Term::empty();
     
-    // Check the rule.
-    if (auto mid = rule(p, s)) {
-      if (auto right = expect_token(p, s, k2))
-        return p.on_enclosure(left, right, mid);
-      else
-        return p.on_error();
+    // Check the rule. Note to be careful about copying the
+    // parsed term. Note that no allocations occur when returning
+    // an error.
+    if (Required<Term> term = rule(p, s)) {
+
+      // Pick up the closing brace.
+      if (auto right = expect_token(p, s, k2))  {
+        return *term;
+      } else {
+        // TODO: Better error message?
+        error("expected '{}'", k2);
+        return Term::error(); // Unabalanced markers.
+      }
     } else {
-      return p.on_expected(s.location(), get_grammar_name(rule));
+      return Term::error(); // Error parsing term.
     }
   }
-  return {};
+  lingo_unreachable();
 }
 
 
@@ -216,8 +249,9 @@ parse_enclosed(Parser& p, Stream& s, Token_kind k1, Token_kind k2, Grammar rule)
 //
 //    paren-enclosed ::= '(' [rule] ')'
 template<typename Parser, typename Stream, typename Grammar>
-inline Result_type<Parser>
+inline auto
 parse_paren_enclosed(Parser& p, Stream& s, Grammar rule)
+  -> decltype(rule(p, s))
 {
   return parse_enclosed(p, s, lparen_tok, rparen_tok, rule);
 }
@@ -227,8 +261,9 @@ parse_paren_enclosed(Parser& p, Stream& s, Grammar rule)
 //
 //    brace-enclosed ::= '{' rule '}'
 template<typename Parser, typename Stream, typename Grammar>
-inline Result_type<Parser>
+inline auto
 parse_brace_enclosed(Parser& p, Stream& s, Grammar rule)
+  -> decltype(rule(p, s))
 {
   return parse_enclosed(p, s, lbrace_tok, rbrace_tok, rule);
 }
@@ -238,8 +273,9 @@ parse_brace_enclosed(Parser& p, Stream& s, Grammar rule)
 //
 //    bracket-enclosed ::= '[' rule ']'
 template<typename Parser, typename Stream, typename Grammar>
-inline Result_type<Parser>
+inline auto
 parse_bracket_enclosed(Parser& p, Stream& s, Grammar rule)
+  -> decltype(rule(p, s))
 {
   return parse_enclosed(p, s, lbrack_tok, rbrack_tok, rule);
 }
@@ -257,14 +293,18 @@ parse_bracket_enclosed(Parser& p, Stream& s, Grammar rule)
 // For any grammar that uses this production, the parser must
 // define a handler, `p.on_prefix_term(op, term)`.
 template<typename Parser, typename Stream, typename Op, typename Rule>
-Result_type<Parser>
-parse_prefix_expression(Parser& p, Stream& s, Op op, Rule rule)
+auto
+parse_prefix_term(Parser& p, Stream& s, Op op, Rule rule)
+  -> decltype(rule(p, s))
 {
+  using Term = decltype(term_type(p, s, rule));
   if (Token const* tok = op(p, s)) {
-    if (Result_type<Parser> term = parse_prefix_expression(p, s, op, rule))
-      return p.on_prefix_expression(tok, term);
-    else
-      return p.on_expected(s.location(), get_grammar_name(rule));
+    if (Required<Term> term = parse_prefix_term(p, s, op, rule)) {
+      return *term;
+    } else {
+      error(s.location(), "expected {}", get_grammar_name(rule));
+      return Term::error();
+    }
   }
   return rule(p, s);
 }
@@ -288,12 +328,13 @@ parse_prefix_expression(Parser& p, Stream& s, Op op, Rule rule)
 // To support diagnostics, `msg` is the name of the grammar
 // production associated with `rule`.
 template<typename Parser, typename Stream, typename Op, typename Rule>
-Result_type<Parser>
+auto
 parse_left_infix_expression(Parser& p, Stream& s, Op op, Rule rule)
+  -> decltype(rule(p, s))
 {
-  if (Result_type<Parser> expr1 = rule(p, s)) {
+  if (auto expr1 = rule(p, s)) {
     while (Token const* tok = op(p, s)) {
-      if (Result_type<Parser> expr2 = rule(p, s)) 
+      if (auto expr2 = rule(p, s)) 
         expr1 = p.on_infix_expression(tok, expr1, expr2);
       else 
         return p.on_expected(tok->location(), get_grammar_name(rule), *tok);
@@ -309,8 +350,9 @@ parse_left_infix_expression(Parser& p, Stream& s, Op op, Rule rule)
 //
 // TODO: Make this iterative?
 template<typename Parser, typename Stream, typename Op, typename Grammar>
-Result_type<Parser>
+auto
 parse_right_infix_expression(Parser& p, Stream& s, Op op, Grammar rule)
+  -> decltype(rule(p, s))
 {
   if (Result_type<Parser> expr1 = rule(p, s)) {
     if (Token const* tok = op(p, s)) {
@@ -335,8 +377,9 @@ parse_right_infix_expression(Parser& p, Stream& s, Op op, Grammar rule)
 //
 // where v is a vector of parsed elements. 
 template<typename Parser, typename Stream, typename Grammar>
-Result_type<Parser>
+auto
 parse_sequence(Parser& p, Stream& s, Grammar rule)
+  -> decltype(rule(p, s))
 {
   std::vector<Result_type<Parser>> seq;
   while (!s.eof()) {
@@ -353,26 +396,32 @@ parse_sequence(Parser& p, Stream& s, Grammar rule)
 //
 //    list(rule) ::= rule [',' rule]*
 //
-// TODO: Consider allowing a list to include an extra trailing comma. 
-// This would only be valid in certain contexts (e.g., enumerations, 
-// aggregate initializers).
+// This takes the sequence being constructed as an argument
+// and returns that value. If an error is encountered during
+// the parse, the input sequence will be overrwritten by
+// an error code.
+//
+// The list type must be a Seq<T const*> where T const* is
+// the return type of the grammar.
 template<typename Parser, typename Stream, typename Grammar>
-Result_type<Parser>
+auto
 parse_list(Parser& p, Stream& s, Grammar rule)
+  -> Sequence<decltype(term_type(p, s, rule))>
 {
-  std::vector<Result_type<Parser>> list;
+  using Term = decltype(term_type(p, s, rule));
+  using List = Sequence<Term>;
+  List list;
   do {
-    Location loc = s.location();
-    Result_type<Parser> elem = rule(p, s);
-    if (!elem)
-      return p.on_expected(loc, get_grammar_name(rule));
-    if (p.is_error(elem))
-      return elem;
-    list.push_back(elem);
+    if (Required<Term> term = rule(p, s))
+      list.push_back(*term);
+    else
+      return List::error();
   } while (match_token(s, comma_tok));
-  return p.on_list(std::move(list));
+  return list;
 }
 
+
 } // namespace lingo
+
 
 #endif

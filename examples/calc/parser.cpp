@@ -20,7 +20,7 @@ namespace
 {
 
 
-Expr* parse_expression(Parser&, Token_stream&);
+Expr const* parse_expression(Parser&, Token_stream&);
 
 
 // -------------------------------------------------------------------------- //
@@ -32,14 +32,16 @@ Expr* parse_expression(Parser&, Token_stream&);
 //    primary-expression ::=
 //        integer-literal
 //      | '(' expression ')'
-Expr*
+Expr const*
 parse_primary_expression(Parser& p, Token_stream& toks)
 {
   if (Token const* tok = match_if(toks, is_token(decimal_integer_tok)))
     return p.on_int_expression(tok);
 
-  if (next_token_is(toks, lparen_tok))
-    return parse_paren_enclosed(p, toks, parse_expression);
+  if (next_token_is(toks, lparen_tok)) {
+    if (Expr const* e = parse_paren_enclosed(p, toks, parse_expression))
+      return e;
+  }
 
   // If the expression was none of the above, the program is ill-formed.
   if (toks.eof())
@@ -74,12 +76,16 @@ parse_prefix_operator(Parser& p, Token_stream& toks)
 //    prefix-expression ::=
 //        primary-expression
 //      | prefix-operator prefix-expression.
-Expr*
+Expr const*
 parse_prefix_expression(Parser& p, Token_stream& toks)
 {
   auto op = parse_prefix_operator;
   auto sub = parse_primary_expression;
-  return parse_prefix_expression(p, toks, op, sub);
+  Token const* tok = toks.begin();
+  Optional<Expr> e = parse_prefix_term(p, toks, op, sub);
+  if (e)
+    return p.on_prefix_expression(tok, *e);
+  return *e;
 }
 
 
@@ -127,7 +133,7 @@ parse_multiplicative_operator(Parser& p, Token_stream& toks)
 //    multiplicative-expression:
 //      unary-expression
 //      multiplicative-expression multiplicative-operator unary-expression
-Expr*
+Expr const*
 parse_multiplicative_expression(Parser& p, Token_stream& toks)
 {
   auto op = parse_multiplicative_operator;
@@ -153,7 +159,7 @@ parse_additive_operator(Parser& p, Token_stream& toks)
 //    additive-expression ::=
 //        multiplicative-expression
 //      | additive-expression additive-operator multiplicative-expression
-inline Expr*
+inline Expr const*
 parse_additive_expression(Parser& p, Token_stream& toks)
 {
   auto op = parse_additive_operator;
@@ -166,7 +172,7 @@ parse_additive_expression(Parser& p, Token_stream& toks)
 //                           Expression parser
 
 // Parse an expression. 
-Expr*
+Expr const*
 parse_expression(Parser& p, Token_stream& toks)
 {
   return parse_additive_expression(p, toks);
@@ -179,22 +185,22 @@ parse_expression(Parser& p, Token_stream& toks)
 //                            Parser function
 
 
-Expr*
+Expr const*
 Parser::on_error()
 {
   return get_error();
 }
 
 
-Expr*
+Expr const*
 Parser::on_int_expression(Token const* tok)
 {
   return gc().make<Int>(tok->location(), as_integer(*tok));
 }
 
 
-Expr*
-Parser::on_prefix_expression(Token const* tok, Expr* e)
+Expr const*
+Parser::on_prefix_expression(Token const* tok, Expr const* e)
 {
   Location loc = tok->location();
   switch (tok->kind()) {
@@ -206,8 +212,8 @@ Parser::on_prefix_expression(Token const* tok, Expr* e)
 }
 
 
-Expr*
-Parser::on_infix_expression(Token const* tok, Expr* e1, Expr* e2)
+Expr const*
+Parser::on_infix_expression(Token const* tok, Expr const* e1, Expr const* e2)
 {
   Location loc = tok->location();
   switch (tok->kind()) {
@@ -223,7 +229,7 @@ Parser::on_infix_expression(Token const* tok, Expr* e1, Expr* e2)
 
 
 // Do not allow empty parens.
-Expr*
+Expr const*
 Parser::on_enclosure(Token const* left, Token const* right)
 {
   error(left->location(), "empty nested expression");
@@ -232,14 +238,14 @@ Parser::on_enclosure(Token const* left, Token const* right)
 
 
 // Just return the enclosed expression.
-Expr*
-Parser::on_enclosure(Token const* left, Token const* right, Expr* mid)
+Expr const*
+Parser::on_enclosure(Token const* left, Token const* right, Expr const* mid)
 {
   return mid;
 }
 
 
-Expr*
+Expr const*
 Parser::on_expected(char const* str)
 {
   error(Location::none, "expected '{}' but got end-of-file", str);
@@ -247,7 +253,7 @@ Parser::on_expected(char const* str)
 }
 
 
-Expr*
+Expr const*
 Parser::on_expected(Location loc, char const* str, Token const& tok)
 {
   error(loc, "expected '{}' but got '{}'", str, tok);
@@ -255,7 +261,7 @@ Parser::on_expected(Location loc, char const* str, Token const& tok)
 }
 
 
-Expr*
+Expr const*
 Parser::on_expected(Location loc, char const* str)
 {
   error(loc, "expected '{}'", str);
@@ -263,7 +269,7 @@ Parser::on_expected(Location loc, char const* str)
 }
 
 
-Expr* 
+Expr const* 
 parse(Token_stream& ts)
 {
   Parser p;

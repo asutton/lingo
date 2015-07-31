@@ -60,6 +60,9 @@ struct Expr
   Kind        kind() const      { return kind_; }
   Location    location() const  { return loc_; }
 
+  static Expr const* empty() { return nullptr; }
+  static Expr const* error() { return make_error_node<Expr>(); }
+
   Kind     kind_;
   Location loc_;
 };
@@ -70,13 +73,13 @@ struct Expr
 template<Kind K>
 struct Unary : Expr, Node_kind<K>
 {
-  Unary(Location loc, Expr* e)
+  Unary(Location loc, Expr const* e)
     : Expr(K, loc), first(e)
   { }
 
-  Expr* arg() const { return first; }
+  Expr const* arg() const { return first; }
 
-  Expr* first;
+  Expr const* first;
 };
 
 
@@ -85,15 +88,15 @@ struct Unary : Expr, Node_kind<K>
 template<Kind K>
 struct Binary : Expr, Node_kind<K>
 {
-  Binary(Location loc, Expr* l, Expr* r)
+  Binary(Location loc, Expr const* l, Expr const* r)
     : Expr(K, loc), first(l), second(r)
   { }
 
-  Expr* left() const { return first; }
-  Expr* right() const { return second; }
+  Expr const* left() const { return first; }
+  Expr const* right() const { return second; }
 
-  Expr* first;
-  Expr* second;
+  Expr const* first;
+  Expr const* second;
 };
 
 
@@ -162,7 +165,7 @@ struct Pos : Unary<pos_expr>
 // -------------------------------------------------------------------------- //
 //                               Node accessors
 
-Expr* get_error();
+Expr const* get_error();
 
 
 // -------------------------------------------------------------------------- //
@@ -174,7 +177,7 @@ Integer evaluate(Expr const*);
 //                                  Facilities
 
 // Garbage collection
-void mark(Expr*);
+void mark(Expr const*);
 
 // Pretty printing
 void print(Printer&, Expr const*);

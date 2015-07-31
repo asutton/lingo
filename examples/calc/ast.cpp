@@ -33,7 +33,7 @@ get_node_name(Kind k)
 //                               Node accessors
 
 // Returs an error expression.
-Expr* 
+Expr const* 
 get_error()
 {
   return make_error_node<Expr>();
@@ -124,7 +124,7 @@ evaluate(Expr const* e)
 //                               Garbage collection
 
 void
-mark(Expr* e)
+mark(Expr const* e)
 {
   if (!e)
     return;
@@ -236,7 +236,7 @@ needs_parens(Expr const* expr, Expr const* sub)
 // Print a subexpression of an outer expression. This will automatically
 // add parentheses if they are needed (and omit them if they are not).
 inline void
-print_subexpr(Printer& p, Expr const* expr, Expr* sub)
+print_subexpr(Printer& p, Expr const* expr, Expr const* sub)
 {
   if (needs_parens(expr, sub))
     print_paren_enclosed(p, sub);
