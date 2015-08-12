@@ -56,6 +56,15 @@ struct Term : Kind_base<int, N>
 // The following functions define special values of node pointers.
 
 
+// Returns true if the node is empty.
+template<typename T>
+inline bool
+is_empty_node(T const* t)
+{
+  return t == nullptr;
+}
+
+
 // Construct a node pointer that acts as an error value.
 // The type of the node is explicitly given as a template
 // argument.
@@ -380,35 +389,9 @@ is_kary_node()
 }
 
 
-// -------------------------------------------------------------------------- //
-//                             Sequences
-
-
-// A sequence is a generic sequence of some kind of term.
-//
-// TODO: Store any other information in here?
-template<typename T>
-struct Sequence : std::vector<T const*>
-{
-  using std::vector<T const*>::vector;
-
-  Sequence() = default;
-
-  explicit Sequence(std::nullptr_t)
-    : valid(false)
-  { }
-
-  explicit operator bool() const { return valid; }
-
-  static Sequence empty() { return Sequence{}; }
-  static Sequence error() { return Sequence(nullptr); }
-
-  bool valid = true;
-};
-
 
 // -------------------------------------------------------------------------- //
-//                        Reqiured nodes
+//                        Reqiured term
 
 // The Maybe template is typically used to declare node 
 // pointers within condition declarations.
@@ -424,31 +407,18 @@ struct Required
     : ptr(p)
   { }
 
+  // Returns true iff the term is valid.
   explicit operator bool() const { return is_valid_node(ptr); }
 
+  // Returns the underlying term, even if it is an error or
+  // empty term.
   T const* operator*() const { return ptr; }
+  T const* operator->() const { return ptr; }
+
+  bool is_error() const { return is_error_node(ptr); }
+  bool is_empty() const { return is_empty_node(ptr); }
 
   T const* ptr;
-};
-
-template<typename T>
-struct Required<Sequence<T>>
-{
-  Required(Sequence<T>& s)
-    : seq(std::move(s))
-  { }
-
-  Required(Sequence<T> const& s)
-    : seq(s)
-  { }
-
-  // Contextually evaluates to true when the sequence is
-  // non-empty and valid.
-  explicit operator bool() const { return !seq.empty() && (bool)seq; }
-
-  Sequence<T> const& operator*() const { return seq; }
-
-  Sequence<T> seq;
 };
 
 
@@ -458,7 +428,7 @@ struct Required<Sequence<T>>
 // The Optional template is typically used to declare node 
 // pointers within condition declarations.
 //
-//    if (Maybe<Var_decl> var = ...)
+//    if (Optional<Var_decl> var = ...)
 //
 // This class contextually evaluates to `true` whenever
 // it is a non-error value. Note that the term may be empty.
@@ -469,26 +439,51 @@ struct Optional
     : ptr(p)
   { }
 
+  // Returns true iff the term is valid or empty.
   explicit operator bool() const { return !is_error_node(ptr); }
 
+  // Returns the underlying term, even if it is an error.
   T const* operator*() const { return ptr; }
+  T const* operator->() const { return ptr; }
+
+  bool is_error() const { return is_error_node(ptr); }
+  bool is_empty() const { return is_empty_node(ptr); }
 
   T const* ptr;
 };
 
+
+// -------------------------------------------------------------------------- //
+//                        Nonempty results
+
+// The Nonempty template is typically used to declare node 
+// pointers within condition declarations.
+//
+//    if (Nonempty<Var_decl> var = ...)
+//
+// This class contextually evaluates to `true` whenever
+// is non-empty. Note that error conditions are treated as
+// valid results. 
 template<typename T>
-struct Optional<Sequence<T>>
+struct Nonempty
 {
-  Optional(Sequence<T> const& s)
-    : seq(s)
+  Nonempty(T const* p)
+    : ptr(p)
   { }
 
-  explicit operator bool() const { return (bool)seq; }
+  // Returns true iff the term is non-empty.
+  explicit operator bool() const { return !is_empty_node(ptr); }
 
-  Sequence<T> const& operator*() const { return seq; }
+  // Returns the underlying term, even if it is a empty.
+  T const* operator*() const { return ptr; }
+  T const* operator->() const { return ptr; }
 
-  Sequence<T> const& seq;
+  bool is_error() const { return is_error_node(ptr); }
+  bool is_empty() const { return is_empty_node(ptr); }
+
+  T const* ptr;
 };
+
 
 
 } // namespace lingo

@@ -117,6 +117,7 @@ token(Lexer& lex, Character_stream& cs)
   return {};
 }
 
+
 } // namespace
 
 

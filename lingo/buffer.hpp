@@ -30,7 +30,7 @@ public:
   int number() const { return num; }
   int offset() const { return off; }
 
-  String_view rep() const { return {first, last}; }
+  String_view str() const { return String_view(first, last); }
 
   char const* begin() const { return first; }
   char const* end() const   { return last; }
@@ -48,10 +48,11 @@ struct Line_map : std::map<int, Line>
 {
   // Observers
   Line const& line(Location) const;
-  int line_no(Location) const;
-  int column_no(Location) const;
+  int         line_no(Location) const;
+  int         column_no(Location) const;
 
-  // Mutators
+  // Mutators. These are uesd to update the the line
+  // map during lexical analysis.
   Line& start_line(int, char const*);
   void  finish_line(Line&, char const*);
 };
@@ -75,13 +76,7 @@ struct Line_map : std::map<int, Line>
 class Buffer : private Line_map
 {
 public:
-  Buffer()
-    : text_()
-  { }
-
-  Buffer(String const& str)
-    : text_(str)
-  { }
+  Buffer(String const& str);
 
   virtual ~Buffer() { }
 

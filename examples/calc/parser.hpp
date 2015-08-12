@@ -12,6 +12,7 @@ namespace calc
 
 using namespace lingo;
 
+
 struct Expr;
 
 
@@ -21,11 +22,8 @@ struct Expr;
 struct Parser
 {
   Expr const* on_int_expression(Token const*);
-  Expr const* on_prefix_expression(Token const*, Expr const*);
-  Expr const* on_infix_expression(Token const*, Expr const*, Expr const*);
-
-  Expr const* on_enclosure(Token const*, Token const*);
-  Expr const* on_enclosure(Token const*, Token const*, Expr const*);
+  Expr const* on_unary_expression(Token const*, Expr const*);
+  Expr const* on_binary_expression(Token const*, Expr const*, Expr const*);
 
   Expr const* on_error();
   Expr const* on_expected(char const*);

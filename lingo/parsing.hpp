@@ -5,6 +5,7 @@
 #define LINGO_PARSING_HPP
 
 #include "lingo/token.hpp"
+#include "lingo/memory.hpp"
 #include "lingo/algorithm.hpp"
 #include "lingo/error.hpp"
 
@@ -171,7 +172,7 @@ require_token(Stream& s, Token_kind k)
 
 
 // -------------------------------------------------------------------------- //
-//                           Parser combinators
+//                           Parser types
 
 // Strip information from the return type of a rule.
 template<typename T>
@@ -181,23 +182,93 @@ using get_term_type =
   >::type;
 
 
+// The term type is the core term returned by a grammatical
+// rule. For example, if the rule is the function:
+//
+//    Node const* parse_foo(Parsre&, Stream&);
+//
+// Then the term type of the rule is `Node`. 
 template<typename Parser, typename Stream, typename Rule>
-inline auto
-term_type(Parser& p, Stream& s, Rule rule)
-  -> get_term_type<decltype(rule(p, s))>;
+using Term_type = 
+  get_term_type<
+    decltype(std::declval<Rule>()(std::declval<Parser&>(), 
+                                  std::declval<Stream&>()))
+  >;
 
 
-template<typename Parser, typename Stream, typename Rule>
-inline auto
+// -------------------------------------------------------------------------- //
+//                           Expected term
+
+
+template<typename Parser, 
+         typename Stream, 
+         typename Rule,
+         typename Term = Term_type<Parser, Stream, Rule>>
+inline Term const*
 parse_expected(Parser& p, Stream& s, Rule rule)
-  -> decltype(term_type(p, s, rule))
 {
-  if (auto result = rule(p, s))
-    return result;
+  Location loc = s.location();
+  if (Required<Term> result = rule(p, s))
+    return *result;
   else {
-    return p.on_expected(s.location(), get_grammar_name(rule));
+    if (result.is_empty())
+      error(loc, "expected {}", get_grammar_name(rule));
+    return *result;
   }
-  return {};
+  lingo_unreachable();
+}
+
+
+
+// -------------------------------------------------------------------------- //
+//                           Enclosure parsing
+
+
+// An enclosed term represents a sub-term bracketed by a pair
+// of tokens. This class includes the locations of those tokens.
+//
+// Note that the enclosure may be empty.
+template<typename T>
+struct Enclosed_term : Term<>
+{
+  Enclosed_term(Location o, Location c)
+    : open_(c), close_(c), first(nullptr)
+  { }
+
+  Enclosed_term(Location o, Location c, T const* t)
+    : open_(c), close_(c), first(t)
+  { }
+
+  char const* node_name() const { return "enclosure"; };
+  Location open() const { return open_; }
+  Location close() const { return close_; }
+  T const* term() const { return first; }
+
+  bool is_empty() const { return first != nullptr; }
+
+  // Factory interface
+  static Enclosed_term* make(Location, Location);
+  static Enclosed_term* make(Location, Location, T const*);
+
+  Location open_;
+  Location close_;
+  T const* first;
+};
+
+
+template<typename T>
+inline Enclosed_term<T>* 
+Enclosed_term<T>::make(Location o, Location c)
+{
+  return gc().make<Enclosed_term<T>>(o, c);
+}
+
+
+template<typename T>
+inline Enclosed_term<T>* 
+Enclosed_term<T>::make(Location o, Location c, T const*)
+{
+  return gc().make<Enclosed_term<T>>(o, c);
 }
 
 
@@ -208,50 +279,66 @@ parse_expected(Parser& p, Stream& s, Rule rule)
 // Here, `k1` and `k2` are token kinds and `rule` is the 
 // enclose grammar production. Note that an empty enclosure
 // is allowed.
-//
-// FIXME: Pass token data back to the caller. A simple struct
-// as an argument should suffice.
-template<typename Parser, typename Stream, typename Grammar>
-inline auto
-parse_enclosed(Parser& p, Stream& s, Token_kind k1, Token_kind k2, Grammar rule)
-  -> decltype(rule(p, s))
+template<typename Parser, 
+         typename Stream, 
+         typename Rule,
+         typename Term = Term_type<Parser, Stream, Rule>>
+Enclosed_term<Term> const*
+parse_enclosed(Parser& p, Stream& s, Token_kind k1, Token_kind k2, Rule rule)
 {
-  using Term = decltype(term_type(p, s, rule));
-  
-  if (auto left = require_token(s, k1)) {
-    
+  using Result = Enclosed_term<Term>;
+  if (auto const* left = require_token(s, k1)) {
     // Match the empty enclosure.
-    if (auto right = match_token(s, k2))
-      return Term::empty();
+    if (auto const* right = match_token(s, k2))
+      return Result::make(left->location(), right->location());
     
     // Check the rule. Note to be careful about copying the
     // parsed term. Note that no allocations occur when returning
-    // an error.
+    // an error. Note that we've covered the emtpy case above,
+    // so this term is required.
     if (Required<Term> term = rule(p, s)) {
-
-      // Pick up the closing brace.
-      if (auto right = expect_token(p, s, k2))  {
-        return *term;
+      if (auto const* right = expect_token(p, s, k2)) {
+        return Result::make(left->location(), right->location(), *term);
       } else {
-        // TODO: Better error message?
-        error("expected '{}'", k2);
-        return Term::error(); // Unabalanced markers.
+        // Unbalanced brace.
+        //
+        // TODO: It would be nice to point at the end of the
+        // enclosed term, but that requires more extensive
+        // range support (which we should probably provide).
+        //
+        // TODO: Show the position of the starting bracket
+        // to improve diagnostics?
+        error((*term)->location(), "expected '{}' after {}", 
+              get_token_spelling(k2),
+              get_grammar_name(rule));
       }
     } else {
-      return Term::error(); // Error parsing term.
+      // Failed to parse the enclosed term.
+      if (term.is_empty())
+        error(left->location(), "expected {} after '{}'",
+              get_grammar_name(rule),
+              get_token_spelling(k1));
     }
+    return make_error_node<Result>();
   }
   lingo_unreachable();
 }
 
 
+// FIXME: If we move all tokens into client languages, then 
+// these parsers will disappear and need to be implemented
+// for in the client compilers.
+
+
 // Parse a parentheses-enclosed production.
 //
 //    paren-enclosed ::= '(' [rule] ')'
-template<typename Parser, typename Stream, typename Grammar>
-inline auto
-parse_paren_enclosed(Parser& p, Stream& s, Grammar rule)
-  -> decltype(rule(p, s))
+template<typename Parser, 
+         typename Stream, 
+         typename Rule,
+         typename Term = Term_type<Parser, Stream, Rule>>
+inline Enclosed_term<Term> const*
+parse_paren_enclosed(Parser& p, Stream& s, Rule rule)
 {
   return parse_enclosed(p, s, lparen_tok, rparen_tok, rule);
 }
@@ -260,164 +347,324 @@ parse_paren_enclosed(Parser& p, Stream& s, Grammar rule)
 // Parse a brace-enclosed production.
 //
 //    brace-enclosed ::= '{' rule '}'
-template<typename Parser, typename Stream, typename Grammar>
-inline auto
-parse_brace_enclosed(Parser& p, Stream& s, Grammar rule)
-  -> decltype(rule(p, s))
+template<typename Parser, 
+         typename Stream, 
+         typename Rule,
+         typename Term = Term_type<Parser, Stream, Rule>>
+inline Enclosed_term<Term> const*
+parse_brace_enclosed(Parser& p, Stream& s, Rule rule)
 {
-  return parse_enclosed(p, s, lbrace_tok, rbrace_tok, rule);
+  return parse_enclosed(p, s, lparen_tok, rparen_tok, rule);
 }
 
 
 // Parse a bracket-enclosed production.
 //
 //    bracket-enclosed ::= '[' rule ']'
-template<typename Parser, typename Stream, typename Grammar>
-inline auto
-parse_bracket_enclosed(Parser& p, Stream& s, Grammar rule)
-  -> decltype(rule(p, s))
+template<typename Parser, 
+         typename Stream, 
+         typename Rule,
+         typename Term = Term_type<Parser, Stream, Rule>>
+inline Enclosed_term<Term> const*
+parse_bracket_enclosed(Parser& p, Stream& s, Rule rule)
 {
-  return parse_enclosed(p, s, lbrack_tok, rbrack_tok, rule);
+  return parse_enclosed(p, s, lparen_tok, rparen_tok, rule);
 }
+
+
+// -------------------------------------------------------------------------- //
+//                           Sequence parsers
+
+
+// A sequence term is a possibly empty list of subterms.
+//
+// TODO: Should we also track the location of interleaving
+// tokens for the case where the sequence is a list?
+template<typename T>
+struct Sequence_term : Term<>, std::vector<T const*>
+{
+  using std::vector<T const*>::vector;
+
+  char const* node_name() const { return "sequence"; };
+
+  // Factories
+  static Sequence_term* make();
+  static Sequence_term* make(Sequence_term&&);
+  static Sequence_term* make(std::initializer_list<T const*>);
+};
+
+
+// Create a new empty sequence.
+template<typename T>
+inline Sequence_term<T>*
+Sequence_term<T>::make()
+{
+  return gc().make<Sequence_term>();
+}
+
+
+// Create a new sequence with the contents of `seq`.
+template<typename T>
+inline Sequence_term<T>*
+Sequence_term<T>::make(Sequence_term&& seq)
+{
+  return gc().make<Sequence_term>(std::move(seq));
+}
+
+
+// Create a new sequence whose contents are given in `list`.
+template<typename T>
+inline Sequence_term<T>*
+Sequence_term<T>::make(std::initializer_list<T const*> list)
+{
+  return gc().make<Sequence_term>(list);
+}
+
+
+// Parse a sequence of terms with no intervening tokens.
+//
+//    sequence ::= <empty> | rule | rule sequence
+//
+// Note that an empty sequence will produce a valid (i.e.,
+// non-empty) node.
+template<typename Parser, 
+         typename Stream, 
+         typename Rule,
+         typename Term = Term_type<Parser, Stream, Rule>>
+inline Sequence_term<Term> const*
+parse_sequence(Parser& p, Stream& s, Rule rule)
+{
+  using Result = Sequence_term<Term>;
+  Result result;
+  while (!s.eof()) {
+    if (Required<Term> term = rule(p, s))
+      result.push_back(*term);
+    else if (term.is_error())
+      return make_error_node<Result>();
+    else if (term.is_empty())
+      break;
+  }
+  return Result::make(std::move(result));
+}
+
+
+// Parse a token-separated list of terms.
+//
+//    list ::= <empty> | rule | rule <token> list
+//
+// Here, <token> is the punctuator for the list.
+template<typename Parser, 
+         typename Stream, 
+         typename Rule,
+         typename Term = Term_type<Parser, Stream, Rule>>
+inline Sequence_term<Term> const*
+parse_list(Parser& p, Stream& s, Token_kind k, Rule rule)
+{
+  using Result = Sequence_term<Term>;
+  Result result;
+  
+  // Match the first term. Note that this can be empty.
+  if (Optional<Term> first = rule(p, s)) {
+    // There were no matching terms.
+    if (first.empty())
+      return Result::make();
+
+    // Save the first term and match all subsequent terms.
+    result.push_back(*first);
+
+    // Match a series of ',' rule terms.
+    while (Token const* tok = match_token(s, k)) {
+      if (Required<Term> next = rule(p, s))
+        result.push_back(*next);
+      else {
+        if (next.is_error())
+          error(tok->location(), "expected {} after '{}'",
+                get_grammar_name(rule),
+                get_token_spelling(k));
+        return make_error_node<Result>();
+      }
+    }
+
+    return Result::make(std::move(result));
+  } else {
+    return make_error_node<Result>();
+  }
+}
+
+
+// -------------------------------------------------------------------------- //
+//                           Prefix parsing
 
 
 // Parse a prefix term. A prefix term (or unary, in some grammars) 
 // has the following form:
 //
-//    prefix-term ::= rule | token prefix-term
+//    prefix-term ::= rule | op prefix-term
 //
-// Here, `token` is a matching function that accepts the set of
-// prefix operators. `rule` is a parsing function that matches
-// the next higher precedence in the grammar.
+// Here, `op` is a function that accepts the set of prefix operators
+// and returns a pointer to a token. It must have the form:
 //
-// For any grammar that uses this production, the parser must
-// define a handler, `p.on_prefix_term(op, term)`.
-template<typename Parser, typename Stream, typename Op, typename Rule>
-auto
-parse_prefix_term(Parser& p, Stream& s, Op op, Rule rule)
-  -> decltype(rule(p, s))
+//    op(p, s)
+//
+// Where `p` is the the parser and `s` is the token stream. The
+// `rule` is a Parse_function that parses the next higher precedence
+// term in the grammar. 
+//
+// The `act` parameter specifies an action to execute whenever
+// the prefix term is matched. It must be invokable as:
+//
+//    act(k, t)
+//
+// Where `k` is a token pointer and `t` is the nested term. The
+// return type of the pointer must be the same as that of `rule`.
+template<typename Parser, 
+         typename Stream, 
+         typename Op, 
+         typename Rule,
+         typename Action,
+         typename Term = Term_type<Parser, Stream, Rule>>
+Term const*
+parse_prefix_term(Parser& p, Stream& s, Op op, Rule rule, Action act)
 {
-  using Term = decltype(term_type(p, s, rule));
-  if (Token const* tok = op(p, s)) {
-    if (Required<Term> term = parse_prefix_term(p, s, op, rule)) {
-      return *term;
+  if (auto const* tok = op(p, s)) {
+    if (Required<Term> term = parse_prefix_term(p, s, op, rule, act)) {
+      return act(tok, *term);
     } else {
-      error(s.location(), "expected {}", get_grammar_name(rule));
-      return Term::error();
+      // Failed to parse the sub-term after the prefix token.
+      if (term.is_empty())
+        error(tok->location(), "expected {} after '{}'", 
+              get_grammar_name(rule),
+              tok->str());
+      return *term;
     }
   }
   return rule(p, s);
 }
 
 
+// -------------------------------------------------------------------------- //
+//                           Infix parsers
+
+
 // Parse a left associative binary expression. This has the form:
 //
-//    left-binary-term ::=
-//        rule
-//      | left-binary-term token rule
+//    left-infix-term ::= rule | left-infix-term op rule
 //
-// Here, `token` is a matching function that accepts the set of
-// binary operators for the grammar. `rule` is a parsing function
-// matches the next higher precedence in the grammar.
+// Here, `op` is a function that accepts the set of infix operators
+// and returns a pointer to a token. It must have the form:
 //
-// Any grammar that invokes this parsing function must define the
-// handler, `p.on_binary_term(tok, expr1, expr2)` where `tok` is
-// the binary operator, `expr1` is the left-hand side, and `expr2` 
-// is the right-hand side.
+//    op(p, s)
 //
-// To support diagnostics, `msg` is the name of the grammar
-// production associated with `rule`.
-template<typename Parser, typename Stream, typename Op, typename Rule>
-auto
-parse_left_infix_expression(Parser& p, Stream& s, Op op, Rule rule)
-  -> decltype(rule(p, s))
+// Where `p` is the the parser and `s` is the token stream. The
+// `rule` is a Parse_function that parses the next higher precedence
+// term in the grammar. 
+//
+// The `act` parameter specifies an action to execute whenever
+// the prefix term is matched. It must be invokable as:
+//
+//    act(k, t)
+//
+// Where `k` is a token pointer and `t` is the nested term. The
+// return type of the pointer must be the same as that of `rule`.
+template<typename Parser, 
+         typename Stream, 
+         typename Op, 
+         typename Rule,
+         typename Action,
+         typename Term = Term_type<Parser, Stream, Rule>>
+Term const*
+parse_left_infix_term(Parser& p, Stream& s, Op op, Rule rule, Action act)
 {
-  if (auto expr1 = rule(p, s)) {
+  Location loc = s.location();
+  if (Required<Term> left = rule(p, s)) {
     while (Token const* tok = op(p, s)) {
-      if (auto expr2 = rule(p, s)) 
-        expr1 = p.on_infix_expression(tok, expr1, expr2);
-      else 
-        return p.on_expected(tok->location(), get_grammar_name(rule), *tok);
+      if (Required<Term> right = rule(p, s)) {
+        left = act(tok, *left, *right);
+      } else  {
+        // We did not match the right operand after the token.
+        if (right.is_empty())
+          error(tok->location(), "expected {} after '{}'",
+                get_grammar_name(rule),
+                tok->str());
+      }
+      return *left;
     }
-    return expr1;
+    
+    // We matched the left term, but not the operator.
+    return *left;
+  } else if (left.is_empty()) {
+    // We did not match the left operand and got an empty
+    // node. This is an error. This shhould never actually
+    // happen. There should be an error if matching fails,
+    // this is jus provided as a safeguard.
+    error(loc, "expected {}", get_grammar_name(rule));
+    return make_error_node<Term>();
+  } else {
+    // There was an error matching the left operand.
+    return *left;
   }
-  return {};
 }
 
 
-// Parse a right associative binary expression. There are two
-// arguments: a token recognizer and the immediate sub-production.
+// Parse a right associative infix interm with the form:
+//
+//    right-infix-term ::= rule | rule op right-infix-term
+//
+// Here, `op` is a function that accepts the set of infix operators
+// and returns a pointer to a token. It must have the form:
+//
+//    op(p, s)
+//
+// Where `p` is the the parser and `s` is the token stream. The
+// `rule` is a Parse_function that parses the next higher precedence
+// term in the grammar. 
+//
+// The `act` parameter specifies an action to execute whenever
+// the prefix term is matched. It must be invokable as:
+//
+//    act(k, t)
+//
+// Where `k` is a token pointer and `t` is the nested term. The
+// return type of the pointer must be the same as that of `rule`.
 //
 // TODO: Make this iterative?
-template<typename Parser, typename Stream, typename Op, typename Grammar>
-auto
-parse_right_infix_expression(Parser& p, Stream& s, Op op, Grammar rule)
-  -> decltype(rule(p, s))
+template<typename Parser, 
+         typename Stream, 
+         typename Op, 
+         typename Rule,
+         typename Action,
+         typename Term = Term_type<Parser, Stream, Rule>>
+Term const*
+parse_right_infix_term(Parser& p, Stream& s, Op op, Rule rule, Action act)
 {
-  if (Result_type<Parser> expr1 = rule(p, s)) {
+  Location loc = s.location();
+  if (Required<Term> left = rule(p, s)) {
     if (Token const* tok = op(p, s)) {
-      if (Result_type<Parser> expr2 = parse_right_infix_expression(p, s, op, rule))
-        expr1 = p.on_infix_expression(tok, expr1, expr2);
-      else
-        return p.on_expected(tok->location(), get_grammar_name(rule), *tok);
+      if (Required<Term> right = parse_right_infix_term(p, s, op, rule, act)) {
+        left = act(tok, *left, *right);
+      } else {
+        // We matched the token but not the right operand.
+        if (right.is_empty())
+          error(tok->location(), "expected {} after '{}'",
+                get_grammar_name(rule),
+                tok->str());
+        return *left;
+      }
     }
-    return expr1;
+
+    // We matched the left operand, but not the token
+    return *left;
+  } else if (left.is_empty()) {
+    // We did not match the left operand and got an empty
+    // node. This is an error. This shhould never actually
+    // happen. There should be an error if matching fails,
+    // this is jus provided as a safeguard.
+    error(loc, "expected {}", get_grammar_name(rule));
+    return make_error_node<Term>();
+  } else {
+    // There was an error matching the left operand.
+    return *left;
   }
-  return {};
-}
-
-
-// Parse a sequence of terms with no intervening tokens.
-//
-//    sequence(rule) ::= <empty> | rule [sequence(rule)]
-//
-// To use this function, the parser must define:
-//
-//    p.on_sequence(v)
-//
-// where v is a vector of parsed elements. 
-template<typename Parser, typename Stream, typename Grammar>
-auto
-parse_sequence(Parser& p, Stream& s, Grammar rule)
-  -> decltype(rule(p, s))
-{
-  std::vector<Result_type<Parser>> seq;
-  while (!s.eof()) {
-    Result_type<Parser> elem = rule(p, s);
-    if (!elem || p.is_error(elem))
-      return elem;
-    seq.push_back(elem);
-  }
-  return p.on_sequence(std::move(seq));
-}
-
-
-// Parse a non-empty comma-separated list of terms.
-//
-//    list(rule) ::= rule [',' rule]*
-//
-// This takes the sequence being constructed as an argument
-// and returns that value. If an error is encountered during
-// the parse, the input sequence will be overrwritten by
-// an error code.
-//
-// The list type must be a Seq<T const*> where T const* is
-// the return type of the grammar.
-template<typename Parser, typename Stream, typename Grammar>
-auto
-parse_list(Parser& p, Stream& s, Grammar rule)
-  -> Sequence<decltype(term_type(p, s, rule))>
-{
-  using Term = decltype(term_type(p, s, rule));
-  using List = Sequence<Term>;
-  List list;
-  do {
-    if (Required<Term> term = rule(p, s))
-      list.push_back(*term);
-    else
-      return List::error();
-  } while (match_token(s, comma_tok));
-  return list;
 }
 
 

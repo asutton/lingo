@@ -34,7 +34,7 @@ public:
   using value_type = char;
 
   Character_stream(Buffer& b, char const* f, char const* l)
-    : buf_(b), base_(f), first_(f), last_(l), line_(start_line())
+    : buf_(b), base_(f), first_(f), last_(l)
   { }
 
   Character_stream(Buffer& b, String const& s)
@@ -66,14 +66,10 @@ public:
 private:
   int offset() const { return first_ - base_; }
   
-  Line* new_line();
-  Line* start_line();
-
   Buffer&       buf_;  // The stream's source file
   char const*   base_;  // The beginning of the stream
   char const*   first_; // Current character pointer
   char const*   last_;  // Past the end of the character buffer
-  Line*         line_;  // The current line
 };
 
 } // namespace lingo

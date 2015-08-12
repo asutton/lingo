@@ -12,9 +12,12 @@
 // Note that more specialized algorithms can be found in the lexing
 // and parsing modules.
 
+#include "lingo/location.hpp"
+
 #include <algorithm>
 #include <type_traits>
 #include <iostream>
+
 
 namespace lingo
 {
@@ -432,15 +435,11 @@ template<typename Context, typename Stream, typename P>
 Iterator_type<Stream>
 expect_if(Context& cxt, Stream& s, P pred, char const* cond)
 {
-  if (auto iter = match_if(s, pred)) {
+  Location loc = s.location();
+  if (auto iter = match_if(s, pred))
     return iter;
-  } else {
-    if (!s.eof())
-      cxt.on_expected(s.location(), cond, s.peek());
-    else
-      cxt.on_expected(cond);
-    return {};
-  }
+  error(loc, "expected '{}' but got '{}'", cond, s.peek());
+  return {};
 }
 
 

@@ -5,6 +5,7 @@
 #define LINGO_TOKEN_HPP
 
 #include "lingo/location.hpp"
+#include "lingo/error.hpp"
 #include "lingo/symbol.hpp"
 #include "lingo/string.hpp"
 #include "lingo/integer.hpp"
@@ -123,7 +124,11 @@ public:
   // Observers
   char const*   token_name() const     { return get_token_name(kind_); }
   char const*   token_spelling() const { return get_token_spelling(kind_); }
+  
   Location      location() const       { return loc_; }
+  Location      start_location() const;
+  Location      end_location() const;
+  
   Token_kind    kind() const           { return kind_; }
   
   // Symbol/text representation
@@ -143,6 +148,22 @@ private:
   Token_kind kind_;
   Symbol*    sym_;
 };
+
+
+// Returns the start location of the token.
+inline Location
+Token::start_location() const
+{
+  return loc_;
+}
+
+
+// Returns the end location of the token.
+inline Location
+Token::end_location() const
+{
+  return Location(loc_.offset() + str()->size() - 1);
+}
 
 
 // A sequence of tokens.
@@ -187,9 +208,13 @@ class Token_stream
 public:
   using value_type = Token;
 
+  // Construct a token stream over a non-empty range of
+  // token pointers. Behavior is undefind if f == l.
   Token_stream(Token const* f, Token const* l)
     : first_(f), last_(l)
-  { }
+  { 
+    lingo_assert(first_ != last_);
+  }
 
   Token_stream(Token_list const& toks)
     : Token_stream(toks.data(), toks.data() + toks.size())
@@ -200,6 +225,8 @@ public:
   Token const& peek() const;
   Token        peek(int) const;
   Token const& get();
+  Token const& last() { return *(last_ - 1); }
+  Token const& last() const { return *(last_ - 1); }
 
   // Iterators
   Token const* begin()       { return first_; }
@@ -208,7 +235,10 @@ public:
   Token const* end() const { return last_; }
 
   // Returns the source location of the the current token.
-  Location location() { return eof() ? Location{} : peek().location(); }
+  Location location() const { return eof() ? Location{} : peek().location(); }
+
+  // Returns the last source location for a token in the buffer.
+  Location last_location() const { return last().end_location(); }
 
   Token const* first_; // Current character pointer
   Token const* last_;  // Past the end of the character buffer

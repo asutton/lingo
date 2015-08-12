@@ -10,21 +10,61 @@
 
 #include <iostream>
 
+
 namespace calc
 {
 
 using lingo::print;
 using lingo::debug;
 
+
 namespace
 {
-
 
 Expr const* parse_expression(Parser&, Token_stream&);
 
 
 // -------------------------------------------------------------------------- //
 //                          Primary expressions
+
+using Nested_expr = Enclosed_term<Expr>;
+
+
+// Parse an integer literal.
+Expr const*
+parse_integer_literal(Parser& p, Token_stream& toks)
+{
+  // Match integers.
+  if (Token const* tok = match_if(toks, is_token(decimal_integer_tok)))
+    return p.on_int_expression(tok);
+  return nullptr;
+}
+
+
+// Parse a paren-enclosed expression.
+Expr const*
+parse_paren_expression(Parser& p, Token_stream& toks)
+{
+  // Match a nested sub-exprssion.
+  if (Token const* open = match_token(toks, lparen_tok)) {
+    if (Required<Expr> e = parse_expression(p, toks)) {
+      if (expect_token(p, toks, rparen_tok)) {
+        return *e;
+      } else {
+        // TODO: Show the location of the first brace.
+        error(e->location(), "mismatched ')'");
+        return make_error_node<Expr>();
+      }
+    } else {
+      // We failed to match a nested expression. If it's empty
+      // we still need an error message.
+      if (e.is_empty())
+        error(open->location(), "expected expression after '('");
+      return make_error_node<Expr>();
+    }
+  }
+  return nullptr;
+}
 
 
 // Parse a primary expression.
@@ -35,62 +75,59 @@ Expr const* parse_expression(Parser&, Token_stream&);
 Expr const*
 parse_primary_expression(Parser& p, Token_stream& toks)
 {
-  if (Token const* tok = match_if(toks, is_token(decimal_integer_tok)))
-    return p.on_int_expression(tok);
+  if (Nonempty<Expr> e = parse_integer_literal(p, toks))
+    return *e;
 
-  if (next_token_is(toks, lparen_tok)) {
-    if (Expr const* e = parse_paren_enclosed(p, toks, parse_expression))
-      return e;
-  }
+  if (Nonempty<Expr> e = parse_paren_expression(p, toks))
+    return *e;
 
-  // If the expression was none of the above, the program is ill-formed.
+  // If the expression was none of the above, the program 
+  // is ill-formed. Emit a resaonable diagnostic.
   if (toks.eof())
-    error(Location::none, "exected primary-expression, got end-of-file");
+    error(toks.last_location(), "exected primary-expression, got end-of-file");
   else
     error("expected primary-expression, got '{}'", toks.peek());
-  return p.on_error();
+  return make_error_node<Expr>();
 }
 
 
 // -------------------------------------------------------------------------- //
 //                            Prefix expressions
 
-
-// Parse a prefix operator.
+// Parse a unary operator.
 //
-//    prefix-operator ::= '+' | '-'
+//    unary-operator ::= '+' | '-'
 //
 // Note that this is the same as additive-operator.
 Token const*
-parse_prefix_operator(Parser& p, Token_stream& toks)
+parse_unary_operator(Parser& p, Token_stream& toks)
 {
   extern Token const* parse_additive_operator(Parser&, Token_stream&);
   return parse_additive_operator(p, toks);
 }
 
 
-// Parse a prefix epxression. A prefix expressions is one
+// Parse a unary epxression. A unary expressions is one
 // that begins with an operator and is followed by a
-// prefix expression.
+// unary expression.
 //
-//    prefix-expression ::=
+//    unary-expression ::=
 //        primary-expression
-//      | prefix-operator prefix-expression.
+//      | unary-operator unary-expression.
 Expr const*
-parse_prefix_expression(Parser& p, Token_stream& toks)
+parse_unary_expression(Parser& p, Token_stream& toks)
 {
-  auto op = parse_prefix_operator;
+  auto op = parse_unary_operator;
   auto sub = parse_primary_expression;
-  Token const* tok = toks.begin();
-  Optional<Expr> e = parse_prefix_term(p, toks, op, sub);
-  if (e)
-    return p.on_prefix_expression(tok, *e);
-  return *e;
+  auto act = [&](Token const* tok, Expr const* e) {
+    return p.on_unary_expression(tok, e);
+  };
+  return parse_prefix_term(p, toks, op, sub, act);
 }
 
 
 // -------------------------------------------------------------------------- //
-//                            Precedence parser
+//                        Binary precedence parser
 
 // Returns true iff tok is one of the multiplicative operators.
 inline bool
@@ -119,38 +156,37 @@ is_additive_operator(Token const& tok)
 // header to project the token kind so we can make these kinds
 // of determinations. Same for additive operator and unary operator
 // above.
-Token const*
+inline Token const*
 parse_multiplicative_operator(Parser& p, Token_stream& toks)
 {
-  if (Token const* tok = match_if(toks, is_multiplicative_operator))
-    return tok;
-  return nullptr;
+  return match_if(toks, is_multiplicative_operator);
 }
 
 
 // Parse a multiplicative expression.
 //
-//    multiplicative-expression:
-//      unary-expression
-//      multiplicative-expression multiplicative-operator unary-expression
+//    multiplicative-expression ::=
+//        unary-expression
+//      | multiplicative-expression multiplicative-operator unary-expression
 Expr const*
 parse_multiplicative_expression(Parser& p, Token_stream& toks)
 {
   auto op = parse_multiplicative_operator;
-  auto sub = parse_prefix_expression;
-  return parse_left_infix_expression(p, toks, op, sub);
+  auto sub = parse_unary_expression;
+  auto act = [&](Token const* tok, Expr const* e1, Expr const* e2) {
+    return p.on_binary_expression(tok, e1, e2);
+  };
+  return parse_left_infix_term(p, toks, op, sub, act);
 }
 
 
 // Parse an additive operator.
 //
 //    additive-operator ::= '+' | '-'
-Token const*
+inline Token const*
 parse_additive_operator(Parser& p, Token_stream& toks)
 {
-  if (Token const* tok = match_if(toks, is_additive_operator))
-    return tok;
-  return nullptr;
+  return match_if(toks, is_additive_operator);
 }
 
 
@@ -159,12 +195,24 @@ parse_additive_operator(Parser& p, Token_stream& toks)
 //    additive-expression ::=
 //        multiplicative-expression
 //      | additive-expression additive-operator multiplicative-expression
-inline Expr const*
+Expr const*
 parse_additive_expression(Parser& p, Token_stream& toks)
 {
   auto op = parse_additive_operator;
   auto sub = parse_multiplicative_expression;
-  return parse_left_infix_expression(p, toks, op, sub);
+  auto act = [&](Token const* tok, Expr const* e1, Expr const* e2) {
+    return p.on_binary_expression(tok, e1, e2);
+  };
+  return parse_left_infix_term(p, toks, op, sub, act);
+}
+
+
+// Parse a binary expression. This is the top-level entry point 
+// for the binary precedence parser.
+inline Expr const*
+parse_binary_expression(Parser& p, Token_stream& toks)
+{
+  return parse_additive_expression(p, toks);
 }
 
 
@@ -177,6 +225,7 @@ parse_expression(Parser& p, Token_stream& toks)
 {
   return parse_additive_expression(p, toks);
 }
+
 
 } // namespace
 
@@ -200,7 +249,7 @@ Parser::on_int_expression(Token const* tok)
 
 
 Expr const*
-Parser::on_prefix_expression(Token const* tok, Expr const* e)
+Parser::on_unary_expression(Token const* tok, Expr const* e)
 {
   Location loc = tok->location();
   switch (tok->kind()) {
@@ -213,7 +262,7 @@ Parser::on_prefix_expression(Token const* tok, Expr const* e)
 
 
 Expr const*
-Parser::on_infix_expression(Token const* tok, Expr const* e1, Expr const* e2)
+Parser::on_binary_expression(Token const* tok, Expr const* e1, Expr const* e2)
 {
   Location loc = tok->location();
   switch (tok->kind()) {
@@ -225,23 +274,6 @@ Parser::on_infix_expression(Token const* tok, Expr const* e1, Expr const* e2)
   default:
     lingo_unreachable("invalid binary operator '{}'", tok->token_name());
   }
-}
-
-
-// Do not allow empty parens.
-Expr const*
-Parser::on_enclosure(Token const* left, Token const* right)
-{
-  error(left->location(), "empty nested expression");
-  return get_error();
-}
-
-
-// Just return the enclosed expression.
-Expr const*
-Parser::on_enclosure(Token const* left, Token const* right, Expr const* mid)
-{
-  return mid;
 }
 
 
@@ -285,7 +317,7 @@ void
 init_grammar()
 {
   install_grammar(parse_primary_expression, "primary-expression");
-  install_grammar(parse_prefix_expression, "prefix-expression");
+  install_grammar(parse_unary_expression, "unary-expression");
   install_grammar(parse_multiplicative_expression, "multiplicative-expression");
   install_grammar(parse_additive_expression, "additive-expression");
   install_grammar(parse_expression, "expression");

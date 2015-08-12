@@ -11,21 +11,35 @@ namespace lingo
 {
 
 
-// Construct file with the given index. This will cache the 
-// text of the file.
-File::File(Path const& p, int n)
-  : Buffer(), path_(p), index_(n)
+namespace
 {
-  std::ifstream f(path_.native());
 
+// Return a string containing the text of the file.
+String
+read_file(Path const& p)
+{
+  std::ifstream f(p.native());
+
+  String text;
   f.seekg(0, std::ios::end);   
-  text_.reserve(f.tellg());
+  text.reserve(f.tellg());
   f.seekg(0, std::ios::beg);
 
   std::istreambuf_iterator<char> first = f;
   std::istreambuf_iterator<char> last;
-  text_.assign(first, last);
+  text.assign(first, last);
+  
+  return text;
 }
+
+} // namespace
+
+
+// Construct file with the given index. This will cache the 
+// text of the file.
+File::File(Path const& p, int n)
+  : Buffer(read_file(p)), path_(p), index_(n)
+{ }
 
 
 namespace

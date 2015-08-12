@@ -15,6 +15,7 @@
 #include "lingo/buffer.hpp"
 #include "lingo/print.hpp"
 
+#include <cstdio>
 #include <string>
 #include <vector>
 
@@ -35,7 +36,7 @@
 // Like lingo_assert, but allows the inclusion of a message.
 #define lingo_alert(cond, msg, args...)                          \
   if (!(cond))                                                   \
-    ::lingo::abort("{}:{}: " msg, __PRETTY_FUNCTION__, __LINE__, ## args)
+    ::lingo::abort("%s:%s: " msg, __PRETTY_FUNCTION__, __LINE__, ## args)
 
 
 namespace lingo
@@ -53,12 +54,17 @@ namespace lingo
 // TODO: Allow this to call abort() based on some configuration
 // setting. Also, derive a new unlikely-to-be-caught exception
 // to prevent users from doing the wrong thing.
+//
+// FIXME: cppformat fails to render strings that include
+// braces. That's not particularly good for compiler. I might
+// need to revert to using something more printf-like.
 template<typename... Args>
 [[noreturn]] 
 inline void
 abort(char const* msg, Args const&... args)
 {
-  throw std::runtime_error(to_string(msg, args...));
+  throw std::runtime_error("internal compiler error");
+  // throw std::runtime_error(to_string(msg, args...));
 }
 
 
