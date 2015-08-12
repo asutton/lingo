@@ -45,6 +45,8 @@ struct Kind_base
 template<int N = 0>
 struct Term : Kind_base<int, N>
 {
+  virtual ~Term() { }
+
   char const* node_name() const { return "<unspecified term>"; }
   int kind() const              { return N; }
 };

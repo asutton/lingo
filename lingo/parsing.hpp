@@ -308,7 +308,7 @@ parse_enclosed(Parser& p, Stream& s, Token_kind k1, Token_kind k2, Rule rule)
         //
         // TODO: Show the position of the starting bracket
         // to improve diagnostics?
-        error((*term)->location(), "expected '{}' after {}", 
+        error(left->location(), "expected '{}' after {}", 
               get_token_spelling(k2),
               get_grammar_name(rule));
       }
@@ -386,6 +386,8 @@ struct Sequence_term : Term<>, std::vector<T const*>
   using std::vector<T const*>::vector;
 
   char const* node_name() const { return "sequence"; };
+
+  Location location() const { return this->front()->location(); }
 
   // Factories
   static Sequence_term* make();
@@ -466,7 +468,7 @@ parse_list(Parser& p, Stream& s, Token_kind k, Rule rule)
   // Match the first term. Note that this can be empty.
   if (Optional<Term> first = rule(p, s)) {
     // There were no matching terms.
-    if (first.empty())
+    if (first.is_empty())
       return Result::make();
 
     // Save the first term and match all subsequent terms.
