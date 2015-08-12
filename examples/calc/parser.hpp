@@ -24,11 +24,6 @@ struct Parser
   Expr const* on_int_expression(Token const*);
   Expr const* on_unary_expression(Token const*, Expr const*);
   Expr const* on_binary_expression(Token const*, Expr const*, Expr const*);
-
-  Expr const* on_error();
-  Expr const* on_expected(char const*);
-  Expr const* on_expected(Location, char const*);
-  Expr const* on_expected(Location, char const*, Token const&);
 };
 
 void init_grammar();

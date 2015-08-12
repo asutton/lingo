@@ -233,14 +233,6 @@ parse_expression(Parser& p, Token_stream& toks)
 // -------------------------------------------------------------------------- //
 //                            Parser function
 
-
-Expr const*
-Parser::on_error()
-{
-  return get_error();
-}
-
-
 Expr const*
 Parser::on_int_expression(Token const* tok)
 {
@@ -274,30 +266,6 @@ Parser::on_binary_expression(Token const* tok, Expr const* e1, Expr const* e2)
   default:
     lingo_unreachable("invalid binary operator '{}'", tok->token_name());
   }
-}
-
-
-Expr const*
-Parser::on_expected(char const* str)
-{
-  error(Location::none, "expected '{}' but got end-of-file", str);
-  return get_error();
-}
-
-
-Expr const*
-Parser::on_expected(Location loc, char const* str, Token const& tok)
-{
-  error(loc, "expected '{}' but got '{}'", str, tok);
-  return get_error();
-}
-
-
-Expr const*
-Parser::on_expected(Location loc, char const* str)
-{
-  error(loc, "expected '{}'", str);
-  return get_error();
 }
 
 
