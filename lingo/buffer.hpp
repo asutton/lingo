@@ -35,8 +35,8 @@ public:
   char const* begin() const { return first; }
   char const* end() const   { return last; }
 
-  int         num;    // Tjhe line number
-  int         off;    // The character offset
+  int         num;    // The line number
+  int         off;    // Offset of the first character
   char const* first;
   char const* last;
 };

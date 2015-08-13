@@ -47,20 +47,25 @@ parse_paren_expression(Parser& p, Token_stream& toks)
 {
   // Match a nested sub-exprssion.
   if (Token const* open = match_token(toks, lparen_tok)) {
+
+    // Check for empty parens so we can diagnos an error
+    // more appropriately.
+    if (next_token_is(toks, rparen_tok)) {
+        error(open->location(), "expected expression after '('");
+        return make_error_node<Expr>();
+    }
+
+    // Match the nested expression.
     if (Required<Expr> e = parse_expression(p, toks)) {
       if (expect_token(p, toks, rparen_tok)) {
         return *e;
       } else {
         // TODO: Show the location of the first brace.
-        error(e->location(), "mismatched ')'");
+        note(open->location(), "unmatched paren is here");
         return make_error_node<Expr>();
       }
     } else {
-      // We failed to match a nested expression. If it's empty
-      // we still need an error message.
-      if (e.is_empty())
-        error(open->location(), "expected expression after '('");
-      return make_error_node<Expr>();
+      return *e; // Propagate the error.
     }
   }
   return nullptr;
@@ -83,11 +88,10 @@ parse_primary_expression(Parser& p, Token_stream& toks)
 
   // If the expression was none of the above, the program 
   // is ill-formed. Emit a resaonable diagnostic.
-  if (toks.eof())
-    error(toks.last_location(), "exected primary-expression, got end-of-file");
-  else
-    error("expected primary-expression, got '{}'", toks.peek());
-  return make_error_node<Expr>();
+  //
+  // TODO: Maybe let fail gracefully so that the error gets
+  // picked up at the lowest precedence parse?
+  return nullptr;
 }
 
 

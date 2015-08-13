@@ -7,9 +7,8 @@
 // The error module contains facilities for managing error
 // reporting.
 //
-// TODO: The diagnostic framework needs a bit of work. In particular,
-// we should be emitting errors as they occurr instead of (or in
-// addition to?) keeping them for later. 
+// TODO: Traverse variadic arguments in order to generate
+// an underscore when requested.
 
 #include "lingo/location.hpp"
 #include "lingo/buffer.hpp"
@@ -84,12 +83,11 @@ enum Diagnostic_kind
 // note occurring at a particular location.
 struct Diagnostic
 {
-  Diagnostic(Diagnostic_kind k, Bound_location l, String const& m)
-    : kind(k), loc(l), msg(m)
-  { }
+  Diagnostic(Diagnostic_kind, Bound_location, String const&);
 
   Diagnostic_kind kind;
   Bound_location  loc;
+  int             caret;
   String          msg;
 };
 

@@ -47,8 +47,9 @@ namespace
 #define font_note       fmt_diagnostic(cyan)
 
 
-// Coloring for source code locations.
+// Coloring for source code locations and carets
 #define font_location   font_start font_bold "m"
+#define font_caret      font_start font_bold ";" font_cyan "m"
  
 } // namespace
 
@@ -81,11 +82,13 @@ operator<<(std::ostream& os, Diagnostic const& diag)
   // code indicated by the diagnostics.
   //
   // TODO: How much should we indent? Should we include line
-  // numbers? Maybe some contextual information. It would surely
-  // look nice.
+  // numbers? Maybe some contextual information. 
   if (loc.is_valid()) {
     Line const& line = loc.line();
     os << "|    " << line.str() << '\n';
+    os << "|    " << std::string(diag.caret - 1, ' ');
+    os << font_caret << '^' << font_end << '\n';
+
   } 
 
   return os;
@@ -105,6 +108,12 @@ Diagnostic_context root_;
 
 
 } // namespace
+
+
+
+Diagnostic::Diagnostic(Diagnostic_kind k, Bound_location l, String const& m)
+  : kind(k), loc(l), caret(loc.column_no()), msg(m)
+{ }
 
 
 Diagnostic_context::Diagnostic_context(bool suppress)

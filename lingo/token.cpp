@@ -390,7 +390,7 @@ debug(Printer& p, Token tok)
 std::ostream&
 operator<<(std::ostream& os, Token tok)
 {
-  return os << tok.str();
+  return os << *tok.str();
 }
 
 

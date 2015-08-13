@@ -61,7 +61,7 @@ operator<<(std::ostream& os, Bound_location const& loc)
     return os;
 
   if (loc.is_file_location())
-    os << loc.file().path() << ":";
+    os << loc.file().path().string() << ":";
 
   return os << loc.line_no() << ':' << loc.column_no();
 }

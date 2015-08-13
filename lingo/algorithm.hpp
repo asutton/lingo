@@ -13,6 +13,7 @@
 // and parsing modules.
 
 #include "lingo/location.hpp"
+#include "lingo/error.hpp"
 
 #include <algorithm>
 #include <type_traits>
@@ -435,10 +436,13 @@ template<typename Context, typename Stream, typename P>
 Iterator_type<Stream>
 expect_if(Context& cxt, Stream& s, P pred, char const* cond)
 {
-  Location loc = s.location();
   if (auto iter = match_if(s, pred))
     return iter;
-  error(loc, "expected '{}' but got '{}'", cond, s.peek());
+
+  if (!s.eof())
+    error(s.location(), "expected '{}' but got '{}'", cond, s.peek());
+  else
+    error(s.last_location(), "expected '{}' but got end-of-file", cond);
   return {};
 }
 

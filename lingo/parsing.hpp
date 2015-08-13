@@ -21,7 +21,7 @@ namespace lingo
 
 
 void install_grammar(void(*)(), char const*);
-char const* get_grammar_name(void*);
+char const* get_grammar_name(void(*)());
 
 
 // Install a grammar name for the given function.
@@ -533,10 +533,12 @@ parse_prefix_term(Parser& p, Stream& s, Op op, Rule rule, Action act)
       return act(tok, *term);
     } else {
       // Failed to parse the sub-term after the prefix token.
-      if (term.is_empty())
+      if (term.is_empty()) {
         error(tok->location(), "expected {} after '{}'", 
               get_grammar_name(rule),
               tok->str());
+        return make_error_node<Term>();
+      }
       return *term;
     }
   }
@@ -584,12 +586,13 @@ parse_left_infix_term(Parser& p, Stream& s, Op op, Rule rule, Action act)
         left = act(tok, *left, *right);
       } else  {
         // We did not match the right operand after the token.
-        if (right.is_empty())
+        if (right.is_empty()) {
           error(tok->location(), "expected {} after '{}'",
                 get_grammar_name(rule),
                 tok->str());
+          return make_error_node<Term>();
+        }
       }
-      return *left;
     }
     
     // We matched the left term, but not the operator.
@@ -646,10 +649,12 @@ parse_right_infix_term(Parser& p, Stream& s, Op op, Rule rule, Action act)
         left = act(tok, *left, *right);
       } else {
         // We matched the token but not the right operand.
-        if (right.is_empty())
+        if (right.is_empty()) {
           error(tok->location(), "expected {} after '{}'",
                 get_grammar_name(rule),
                 tok->str());
+          return make_error_node<Term>();
+        }
         return *left;
       }
     }
