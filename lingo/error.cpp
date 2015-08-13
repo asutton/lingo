@@ -107,12 +107,22 @@ std::stack<Diagnostic_context*> diags_;
 Diagnostic_context root_;
 
 
+// Return the index of the caret for the given location.
+int
+get_caret(Bound_location loc)
+{
+  if (loc.is_valid())
+    return loc.column_no() - 1;
+  else
+    return -1;
+}
+
 } // namespace
 
 
 
 Diagnostic::Diagnostic(Diagnostic_kind k, Bound_location l, String const& m)
-  : kind(k), loc(l), caret(loc.column_no()), msg(m)
+  : kind(k), loc(l), caret(get_caret(l)), msg(m)
 { }
 
 
