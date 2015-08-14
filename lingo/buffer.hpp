@@ -87,6 +87,8 @@ public:
   using Line_map::line_no;
   using Line_map::column_no;
 
+  Line_map const& lines() const { return *this; }
+
   // Returns a bound location for the offset. Behavior is
   // undefined if `loc` does not represent a location in
   // this buffer.

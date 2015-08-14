@@ -31,9 +31,11 @@ Line const&
 Line_map::line(Location loc) const
 {
   lingo_assert(!empty());
-  auto iter = lower_bound(loc.offset());
-  if (iter == end())
-    --iter;
+
+  // Find the line whose starting offset is greater than that
+  // of the location. The location's line number is the
+  // previous location.
+  auto iter = --upper_bound(loc.offset());
   return iter->second;
 }
 
