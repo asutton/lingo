@@ -153,6 +153,17 @@ as(U const* u)
 }
 
 
+// Return a non-const pointer to the term. This is used
+// to modify a term post-initializatoin (which should
+// be rare).
+template<typename T>
+inline T*
+modify(T const* t)
+{
+  return const_cast<T*>(t);
+}
+
+
 // -------------------------------------------------------------------------- //
 //                              Concepts
 //
