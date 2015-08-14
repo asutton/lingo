@@ -232,11 +232,11 @@ template<typename T>
 struct Enclosed_term : Term<>
 {
   Enclosed_term(Location o, Location c)
-    : open_(c), close_(c), first(nullptr)
+    : open_(o), close_(c), first(nullptr)
   { }
 
   Enclosed_term(Location o, Location c, T const* t)
-    : open_(c), close_(c), first(t)
+    : open_(o), close_(c), first(t)
   { }
 
   char const* node_name() const { return "enclosure"; };
@@ -266,9 +266,9 @@ Enclosed_term<T>::make(Location o, Location c)
 
 template<typename T>
 inline Enclosed_term<T>* 
-Enclosed_term<T>::make(Location o, Location c, T const*)
+Enclosed_term<T>::make(Location o, Location c, T const* t)
 {
-  return gc().make<Enclosed_term<T>>(o, c);
+  return gc().make<Enclosed_term<T>>(o, c, t);
 }
 
 
@@ -288,8 +288,9 @@ parse_enclosed(Parser& p, Stream& s, Token_kind k1, Token_kind k2, Rule rule)
 {
   using Result = Enclosed_term<Term>;
   if (auto const* left = require_token(s, k1)) {
+    
     // Match the empty enclosure.
-    if (auto const* right = match_token(s, k2))
+    if (auto const* right = match_token(s, k2)) 
       return Result::make(left->location(), right->location());
     
     // Check the rule. Note to be careful about copying the
@@ -467,6 +468,7 @@ parse_list(Parser& p, Stream& s, Token_kind k, Rule rule)
   
   // Match the first term. Note that this can be empty.
   if (Optional<Term> first = rule(p, s)) {
+
     // There were no matching terms.
     if (first.is_empty())
       return Result::make();
@@ -476,9 +478,9 @@ parse_list(Parser& p, Stream& s, Token_kind k, Rule rule)
 
     // Match a series of ',' rule terms.
     while (Token const* tok = match_token(s, k)) {
-      if (Required<Term> next = rule(p, s))
+      if (Required<Term> next = rule(p, s)) {
         result.push_back(*next);
-      else {
+      } else {
         if (next.is_error())
           error(tok->location(), "expected {} after '{}'",
                 get_grammar_name(rule),
