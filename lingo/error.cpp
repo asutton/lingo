@@ -86,7 +86,7 @@ operator<<(std::ostream& os, Diagnostic const& diag)
   if (loc.is_valid()) {
     Line const& line = loc.line();
     os << "|    " << line.str() << '\n';
-    os << "|    " << std::string(diag.caret - 1, ' ');
+    os << "|    " << std::string(diag.caret, ' ');
     os << font_caret << '^' << font_end << '\n';
 
   } 
