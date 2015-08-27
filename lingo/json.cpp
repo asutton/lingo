@@ -15,23 +15,6 @@ namespace lingo
 namespace json
 {
 
-// Return a textual description of the node name.
-char const*
-get_node_name(Kind k)
-{
-  switch(k) {
-  case null_value: return "null_value";
-  case bool_value: return "bool_value";
-  case int_value: return "int_value";
-  case real_value: return "real_value";
-  case string_value: return "string_value";
-  case array_value: return "array_value";
-  case object_value: return "object_value";
-  default:
-    lingo_unreachable("unhandled node kind '{}'", k);
-  }
-}
-
 // Hash a string value.
 std::size_t
 String_hash::operator()(String const* p) const
@@ -297,24 +280,24 @@ void
 destroy(Value* v)
 {
   switch (v->kind()) {
-  case null_value:
-  case bool_value: 
-    return;
+    case null_value:
+    case bool_value: 
+      return;
 
-  case int_value: 
-    return destroy_literal(cast<Int>(v));
-  
-  case real_value: 
-    return destroy_literal(cast<Real>(v));
-  
-  case string_value: 
-    return destroy_literal(cast<String>(v));
-  
-  case array_value: 
-    return destroy_array(cast<Array>(v));
-  
-  case object_value: 
-    return destroy_object(cast<Object>(v));
+    case int_value: 
+      return destroy_literal(cast<Int>(v));
+    
+    case real_value: 
+      return destroy_literal(cast<Real>(v));
+    
+    case string_value: 
+      return destroy_literal(cast<String>(v));
+    
+    case array_value: 
+      return destroy_array(cast<Array>(v));
+    
+    case object_value: 
+      return destroy_object(cast<Object>(v));
   }
 }
 

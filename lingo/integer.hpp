@@ -37,8 +37,8 @@ public:
   Integer();
 
   // Copy semantics
-  Integer(const Integer&);
-  Integer& operator=(const Integer&);
+  Integer(Integer const&);
+  Integer& operator=(Integer const&);
 
   // Value initialization. Allows implicit conversion.
   Integer(std::intmax_t, int = 10);
@@ -50,18 +50,18 @@ public:
   ~Integer();
 
   // Arithmetic compound assignmnt operators.
-  Integer& operator+=(const Integer&);
-  Integer& operator-=(const Integer&);
-  Integer& operator*=(const Integer&);
-  Integer& operator/=(const Integer&);
-  Integer& operator%=(const Integer&);
+  Integer& operator+=(Integer const&);
+  Integer& operator-=(Integer const&);
+  Integer& operator*=(Integer const&);
+  Integer& operator/=(Integer const&);
+  Integer& operator%=(Integer const&);
 
-  Integer& operator&=(const Integer&);
-  Integer& operator|=(const Integer&);
-  Integer& operator^=(const Integer&);
+  Integer& operator&=(Integer const&);
+  Integer& operator|=(Integer const&);
+  Integer& operator^=(Integer const&);
 
-  Integer& operator<<=(const Integer&);
-  Integer& operator>>=(const Integer&);
+  Integer& operator<<=(Integer const&);
+  Integer& operator>>=(Integer const&);
 
   Integer& neg();
   Integer& abs();
@@ -123,7 +123,7 @@ Integer operator>>(Integer const&, Integer const&);
 void print(Printer&, Integer const&);
 void debug(Printer&, Integer const&);
 
-std::ostream& operator<<(std::ostream&, const Integer&);
+std::ostream& operator<<(std::ostream&, Integer const&);
 
 } // namespace lingo
 

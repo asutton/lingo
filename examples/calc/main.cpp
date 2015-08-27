@@ -24,7 +24,6 @@ prompt(std::string& line)
 
 int main()
 {
-  init_diagnostics();
   init_tokens();
   init_grammar();
 
@@ -62,6 +61,4 @@ int main()
     std::cout << expr << " == " << evaluate(expr) << '\n';
 
   }
-
-  gc().collect();
 }

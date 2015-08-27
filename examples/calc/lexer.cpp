@@ -17,56 +17,18 @@ namespace calc
 // -------------------------------------------------------------------------- //
 //                                Tokens
 
-// The extended token set.
-Extended_token_set toks_;
-
 
 // Initialize the token set used by the language.
 void
 init_tokens()
 {
-  install_token_set(toks_);
-  install_tokens({
-    { "(", lparen_tok },
-    { ")", rparen_tok },
-    { "+", plus_tok },
-    { "-", minus_tok },
-    { "*", star_tok },
-    { "/", slash_tok },
-    { "%", percent_tok },
-  });
-}
-
-
-// Returns a string representation of the token name.
-char const*
-get_token_name(Token_kind k)
-{
-  switch (k)
-  {
-  case plus_tok: return "plus_tok";
-  case minus_tok: return "minus_tok";
-  case star_tok: return "star_tok";
-  case slash_tok: return "slash_tok";
-  case percent_tok: return "percent_tok";
-  default: lingo_unreachable("unknown token kind ({})", k);
-  }
-}
-
-
-// Returns the spelling of the given token kind.
-char const*
-get_token_spelling(Token_kind k)
-{
-  switch (k)
-  {
-  case plus_tok: return "+";
-  case minus_tok: return "-";
-  case star_tok: return "*";
-  case slash_tok: return "/";
-  case percent_tok: return "%";
-  default: lingo_unreachable("unknown token kind ({})", k);
-  }
+  install_token(lparen_tok,  "lparen_tok", "(");
+  install_token(rparen_tok,  "rparen_tok", ")");
+  install_token(plus_tok,    "plus_tok",   "+");
+  install_token(minus_tok,   "minus_tok",  "-");
+  install_token(star_tok,    "star_tok",   "*");
+  install_token(slash_tok,   "slash_tok",   "/");
+  install_token(percent_tok, "percent_tok", "%");
 }
 
 
@@ -138,7 +100,8 @@ Lexer::on_rparen(Location loc, char const* str)
 Token
 Lexer::on_plus(Location loc, char const* str)
 {
-  return Token(loc, str, 1);
+  Token tok = Token(loc, str, 1);
+  return tok;
 }
 
 
@@ -173,7 +136,7 @@ Lexer::on_percent(Location loc, char const* str)
 Token
 Lexer::on_decimal_integer(Location loc, char const* first, char const* last)
 {
-  return Token(loc, decimal_integer_tok, first, last);
+  return Token(loc, integer_tok, first, last);
 }
 
 
@@ -186,6 +149,19 @@ lex(Character_stream& cs)
   while (Token tok = token(lexer, cs))
     toks.push_back(tok);
   return toks;
+}
+
+
+
+// -------------------------------------------------------------------------- //
+//                           Elaboration
+
+
+// Return the integer value of the token. 
+Integer
+as_integer(Token const& tok)
+{
+  return Integer(*tok.str(), 10);
 }
 
 

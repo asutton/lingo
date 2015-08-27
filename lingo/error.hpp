@@ -131,7 +131,6 @@ private:
 // -------------------------------------------------------------------------- //
 //                          Diagnostic interface
 
-void init_diagnostics();
 void emit_diagnostics();
 void reset_diagnostics();
 int error_count();

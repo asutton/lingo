@@ -28,7 +28,6 @@ inline Integer&
 Integer::operator=(Integer const& x) 
 {
   if (this != &x) {
-    mpz_clear(value_);
     mpz_set(value_, x.value_);
     base_ = x.base_;
   }

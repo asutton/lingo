@@ -173,15 +173,6 @@ Diagnostic_context::emit()
 }
 
 
-// Initialize the root diagnostic context.
-//
-// FIXME: This should go aways.
-void
-init_diagnostics()
-{
-}
-
-
 // Print all sved diagnostics. This is useful for
 // replaying diagnostcs when suppressed.
 void

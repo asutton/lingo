@@ -1,3 +1,5 @@
+// Copyright (c) 2015 Andrew Sutton
+// All rights reserved
 
 #include "ast.hpp"
 
@@ -9,180 +11,86 @@
 namespace calc
 {
 
-// Returns a textual representation of the node's name.
-char const*
-get_node_name(Kind k)
-{
-  switch (k) {
-  case int_expr: return "int_expr";
-  case add_expr: return "add_expr";
-  case sub_expr: return "sub_expr";
-  case mul_expr: return "mul_expr";
-  case div_expr: return "div_expr";
-  case mod_expr: return "mod_expr";
-  case neg_expr: return "neg_expr";
-  case pos_expr: return "pos_expr";
-
-  default:
-    lingo_unreachable("unhandled node kind ({})", (int)k);
-  }
-}
-
-
-// -------------------------------------------------------------------------- //
-//                               Node accessors
-
-// Returs an error expression.
-Expr const* 
-get_error()
-{
-  return make_error_node<Expr>();
-}
-
 
 // -------------------------------------------------------------------------- //
 //                                  Evaluations
 
-inline Integer
-eval_int(Int const* e)
+// Dispatch table for evaluation.
+struct Eval_fn
 {
-  return e->value();
-}
-
-
-inline Integer
-eval_add(Add const* e) 
-{
-  return evaluate(e->left()) + evaluate(e->right());
-}
-
-
-inline Integer
-eval_sub(Sub const* e)
-{
-  return evaluate(e->left()) - evaluate(e->right());
-}
-
-
-inline Integer
-eval_mul(Mul const* e)
-{
-  return evaluate(e->left()) * evaluate(e->right());
-}
-
-
-inline Integer
-eval_div(Div const* e)
-{
-  return evaluate(e->left()) / evaluate(e->right());
-}
-
-
-inline Integer
-eval_mod(Mod const* e)
-{
-  return evaluate(e->left()) % evaluate(e->right());
-}
-
-
-inline Integer
-eval_neg(Neg const* e)
-{
-  return -evaluate(e->arg());
-}
-
-
-inline Integer
-eval_pos(Pos const* e)
-{
-  return evaluate(e->arg());
-}
+  Integer operator()(Int const* e) const 
+  {
+    return e->value(); 
+  }
+  
+  Integer operator()(Add const* e) const 
+  { 
+    return evaluate(e->left()) + evaluate(e->right()); 
+  }
+  
+  Integer operator()(Sub const* e)
+  {
+    return evaluate(e->left()) - evaluate(e->right());
+  }
+  
+  Integer operator()(Mul const* e)
+  {
+    return evaluate(e->left()) * evaluate(e->right());
+  }
+  
+  Integer operator()(Div const* e)
+  {
+    return evaluate(e->left()) / evaluate(e->right());
+  }
+  
+  Integer operator()(Mod const* e)
+  {
+    return evaluate(e->left()) % evaluate(e->right());
+  }
+  
+  Integer operator()(Neg const* e)
+  {
+    return -evaluate(e->arg());
+  }
+  
+  Integer operator()(Pos const* e)
+  {
+    return evaluate(e->arg());
+  }
+};
 
 
 // Compute the integer evaluation of the expression.
 Integer
 evaluate(Expr const* e)
 {
-  lingo_assert(e);
-  switch (e->kind()) {
-  case int_expr: return eval_int(cast<Int>(e));
-  case add_expr: return eval_add(cast<Add>(e));
-  case sub_expr: return eval_sub(cast<Sub>(e));
-  case mul_expr: return eval_mul(cast<Mul>(e));
-  case div_expr: return eval_div(cast<Div>(e));
-  case mod_expr: return eval_mod(cast<Mod>(e));
-  case neg_expr: return eval_neg(cast<Neg>(e));
-  case pos_expr: return eval_pos(cast<Pos>(e));
-  
-  default:
-    lingo_unreachable("unevaluated node '{}'", e->node_name());
-  }
+  return apply(e, Eval_fn());
 }
 
-
-// -------------------------------------------------------------------------- //
-//                               Garbage collection
-
-void
-mark(Expr const* e)
-{
-  if (!e)
-    return;
-  if (is_error_node(e))
-    return;
-  switch (e->kind()) {
-  case int_expr: return mark(cast<Int>(e));
-  case add_expr: return mark(cast<Add>(e));
-  case sub_expr: return mark(cast<Sub>(e));
-  case mul_expr: return mark(cast<Mul>(e));
-  case div_expr: return mark(cast<Div>(e));
-  case mod_expr: return mark(cast<Mod>(e));
-  case neg_expr: return mark(cast<Neg>(e));
-  case pos_expr: return mark(cast<Pos>(e));
-  
-  default:
-    lingo_unreachable("unevaluated node '{}'", e->node_name());
-  }
-}
 
 // -------------------------------------------------------------------------- //
 //                                  Printing
 
+
 namespace
 {
 
-inline void
-print_int(Printer& p, Int const* e)
+// Comptues the precedence of an expression.
+// See the precedence table below.
+struct Precedence_fn
 {
-  print(p, e->value());
-}
+  int operator()(Int const* e) const { return 0; }
 
+  int operator()(Neg const* e) const { return 1; }
+  int operator()(Pos const* e) const { return 1; }
 
-inline void
-print_operator(Printer& p, Expr const* e)
-{
-  switch (e->kind()) {
-  case add_expr:
-  case pos_expr:
-    print(p, '+'); break;
+  int operator()(Mul const* e) const { return 2; }
+  int operator()(Div const* e) const { return 2; }
+  int operator()(Mod const* e) const { return 2; }
 
-  case sub_expr: 
-  case neg_expr:
-    print(p, '-'); break;
-  
-  case mul_expr:
-    print(p, '*'); break;
-  
-  case div_expr:
-    print(p, '/'); break;
-  
-  case mod_expr: 
-    print(p, '%'); break;
-
-  default:
-    lingo_unreachable("unhandled node '{}'", e->node_name());
-  }
-}
+  int operator()(Add const* e) const { return 3; }
+  int operator()(Sub const* e) const { return 3; }
+};
 
 
 // Returns the precendence of the term e. The precedence of terms
@@ -195,27 +103,9 @@ print_operator(Printer& p, Expr const* e)
 int 
 precedence(Expr const* e)
 {
-  switch (e->kind()) {
-  case int_expr:
-    return 0;
-
-  case add_expr:
-  case sub_expr:
-    return 3;
-
-  case mul_expr:
-  case div_expr:
-  case mod_expr:
-    return 2;
-
-  case neg_expr:
-  case pos_expr:
-    return 1;
-
-  default:
-    lingo_unreachable("precedence undefined for '{}'", e->node_name());
-  }
+  return apply(e, Precedence_fn());
 }
+
 
 // A subexpression needs parens only when its prcedence is
 // greater than that of the subexpression. Note that we could
@@ -245,9 +135,39 @@ print_subexpr(Printer& p, Expr const* expr, Expr const* sub)
 }
 
 
-template<typename T>
+// Return the character representing the operator of an expression.
+struct Operator_fn
+{
+  char operator()(Int const* e) const { lingo_unreachable(); }
+  char operator()(Add const* e) const { return '+'; }
+  char operator()(Sub const* e) const { return '-'; }
+  char operator()(Mul const* e) const { return '*'; }
+  char operator()(Div const* e) const { return '/'; }
+  char operator()(Mod const* e) const { return '%'; }
+  char operator()(Neg const* e) const { return '-'; }
+  char operator()(Pos const* e) const { return '+'; }
+};
+
+
+// Prints the textual representation of an operator for
+// that node.
+inline void
+print_operator(Printer& p, Expr const* e)
+{
+  print(p, apply(e, Operator_fn()));
+}
+
+
 void
-print_binary(Printer& p, T const* e)
+print(Printer& p, Int const* e)
+{
+  print(p, e->value());
+}
+
+
+template<typename T>
+typename std::enable_if<is_binary<T>(), void>::type
+print(Printer& p, T const* e)
 {
   print_subexpr(p, e, e->left());
   print_space(p);
@@ -258,12 +178,33 @@ print_binary(Printer& p, T const* e)
 
 
 template<typename T>
-void
-print_unary(Printer& p, T const* e)
+typename std::enable_if<is_unary<T>(), void>::type
+print(Printer& p, T const* e)
 {
   print_operator(p, e);
   print_subexpr(p, e, e->arg());
 }
+
+
+
+struct Print_fn
+{
+  Print_fn(Printer& p)
+    : p(p)
+  { }
+
+  void operator()(Int const* e) const { print(p, e); }
+  void operator()(Add const* e) const { print(p, e); }
+  void operator()(Sub const* e) const { print(p, e); }
+  void operator()(Mul const* e) const { print(p, e); }
+  void operator()(Div const* e) const { print(p, e); }
+  void operator()(Mod const* e) const { print(p, e); }
+  void operator()(Neg const* e) const { print(p, e); }
+  void operator()(Pos const* e) const { print(p, e); }
+
+  Printer& p;
+};
+
 
 } // namespace
 
@@ -273,20 +214,37 @@ void
 print(Printer& p, Expr const* e)
 {
   lingo_assert(is_valid_node(e));
-  switch (e->kind()) {
-  case int_expr: return print_int(p, cast<Int>(e));
-  case add_expr: return print_binary(p, cast<Add>(e));
-  case sub_expr: return print_binary(p, cast<Sub>(e));
-  case mul_expr: return print_binary(p, cast<Mul>(e));
-  case div_expr: return print_binary(p, cast<Div>(e));
-  case mod_expr: return print_binary(p, cast<Mod>(e));
-  case neg_expr: return print_unary(p, cast<Neg>(e));
-  case pos_expr: return print_unary(p, cast<Pos>(e));
-
-  default:
-    lingo_unreachable("unhandled node '{}'", e->node_name());
-  }
+  apply(e, Print_fn(p));
 }
+
+
+// -------------------------------------------------------------------------- //
+// Debug printing
+
+
+namespace
+{
+
+struct Debug_fn
+{
+  Debug_fn(Printer& p)
+    : p(p)
+  { }
+
+  void operator()(Int const* e) const { debug(p, e); }
+  void operator()(Add const* e) const { debug(p, e); }
+  void operator()(Sub const* e) const { debug(p, e); }
+  void operator()(Mul const* e) const { debug(p, e); }
+  void operator()(Div const* e) const { debug(p, e); }
+  void operator()(Mod const* e) const { debug(p, e); }
+  void operator()(Neg const* e) const { debug(p, e); }
+  void operator()(Pos const* e) const { debug(p, e); }
+
+  Printer& p;
+};
+
+
+} // namespace
 
 
 // Emit a debug representation of the given expression.
@@ -302,20 +260,8 @@ debug(Printer& p, Expr const* e)
     debug(p, "<error>");
     return;
   }
-  
-  switch (e->kind()) {
-  case int_expr: return debug(p, cast<Int>(e));
-  case add_expr: return debug(p, cast<Add>(e));
-  case sub_expr: return debug(p, cast<Sub>(e));
-  case mul_expr: return debug(p, cast<Mul>(e));
-  case div_expr: return debug(p, cast<Div>(e));
-  case mod_expr: return debug(p, cast<Mod>(e));
-  case neg_expr: return debug(p, cast<Neg>(e));
-  case pos_expr: return debug(p, cast<Pos>(e));
 
-  default:
-    lingo_unreachable("unhandled node '{}'", e->node_name());
-  }
+  apply(e, Debug_fn(p));  
 }
 
 

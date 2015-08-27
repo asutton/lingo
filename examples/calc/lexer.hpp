@@ -19,32 +19,26 @@ using namespace lingo;
 // -------------------------------------------------------------------------- //
 //                              Tokens
 
-constexpr Token_kind plus_tok    = 100;
-constexpr Token_kind minus_tok   = 101;
-constexpr Token_kind star_tok    = 102;
-constexpr Token_kind slash_tok   = 103;
-constexpr Token_kind percent_tok = 104;
-
-char const* get_token_name(Token_kind);
-char const* get_token_spelling(Token_kind);
-
-
-// The extended token set for the calc language.
-struct Extended_token_set : Token_set
+enum Token_kind
 {
-  char const* token_name(Token_kind k) const override
-  { 
-    return get_token_name(k); 
-  }
-
-  char const* token_spelling(Token_kind k) const override
-  { 
-    return get_token_spelling(k); 
-  }
+  lparen_tok,
+  rparen_tok,
+  plus_tok,
+  minus_tok,
+  star_tok,
+  slash_tok,
+  percent_tok,
+  integer_tok,
 };
 
 
 void init_tokens();
+
+
+// -------------------------------------------------------------------------- //
+//                              Elaboration
+
+Integer as_integer(Token const&);
 
 
 // -------------------------------------------------------------------------- //
@@ -75,6 +69,8 @@ struct Lexer
 
 Token_list lex(Character_stream&);
 
+
 } // namespace calc
+
 
 #endif

@@ -120,4 +120,16 @@ set_input_location(Location loc)
 }
 
 
+Input_location::Input_location(Location loc)
+  : saved(input_location())
+{
+  set_input_location(loc);
+}
+
+Input_location::~Input_location()
+{
+  set_input_location(saved);
+}
+
+
 } // namespace

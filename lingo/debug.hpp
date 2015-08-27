@@ -24,7 +24,7 @@ struct sexpr
     : p(p)
   {
     print_chars(p, '(');
-    print_chars(p, n->node_name());
+    print_chars(p, get_node_name(n));
     if (space)
       print_space(p);
   }

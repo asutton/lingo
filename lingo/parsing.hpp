@@ -53,7 +53,7 @@ struct is_token_fn
     return tok.kind() == k;
   }
 
-  Token_kind k;
+  int k;
 };
 
 
@@ -65,13 +65,13 @@ struct is_not_token_fn
     return tok.kind() != k;
   }
 
-  Token_kind k;
+  int k;
 };
 
 
 // Returns a function that evalutes if a token has the given kind.
 inline is_token_fn
-is_token(Token_kind k)
+is_token(int k)
 {
   return {k};
 }
@@ -80,7 +80,7 @@ is_token(Token_kind k)
 // Returns a function that evaluates if a token does not have 
 // the given kind.
 inline is_not_token_fn
-is_not_token(Token_kind k)
+is_not_token(int k)
 {
   return {k};
 }
@@ -88,7 +88,7 @@ is_not_token(Token_kind k)
 
 // Returns the kind of the next token in `s`.
 template<typename Stream>
-inline Token_kind
+inline int
 next_token_kind(Stream& s)
 {
   if (s.eof())
@@ -101,7 +101,7 @@ next_token_kind(Stream& s)
 // Returns true if the next token has kind k.
 template<typename Stream>
 inline bool
-next_token_is(Stream& s, Token_kind k)
+next_token_is(Stream& s, int k)
 {
   return next_token_kind(s) == k;
 }
@@ -110,7 +110,7 @@ next_token_is(Stream& s, Token_kind k)
 // Returns true if the next token does not have kind k.
 template<typename Stream>
 inline bool
-next_token_is_not(Stream& s, Token_kind k)
+next_token_is_not(Stream& s, int k)
 {
   return next_token_kind(s) != k;
 }
@@ -120,7 +120,7 @@ next_token_is_not(Stream& s, Token_kind k)
 // numeric range [first, last], inclusive.
 template<typename Stream>
 inline bool
-next_token_in_range(Stream& s, Token_kind first, Token_kind last)
+next_token_in_range(Stream& s, int first, int last)
 {
   return first <= next_token_kind(s) && next_token_kind(s) <= last;
 }
@@ -146,7 +146,7 @@ get_token(Stream& s)
 // returns a null pointer.
 template<typename Stream>
 inline Iterator_type<Stream>
-match_token(Stream& s, Token_kind k)
+match_token(Stream& s, int k)
 {
   return match_if(s, is_token(k));
 }
@@ -156,7 +156,7 @@ match_token(Stream& s, Token_kind k)
 // returns a null pointer.
 template<typename Parser, typename Stream>
 inline Iterator_type<Stream>
-expect_token(Parser& p, Stream& s, Token_kind k)
+expect_token(Parser& p, Stream& s, int k)
 {
   return expect_if(p, s, is_token(k), get_token_spelling(k));
 }
@@ -164,7 +164,7 @@ expect_token(Parser& p, Stream& s, Token_kind k)
 
 template<typename Stream>
 inline Iterator_type<Stream>
-require_token(Stream& s, Token_kind k)
+require_token(Stream& s, int k)
 {
   lingo_alert(next_token_is(s, k), "required token '{}'", get_token_spelling(k));
   return match_if(s, is_token(k));
@@ -229,7 +229,7 @@ parse_expected(Parser& p, Stream& s, Rule rule)
 //
 // Note that the enclosure may be empty.
 template<typename T>
-struct Enclosed_term : Term<>
+struct Enclosed_term
 {
   Enclosed_term(Location o, Location c)
     : open_(o), close_(c), first(nullptr)
@@ -284,7 +284,7 @@ template<typename Parser,
          typename Rule,
          typename Term = Term_type<Parser, Stream, Rule>>
 Enclosed_term<Term> const*
-parse_enclosed(Parser& p, Stream& s, Token_kind k1, Token_kind k2, Rule rule)
+parse_enclosed(Parser& p, Stream& s, int k1, int k2, Rule rule)
 {
   using Result = Enclosed_term<Term>;
   if (auto const* left = require_token(s, k1)) {
@@ -330,7 +330,7 @@ parse_enclosed(Parser& p, Stream& s, Token_kind k1, Token_kind k2, Rule rule)
 // these parsers will disappear and need to be implemented
 // for in the client compilers.
 
-
+#if 0
 // Parse a parentheses-enclosed production.
 //
 //    paren-enclosed ::= '(' [rule] ')'
@@ -371,6 +371,7 @@ parse_bracket_enclosed(Parser& p, Stream& s, Rule rule)
 {
   return parse_enclosed(p, s, lparen_tok, rparen_tok, rule);
 }
+#endif
 
 
 // -------------------------------------------------------------------------- //
@@ -382,7 +383,7 @@ parse_bracket_enclosed(Parser& p, Stream& s, Rule rule)
 // TODO: Should we also track the location of interleaving
 // tokens for the case where the sequence is a list?
 template<typename T>
-struct Sequence_term : Term<>, std::vector<T const*>
+struct Sequence_term : std::vector<T const*>
 {
   using std::vector<T const*>::vector;
 
@@ -461,7 +462,7 @@ template<typename Parser,
          typename Rule,
          typename Term = Term_type<Parser, Stream, Rule>>
 inline Sequence_term<Term> const*
-parse_list(Parser& p, Stream& s, Token_kind k, Rule rule)
+parse_list(Parser& p, Stream& s, int k, Rule rule)
 {
   using Result = Sequence_term<Term>;
   Result result;

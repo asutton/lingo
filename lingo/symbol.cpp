@@ -16,22 +16,31 @@ namespace lingo
 // -------------------------------------------------------------------------- //
 //                           Symbol table
 
+Symbol_table::~Symbol_table()
+{
+  for (auto p : map_)
+    delete p.second;
+}
+
+
 // Insert a symbol as having the given kind. If the symbol already
 // exists, do nothing and return its index.
+//
+// Note that a symbol's kind cannot be changed by re-insertion.
+// However, it can be modified explicitly upon need, but this
+// should be rarely needed.
 Symbol&
-Symbol_table::insert(String_view s, Symbol_descriptor k)
+Symbol_table::insert(String_view s, int k)
 {
-  auto iter = map_.find(s);
-  if (iter == map_.end()) {
-    // Create/insert a new symbol for the given string.
-    syms_.emplace_back(s.str(), k);
-    Symbol* sym = &syms_.back();
-
-    // Insert the string into the lookup table.
-    map_.insert({sym->view(), sym});
+  auto ins = map_.insert({s, nullptr});
+  if (ins.second) {
+    // Create a new symbol for the given string.
+    Symbol* sym = new Symbol(s.str(), k);
+    ins.first->second = sym;
     return *sym;
   } else {
-    return *iter->second;
+    // Return the existing symbol.
+    return *ins.first->second;
   }
 }
 

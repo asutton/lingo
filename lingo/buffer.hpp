@@ -142,6 +142,16 @@ struct Input_guard
 };
 
 
+// This RAII class is used to manage the input location.
+struct Input_location
+{
+  Input_location(Location);
+  ~Input_location();
+
+  Location saved;
+};
+
+
 } // namespace
 
 #endif

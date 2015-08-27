@@ -43,14 +43,6 @@ enum Kind
 };
 
 
-char const* get_node_name(Kind);
-
-
-// Partial specialization of the kinding facility.
-template<Kind K>
-using Kind_of = Kind_base<Kind, K>;
-
-
 // Declarations
 struct Value;
 struct Undefined;
@@ -96,67 +88,53 @@ using Pair = Object_impl::value_type;
 // we don't keep source locations for these.
 struct Value
 {
-  Value(Kind k)
-    : kind_(k)
-  { }
-
   virtual ~Value() { }
-
-  char const* node_name() const { return get_node_name(kind_); }
-  Kind kind() const { return kind_; }
-
-  Kind kind_;
 };
 
 
 // A helper class for the definition of literal-valued terms.
 // This includes booleans, integers, reals, and strings.
-template<Kind K, typename T>
-struct Literal : Value, Kind_of<K>
+template<typename T>
+struct Literal : Value
 {
   template<typename... Args>
   Literal(Args&&... args)
-    : Value(K), first(std::forward<Args>(args)...)
+    : first(std::forward<Args>(args)...)
   { }
 
   T const& value() const { return first; }
-
-  static bool is(Kind k) { return k == K; }
 
   T first;
 };
 
 
 // The literal value null.
-struct Null : Value, Kind_of<null_value>
+struct Null : Value
 {
-  Null()
-    : Value(node_kind)
-  { }
 };
 
 
 
 // Represents the literal values true and false.
-struct Bool : Literal<bool_value, bool> 
+struct Bool : Literal<bool> 
 {
-  using Literal<bool_value, bool>::Literal;
+  using Literal<bool>::Literal;
 };
 
 
 // Represents integer-valued literals.
-struct Int : Literal<int_value, Integer> 
+struct Int : Literal<Integer> 
 {
-  using Literal<int_value, Integer>::Literal;
+  using Literal<Integer>::Literal;
 };
 
 
 // Represents real-valued literals.
 //
 // FIXME: Use a more general purpose real number for the value.
-struct Real : Literal<real_value, double> 
+struct Real : Literal<double> 
 {
-  using Literal<real_value, double>::Literal;
+  using Literal<double>::Literal;
 };
 
 
@@ -164,43 +142,39 @@ struct Real : Literal<real_value, double>
 //
 // TODO: Strings are immutable. Perhaps we could use a shared
 // representation to minimize allocations? 
-struct String : Literal<string_value, std::string> 
+struct String : Literal<std::string> 
 {
-  using Literal<string_value, std::string>::Literal;
+  using Literal<std::string>::Literal;
 };
 
 
 // An array of values.
-struct Array : Value, Array_impl, Kind_of<array_value>
+struct Array : Value, Array_impl
 {
-  Array()
-    : Value(node_kind)
-  { }
+  Array() = default;
 
   Array(std::initializer_list<Value*> list)
-    : Value(node_kind), Array_impl(list)
+    : Array_impl(list)
   { }
 
   Array(Array_impl&& arr)
-    : Value(node_kind), Array_impl(std::move(arr))
+    : Array_impl(std::move(arr))
   { }
 };
 
 
 // A mapping of strings to values, or a set of 
 // name/value pairs.
-struct Object : Value, Object_impl, Kind_of<object_value>
+struct Object : Value, Object_impl
 {
-  Object()
-    : Value(node_kind)
-  { }
+  Object() = default;
 
   Object(std::initializer_list<Pair> list)
-    : Value(node_kind), Object_impl(list)
+    : Object_impl(list)
   { }
 
   Object(Object_impl&& map)
-    : Value(node_kind), Object_impl(std::move(map))
+    : Object_impl(std::move(map))
   { }
 
   Value*& operator[](String const*);

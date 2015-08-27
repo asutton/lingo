@@ -4,6 +4,8 @@
 #ifndef LINGO_NODE_HPP
 #define LINGO_NODE_HPP
 
+#include "lingo/utility.hpp"
+
 #include <cassert>
 #include <vector>
 #include <type_traits>
@@ -15,41 +17,13 @@
 namespace lingo
 {
 
-class Token;
 
-
-// The Kind_of class is a helper class that supports the definition 
-// of node models. This provides a static representation of the 
-// node kind and a static `is` function for dynamic type testing.
-template<typename T, T K>
-struct Kind_base
+template<typename T>
+inline String 
+get_node_name(T const* t)
 {
-  static constexpr T node_kind = K;
-
-  static bool is(T k) { return node_kind == k; }
-};
-
-
-// -------------------------------------------------------------------------- //
-//                        Generic terms
-
-
-// The Term template provides a facility for making an arbitrary
-// type model the requirements of a node. This is useful for 
-// defining terms that do not fall into other categegories (types,
-// expressions, declarations, statments, etc).
-//
-// The "kind" of the node can be specified by the integer template
-// argument N, but it is rarely useful to define it as anything
-// other.
-template<int N = 0>
-struct Term : Kind_base<int, N>
-{
-  virtual ~Term() { }
-
-  char const* node_name() const { return "<unspecified term>"; }
-  int kind() const              { return N; }
-};
+  return type_str(*t);
+}
 
 
 // -------------------------------------------------------------------------- //
@@ -106,7 +80,7 @@ template<typename T, typename U>
 inline bool
 is(U const* u)
 {
-  return T::is(u->kind());
+  return dynamic_cast<T const*>(u);
 }
 
 
@@ -121,7 +95,7 @@ template<typename T, typename U>
 inline T* 
 cast(U* u)
 {
-  assert(is_valid_node(u) ? is<T>(u) : true);
+  lingo_assert(is_valid_node(u) ? is<T>(u) : true);
   return static_cast<T*>(u);
 }
 
@@ -141,7 +115,7 @@ template<typename T, typename U>
 inline T*
 as(U* u)
 {
-  return is<T>(u) ? cast<T>(u) : nullptr;
+  return dynamic_cast<T*>(u);
 }
 
 
@@ -149,7 +123,7 @@ template<typename T, typename U>
 inline T const*
 as(U const* u)
 {
-  return is<T>(u) ? cast<T>(u) : nullptr;
+  return dynamic_cast<T const*>(u);
 }
 
 
@@ -215,17 +189,6 @@ struct is_non_void<void>
 };
 
 
-// Detect the existince of the member T::node_kind. 
-template<typename T>
-struct node_kind_type
-{
-  template<typename U> static auto f(U* p) -> decltype(U::node_kind);
-  static                      void f(...);
-
-  using type = decltype(f(std::declval<T*>()));
-};
-
-
 // Detect the existince of the member t->first.
 template<typename T>
 struct first_type
@@ -282,15 +245,6 @@ struct end_type
 };
 
 
-// Returns true when `T` has the static member object `node_kind`.
-template<typename T>
-constexpr bool
-has_node_kind()
-{
-  return is_non_void<typename node_kind_type<T>::type>::value;
-}
-
-
 // Returns true when `T` has the member `first`.
 template<typename T>
 constexpr bool
@@ -339,23 +293,12 @@ has_end()
 } // namesapce traits
 
 
-// Returns true if T models the Node concept.
-template<typename T>
-constexpr bool 
-is_node()
-{
-  return traits::has_node_kind<T>();
-}
-
-
 // Returns true if T is a Nullary_node.
 template<typename T>
 constexpr bool
 is_nullary_node()
 {
-  return is_node<T>()
-      && !traits::has_first<T>()  // Not a unary node
-      && !traits::has_begin<T>(); // Not a k-ary node
+  return !traits::has_first<T>();
 }
 
 
@@ -364,8 +307,7 @@ template<typename T>
 constexpr bool
 is_unary_node()
 {
-  return is_node<T>() 
-      && traits::has_first<T>() 
+  return traits::has_first<T>() 
       && !traits::has_second<T>();
 }
 
@@ -375,8 +317,7 @@ template<typename T>
 constexpr bool
 is_binary_node()
 {
-  return is_node<T>() 
-      && traits::has_second<T>() 
+  return traits::has_second<T>() 
       && !traits::has_third<T>();
 }
 
@@ -386,8 +327,7 @@ template<typename T>
 constexpr bool
 is_ternary_node()
 {
-  return is_node<T>() 
-      && traits::has_first<T>()
+  return traits::has_first<T>()
       && traits::has_second<T>() 
       && traits::has_third<T>();
 }
@@ -398,7 +338,7 @@ template<typename T>
 constexpr bool
 is_kary_node()
 {
-  return is_node<T>() && traits::has_begin<T>() && traits::has_end<T>();
+  return traits::has_begin<T>() && traits::has_end<T>();
 }
 
 

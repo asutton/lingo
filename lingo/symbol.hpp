@@ -22,26 +22,8 @@ namespace lingo
 // -------------------------------------------------------------------------- //
 //                                  Symbols
 
-// Determines the kinds of attributes associated with the symbol.
-//
-// TODO: Add extra attributes for other stuff?
-using Symbol_kind = int;
-constexpr int unspecified_sym = 0;
-constexpr int language_sym    = 1; // Defined by the language (no attributes)
-constexpr int integer_sym     = 2; // Has an integer attribute
-constexpr int real_sym        = 3; // Has a real-valued attribute
-constexpr int identifier_sym  = 4; // Has a binding attribute
-
-
-// The symbol descriptor contains information about a symbol
-// in the symbol table.
-//
-// NOTE: The bitfields can be rebalanced at need.
-struct Symbol_descriptor
-{
-  int kind  : 8;  // The kind of keyword (see above)
-  int token : 24; // An associated token kind
-};
+// The unknown token kind. No token must ever have this kind.
+constexpr int unknown_tok = -1;
 
 
 // A Symbol represents a lexeme saved in the symbol table and
@@ -53,21 +35,21 @@ struct Symbol_descriptor
 // Note that the symbol owns the pointer to its string view and is
 // responsible for de-allocating that memory.
 //
-// TODO: What kinds of information can we add to this entry
-// to simplify functioning.
-//
-// TODO: When we start using a reasonable allocator for the symbol
-// table, revisit the destructor.
+// The symbol also associates a token kind, allowing for efficient
+// token construction. Most symbols are inserted with the token
+// kind already known. However, for tokens like identifiers, integers,
+// and real values, the token kind must be assigned later.
+// 
 struct Symbol
 {
-  Symbol(String const& s, Symbol_descriptor d)
-    : str(s), desc(d)
+  Symbol(String const& s, int k)
+    : str(s), kind(k)
   { }
 
   String_view view() const { return make_view(str); }
 
-  String            str;  // The string view
-  Symbol_descriptor desc; // The kind of token
+  String str;  // The string view
+  int    kind; // The kind of token
 };
 
 
@@ -85,18 +67,6 @@ operator!=(Symbol const& a, Symbol const& b)
 }
 
 
-// Returns true if the symbol is one defined by the core
-// language. Note that core language symbols have only
-// one possible spelling (although multiple spellings may
-// be associated with the same token kind).
-inline bool
-is_language_symbol(Symbol const& s)
-{
-  return s.desc.kind == language_sym;
-}
-
-
-
 // -------------------------------------------------------------------------- //
 //                           Symbol table
 
@@ -107,39 +77,42 @@ is_language_symbol(Symbol const& s)
 //
 // The symbol table is implemented as a linked list of symbols 
 // with a side table to support efficient lookup.
+//
+// TODO: Use a bump alloctor for the hash table and the strings.
+// Because the table is only ever cleared on program exit, it
+// would be far more effecient to simply blow away all pages
+// allocated to the symbol table.
 class Symbol_table
 {
   using Hash = String_view_hash;
   using Eq = String_view_eq;
-  using List = std::list<Symbol>;
   using Map = std::unordered_map<String_view, Symbol*, Hash, Eq>;
 
 public:
-  Symbol& insert(String_view, Symbol_descriptor);
-  Symbol& insert(char const*, Symbol_descriptor);
-  Symbol& insert(char const*, char const*, Symbol_descriptor);
+  ~Symbol_table();
+
+  Symbol& insert(String_view, int);
+  Symbol& insert(char const*, int);
+  Symbol& insert(char const*, char const*, int);
 
   Symbol* lookup(String_view) const;
   Symbol* lookup(char const*) const;
   Symbol* lookup(char const*, char const*) const;
 
-  void clear();
-
 private:
-  List syms_;
   Map  map_;
 };
 
 
 inline Symbol&
-Symbol_table::insert(char const* s, Symbol_descriptor k)
+Symbol_table::insert(char const* s, int k)
 {
   return insert(String_view(s), k);
 }
 
 
 inline Symbol& 
-Symbol_table::insert(char const* f, char const* l, Symbol_descriptor k)
+Symbol_table::insert(char const* f, char const* l, int k)
 {
   return insert(String_view(f, l), k);
 }
@@ -163,38 +136,38 @@ Symbol_table& symbols();
 
 
 // Returns the symbol correspondng to `str`, inserting a new
-// symbol if it is not already present.
+// symbol if it is not already present. 
 inline Symbol&
-get_symbol(char const* str)
+get_symbol(char const* str, int k = unknown_tok)
 {
-  return symbols().insert(str, {});
+  return symbols().insert(str, k);
 }
 
 
 // Returns the symbol correspondng to the string in `[first, last)`.
 // Insert the symbol if it does not exist.
 inline Symbol&
-get_symbol(char const* first, char const* last)
+get_symbol(char const* first, char const* last, int k = unknown_tok)
 {
-  return symbols().insert(first, last, {});
+  return symbols().insert(first, last, k);
 }
 
 
 // Returns the symbol corresponding to the stirng `s`. Insert
 // the symbol if it does not exist.
 inline Symbol&
-get_symbol(String_view s)
+get_symbol(String_view s, int k = unknown_tok)
 {
-  return symbols().insert(s, {});
+  return symbols().insert(s, k);
 }
 
 
 // Returns the symbol corresponding to the stirng `s`. Insert
 // the symbol if it does not exist.
 inline Symbol&
-get_symbol(String const& s)
+get_symbol(String const& s, int k = unknown_tok)
 {
-  return symbols().insert(make_view(s), {});
+  return symbols().insert(make_view(s), k);
 }
 
 

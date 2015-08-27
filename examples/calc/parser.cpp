@@ -35,7 +35,7 @@ Expr const*
 parse_integer_literal(Parser& p, Token_stream& toks)
 {
   // Match integers.
-  if (Token const* tok = match_if(toks, is_token(decimal_integer_tok)))
+  if (Token const* tok = match_if(toks, is_token(integer_tok)))
     return p.on_int_expression(tok);
   return nullptr;
 }
@@ -240,7 +240,7 @@ parse_expression(Parser& p, Token_stream& toks)
 Expr const*
 Parser::on_int_expression(Token const* tok)
 {
-  return gc().make<Int>(tok->location(), as_integer(*tok));
+  return new Int(tok->location(), as_integer(*tok));
 }
 
 
@@ -249,11 +249,11 @@ Parser::on_unary_expression(Token const* tok, Expr const* e)
 {
   Location loc = tok->location();
   switch (tok->kind()) {
-  case plus_tok: return gc().make<Pos>(loc, e);
-  case minus_tok: return gc().make<Neg>(loc, e);
-  default:
-    lingo_unreachable("invalid unary operator '{}'", tok->token_name());
+    case plus_tok: return new Pos(loc, e);
+    case minus_tok: return new Neg(loc, e);
+    default: break;
   }
+  lingo_unreachable("invalid unary operator '{}'", tok->token_name());
 }
 
 
@@ -262,14 +262,14 @@ Parser::on_binary_expression(Token const* tok, Expr const* e1, Expr const* e2)
 {
   Location loc = tok->location();
   switch (tok->kind()) {
-  case plus_tok: return gc().make<Add>(loc, e1, e2);
-  case minus_tok: return gc().make<Sub>(loc, e1, e2);
-  case star_tok: return gc().make<Mul>(loc, e1, e2);
-  case slash_tok: return gc().make<Div>(loc, e1, e2);
-  case percent_tok: return gc().make<Mod>(loc, e1, e2);
-  default:
-    lingo_unreachable("invalid binary operator '{}'", tok->token_name());
+    case plus_tok: return new Add(loc, e1, e2);
+    case minus_tok: return new Sub(loc, e1, e2);
+    case star_tok: return new Mul(loc, e1, e2);
+    case slash_tok: return new Div(loc, e1, e2);
+    case percent_tok: return new Mod(loc, e1, e2);
+    default: break;
   }
+  lingo_unreachable("invalid binary operator '{}'", tok->token_name());
 }
 
 

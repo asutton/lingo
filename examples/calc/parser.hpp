@@ -26,10 +26,14 @@ struct Parser
   Expr const* on_binary_expression(Token const*, Expr const*, Expr const*);
 };
 
-void init_grammar();
 
 Expr const* parse(Token_stream&);
 
+
+void init_grammar();
+
+
 } // nammespace calc
+
 
 #endif

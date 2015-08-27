@@ -50,6 +50,26 @@ private:
 };
 
 
+// A span of text is represented by a pair of source 
+// locations. Like a location, a text span must be
+// resolved against its input buffer.
+//
+// The start location shall be less than or equal to
+// the end location. A span is never empty.
+struct Span
+{
+  Span(Location s, Location e)
+    : start_(s), end_(e)
+  { }
+
+  Location start() const { return start_; }
+  Location end() const { return end_; }
+
+  Location start_;
+  Location end_;
+};
+
+
 // A Bound location associates a location reference with its
 // originating buffer. Bound locations are returned from
 // the location() method of a buffer.
