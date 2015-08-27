@@ -227,7 +227,7 @@ parse_binary_expression(Parser& p, Token_stream& toks)
 Expr const*
 parse_expression(Parser& p, Token_stream& toks)
 {
-  return parse_additive_expression(p, toks);
+  return parse_binary_expression(p, toks);
 }
 
 
