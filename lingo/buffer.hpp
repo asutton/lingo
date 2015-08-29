@@ -122,31 +122,27 @@ Location input_location();
 void set_input_buffer(Buffer&);
 void set_input_location(Location);
 
-// The input guard sets the given buffer to be the current input.
-// When the guard goes out of scope, the previous input buffer
+
+// This RAII class sets the current input buffer. When 
+// the guard goes out of scope, the previous input buffer
 // is restored.
-struct Input_guard
+struct Use_buffer
 {
-  Input_guard(Buffer& buf)
-    : prev(input_buffer())
-  {
-    set_input_buffer(buf); 
-  }
+  Use_buffer(Buffer&);
+  ~Use_buffer();
 
-  ~Input_guard()
-  {
-    set_input_buffer(prev);
-  }
-
-  Buffer& prev;
+  Buffer* prev;
 };
 
 
-// This RAII class is used to manage the input location.
-struct Input_location
+// This RAII class sets the current input location. It
+// generally used prior establish source context before
+// invoking semantic actions. The previous input source
+// is restored when this object goes out of scope.
+struct Use_location
 {
-  Input_location(Location);
-  ~Input_location();
+  Use_location(Location);
+  ~Use_location();
 
   Location saved;
 };

@@ -34,8 +34,11 @@ int main()
 
     // Construct a buffer for the line.
     Buffer buf(line);
-    Input_guard guard(buf);
+    
+    // Establish the input context.
+    Use_buffer cxt(buf);
 
+    // Transform character input into tokens.
     Character_stream cs(buf);
     Token_list toks = lex(cs);
     if (error_count()) {
@@ -45,6 +48,7 @@ int main()
 
     // debug(toks);
 
+    // Transform tokens into abstract syntax.
     Token_stream ts(toks);
     Expr const* expr = parse(ts);
     if (error_count()) {
@@ -59,6 +63,5 @@ int main()
     }
 
     std::cout << expr << " == " << evaluate(expr) << '\n';
-
   }
 }

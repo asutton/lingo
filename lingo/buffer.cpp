@@ -120,13 +120,27 @@ set_input_location(Location loc)
 }
 
 
-Input_location::Input_location(Location loc)
+Use_buffer::Use_buffer(Buffer& buf)
+    : prev(input_)
+{
+  input_ = &buf; 
+}
+
+
+Use_buffer::~Use_buffer()
+{
+  input_ = prev;
+}
+
+
+Use_location::Use_location(Location loc)
   : saved(input_location())
 {
   set_input_location(loc);
 }
 
-Input_location::~Input_location()
+
+Use_location::~Use_location()
 {
   set_input_location(saved);
 }

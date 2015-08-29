@@ -400,16 +400,7 @@ discard_if(Stream& s, P pred)
 //
 // returns the current location in the underlying file or buffer. The
 // only requirement for this type is that it is semiregular. 
-//
-// To support generic diagnostics, the expect* algorithms require a
-// context parameter, which defines the context of translation. The
-// context must define the following functions:
-//
-//    cxt.on_expected(loc, t)
-//    cxt.on_expected(loc, str)
-//
-// Where `loc` is a value returned by `s.location()`, `t` is an element 
-// in the stream and `str` is a C-string.
+
 
 // If the current element matches of the stream the given kind, 
 // advance the stream, returning an iterator to the matched
@@ -419,12 +410,14 @@ template<typename Context, typename Stream, typename T>
 Iterator_type<Stream>
 expect(Context& cxt, Stream& s, T const& t)
 {
-  if (auto iter = match(s, t)) {
+  if (auto iter = match(s, t))
     return iter;
-  } else {
-    cxt.on_expected(s.location(), t);
-    return {};
-  }
+  
+  if (!s.eof())
+    error(s.location(), "expected '{}' but got '{}'", t, s.peek());
+  else
+    error(s.last_location(), "expected '{}' but got end-of-file", t);
+  return {};
 }
 
 

@@ -27,8 +27,11 @@ Symbol_table::~Symbol_table()
 // exists, do nothing and return its index.
 //
 // Note that a symbol's kind cannot be changed by re-insertion.
-// However, it can be modified explicitly upon need, but this
-// should be rarely needed.
+// This means that inserting a symbol as an identifier when it has 
+// been previously installed as a keyword, will simply return the
+// keyword.
+//
+// A symbol's kind can be modified after initialization if needed.
 Symbol&
 Symbol_table::insert(String_view s, int k)
 {

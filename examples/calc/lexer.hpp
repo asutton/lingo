@@ -63,7 +63,7 @@ struct Lexer
   Token on_slash(Location, char const*);
   Token on_percent(Location, char const*);
 
-  Token on_decimal_integer(Location, char const*, char const*);
+  Token on_integer(Location, char const*, char const*, int);
 };
 
 

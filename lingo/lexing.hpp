@@ -73,7 +73,7 @@ is_hexadecimal_digit(char c)
 
 // Returns true if c starts an identifier. 
 inline bool
-is_ident_head(char c)
+is_identifier_start(char c)
 {
   return is_alpha(c) || c == '_';
 }
@@ -81,9 +81,9 @@ is_ident_head(char c)
 
 // Returns true if c can appear in the rest of an identifier.
 inline bool
-is_ident_tail(char c)
+is_identifier_rest(char c)
 {
-  return is_ident_head(c) || is_decimal_digit(c);
+  return is_identifier_start(c) || is_decimal_digit(c);
 }
 
 
@@ -93,12 +93,9 @@ is_ident_tail(char c)
 // TODO: Conditionally support a character as a digit separator
 // in integer values.
 //
-// Note that an integer value like '0x' is an error. Note that the
-// lexers for prefixed integer values require the lexer to define 
-// the following functions:
-// 
-//    cxt.on_expected(loc, t)
-//    cxt.on_expected(loc, str)
+// Note that an integer value like '0x' is an error.
+//
+// TODO: Improve diagnostics.
 
 
 // Lexically analyze a decimal integer. The current character
@@ -109,7 +106,7 @@ lex_decimal_integer(Lexer& lex, Stream& s, Location loc)
 {
   auto pred = [](Stream& s) { return next_element_if(s, is_decimal_digit); };
   auto range = match_range_after_first(s, pred);
-  return lex.on_decimal_integer(loc, range.begin(), range.end());
+  return lex.on_integer(loc, range.begin(), range.end(), 10);
 }
 
 
@@ -143,10 +140,10 @@ lex_binary_integer(Lexer& lex, Stream& s, Location loc)
   auto pred = [](Stream& s) { return next_element_if(s, is_binary_digit); };
   auto range = match_integer_in_base(s, pred);
   if (!range) {
-    lex.on_expected(loc, "binary-digit");
+    error(loc, "expected binary-digit");
     return {};
   }
-  return lex.on_binary_integer(loc, range.begin(), range.end());
+  return lex.on_integer(loc, range.begin(), range.end(), 2);
 }
 
 
@@ -159,10 +156,10 @@ lex_octal_integer(Lexer& lex, Stream& s, Location loc)
   auto pred = [](Stream& s) { return next_element_if(s, is_octal_digit); };
   auto range = match_integer_in_base(s, pred);
   if (!range) {
-    lex.on_expected(loc, "octal-digit");
+    error(loc, "expected octal-digit");
     return {};
   }
-  return lex.on_octal_integer(loc, range.begin(), range.end());
+  return lex.on_integer(loc, range.begin(), range.end(), 8);
 }
 
 
@@ -175,10 +172,10 @@ lex_hexadecimal_integer(Lexer& lex, Stream& s, Location loc)
   auto pred = [](Stream& s) { return next_element_if(s, is_hexadecimal_digit); };
   auto range = match_integer_in_base(s, pred);
   if (!range) {
-    lex.on_expected(loc, "hexadecimal-digit");
+    error(loc, "expected hexadecimal-digit");
     return {};
   }
-  return lex.on_hexadecimal_integer(loc, range.begin(), range.end());
+  return lex.on_integer(loc, range.begin(), range.end(), 16);
 }
 
 
@@ -211,7 +208,7 @@ inline Result_type<Lexer>
 lex_identifier(Lexer& l, Stream& s, Location loc)
 {
   auto first = s.begin();
-  while (!s.eof() && is_ident_tail(s.peek()))
+  while (!s.eof() && is_identifier_rest(s.peek()))
     s.get();
   return l.on_identifier(loc, first, s.begin());
 }

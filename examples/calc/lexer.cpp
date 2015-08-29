@@ -134,7 +134,7 @@ Lexer::on_percent(Location loc, char const* str)
 
 
 Token
-Lexer::on_decimal_integer(Location loc, char const* first, char const* last)
+Lexer::on_integer(Location loc, char const* first, char const* last, int base)
 {
   return Token(loc, integer_tok, first, last);
 }
