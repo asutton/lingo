@@ -260,7 +260,7 @@ template<typename T>
 inline Enclosed_term<T>* 
 Enclosed_term<T>::make(Location o, Location c)
 {
-  return gc().make<Enclosed_term<T>>(o, c);
+  return new Enclosed_term(o, c);
 }
 
 
@@ -268,7 +268,7 @@ template<typename T>
 inline Enclosed_term<T>* 
 Enclosed_term<T>::make(Location o, Location c, T const* t)
 {
-  return gc().make<Enclosed_term<T>>(o, c, t);
+  return new Enclosed_term(o, c, t);
 }
 
 
@@ -326,54 +326,6 @@ parse_enclosed(Parser& p, Stream& s, int k1, int k2, Rule rule)
 }
 
 
-// FIXME: If we move all tokens into client languages, then 
-// these parsers will disappear and need to be implemented
-// for in the client compilers.
-
-#if 0
-// Parse a parentheses-enclosed production.
-//
-//    paren-enclosed ::= '(' [rule] ')'
-template<typename Parser, 
-         typename Stream, 
-         typename Rule,
-         typename Term = Term_type<Parser, Stream, Rule>>
-inline Enclosed_term<Term> const*
-parse_paren_enclosed(Parser& p, Stream& s, Rule rule)
-{
-  return parse_enclosed(p, s, lparen_tok, rparen_tok, rule);
-}
-
-
-// Parse a brace-enclosed production.
-//
-//    brace-enclosed ::= '{' rule '}'
-template<typename Parser, 
-         typename Stream, 
-         typename Rule,
-         typename Term = Term_type<Parser, Stream, Rule>>
-inline Enclosed_term<Term> const*
-parse_brace_enclosed(Parser& p, Stream& s, Rule rule)
-{
-  return parse_enclosed(p, s, lparen_tok, rparen_tok, rule);
-}
-
-
-// Parse a bracket-enclosed production.
-//
-//    bracket-enclosed ::= '[' rule ']'
-template<typename Parser, 
-         typename Stream, 
-         typename Rule,
-         typename Term = Term_type<Parser, Stream, Rule>>
-inline Enclosed_term<Term> const*
-parse_bracket_enclosed(Parser& p, Stream& s, Rule rule)
-{
-  return parse_enclosed(p, s, lparen_tok, rparen_tok, rule);
-}
-#endif
-
-
 // -------------------------------------------------------------------------- //
 //                           Sequence parsers
 
@@ -382,6 +334,8 @@ parse_bracket_enclosed(Parser& p, Stream& s, Rule rule)
 //
 // TODO: Should we also track the location of interleaving
 // tokens for the case where the sequence is a list?
+//
+// TODO: The factories leak memory.
 template<typename T>
 struct Sequence_term : std::vector<T const*>
 {
@@ -403,7 +357,7 @@ template<typename T>
 inline Sequence_term<T>*
 Sequence_term<T>::make()
 {
-  return gc().make<Sequence_term>();
+  return new Sequence_term();
 }
 
 
@@ -412,7 +366,7 @@ template<typename T>
 inline Sequence_term<T>*
 Sequence_term<T>::make(Sequence_term&& seq)
 {
-  return gc().make<Sequence_term>(std::move(seq));
+  return new Sequence_term(std::move(seq));
 }
 
 
@@ -421,7 +375,7 @@ template<typename T>
 inline Sequence_term<T>*
 Sequence_term<T>::make(std::initializer_list<T const*> list)
 {
-  return gc().make<Sequence_term>(list);
+  return new Sequence_term(list);
 }
 
 
