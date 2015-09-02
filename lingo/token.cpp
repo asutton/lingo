@@ -28,8 +28,6 @@ std::unordered_map<int, Symbol*> spelling_;
 
 // Install the name of a grammar, mapping `rule` to `name`. Note
 // that `name` must be a C-string literal.
-//
-// TODO: Should we strdup `name`?
 void 
 install_token(int kind, char const* name, char const* spelling)
 {
