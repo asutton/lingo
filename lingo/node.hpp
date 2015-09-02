@@ -356,6 +356,10 @@ is_kary_node()
 template<typename T>
 struct Required
 {
+  Required()
+    : ptr(nullptr)
+  { }
+
   Required(T const* p)
     : ptr(p)
   { }
@@ -388,6 +392,10 @@ struct Required
 template<typename T>
 struct Optional
 {
+  Optional()
+    : ptr(nullptr)
+  { }
+
   Optional(T const* p)
     : ptr(p)
   { }
@@ -420,6 +428,10 @@ struct Optional
 template<typename T>
 struct Nonempty
 {
+  Nonempty()
+    : ptr(nullptr)
+  { }
+
   Nonempty(T const* p)
     : ptr(p)
   { }
