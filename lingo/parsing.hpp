@@ -233,34 +233,33 @@ parse_expected(Parser& p, Stream& s, Rule rule)
 template<typename T>
 struct Enclosed_term
 {
-  Enclosed_term(Location o, Location c)
+  Enclosed_term(Token const* o, Token const* c)
     : open_(o), close_(c), first(nullptr)
   { }
 
-  Enclosed_term(Location o, Location c, T const* t)
+  Enclosed_term(Token const* o, Token const* c, T const* t)
     : open_(o), close_(c), first(t)
   { }
 
-  char const* node_name() const { return "enclosure"; };
-  Location open() const { return open_; }
-  Location close() const { return close_; }
-  T const* term() const { return first; }
+  Token const* open() const  { return open_; }
+  Token const* close() const { return close_; }
+  T const* term() const      { return first; }
 
   bool is_empty() const { return first != nullptr; }
 
   // Factory interface
-  static Enclosed_term* make(Location, Location);
-  static Enclosed_term* make(Location, Location, T const*);
+  static Enclosed_term* make(Token const*, Token const*);
+  static Enclosed_term* make(Token const*, Token const*, T const*);
 
-  Location open_;
-  Location close_;
+  Token const* open_;
+  Token const* close_;
   T const* first;
 };
 
 
 template<typename T>
 inline Enclosed_term<T>* 
-Enclosed_term<T>::make(Location o, Location c)
+Enclosed_term<T>::make(Token const* o, Token const* c)
 {
   return new Enclosed_term(o, c);
 }
@@ -268,7 +267,7 @@ Enclosed_term<T>::make(Location o, Location c)
 
 template<typename T>
 inline Enclosed_term<T>* 
-Enclosed_term<T>::make(Location o, Location c, T const* t)
+Enclosed_term<T>::make(Token const* o, Token const* c, T const* t)
 {
   return new Enclosed_term(o, c, t);
 }
@@ -293,7 +292,7 @@ parse_enclosed(Parser& p, Stream& s, int k1, int k2, Rule rule)
     
     // Match the empty enclosure.
     if (auto const* right = match_token(s, k2)) 
-      return Result::make(left->location(), right->location());
+      return Result::make(left, right);
     
     // Check the rule. Note to be careful about copying the
     // parsed term. Note that no allocations occur when returning
@@ -301,7 +300,7 @@ parse_enclosed(Parser& p, Stream& s, int k1, int k2, Rule rule)
     // so this term is required.
     if (Required<Term> term = rule(p, s)) {
       if (auto const* right = expect_token(p, s, k2)) {
-        return Result::make(left->location(), right->location(), *term);
+        return Result::make(left, right, *term);
       } else {
         // Unbalanced brace.
         //
