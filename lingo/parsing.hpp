@@ -200,6 +200,8 @@ using Term_type =
 //                           Expected term
 
 
+// Parse a term, guaranteeing that this emits a diagnostics if
+// the term cannot be matched.
 template<typename Parser, 
          typename Stream, 
          typename Rule,
