@@ -36,7 +36,7 @@ int main()
     Buffer buf(line);
     
     // Establish the input context.
-    Use_buffer cxt(buf);
+    Input_context cxt(buf);
 
     // Transform character input into tokens.
     Character_stream cs(buf);

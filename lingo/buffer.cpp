@@ -80,8 +80,9 @@ Buffer::Buffer(String const& str)
 namespace
 {
 
-Buffer* input_ = nullptr;
+Buffer*  buf_ = nullptr;
 Location loc_;
+
 
 } // namespace
 
@@ -91,7 +92,7 @@ Location loc_;
 Buffer&
 input_buffer()
 {
-  return *input_;
+  return *buf_;
 }
 
 
@@ -108,7 +109,7 @@ input_location()
 void
 set_input_buffer(Buffer& buf)
 {
-  input_ = &buf;
+  buf_ = &buf;
 }
 
 
@@ -120,29 +121,41 @@ set_input_location(Location loc)
 }
 
 
-Use_buffer::Use_buffer(Buffer& buf)
-    : prev(input_)
-{
-  input_ = &buf; 
+// Update the current source location.
+Input_context::Input_context(Location loc)
+  : saved_buf(buf_), saved_loc(loc_)
+{ 
+  loc_ = loc;
 }
 
 
-Use_buffer::~Use_buffer()
+// Update the current input buffer. Note that the source
+// location is set to "none".
+//
+// TODO: Set the source location to something meaningful?
+Input_context::Input_context(Buffer& buf)
+  : saved_buf(buf_), saved_loc(loc_)
 {
-  input_ = prev;
+  buf_ = &buf;
+  loc_ = Location::none;
 }
 
 
-Use_location::Use_location(Location loc)
-  : saved(input_location())
+// Update the current input context to the given buffer
+// and source location.
+Input_context::Input_context(Buffer& buf, Location loc)
+  : saved_buf(buf_), saved_loc(loc_)
 {
-  set_input_location(loc);
+  buf_ = &buf;
+  loc_ = loc;
 }
 
 
-Use_location::~Use_location()
+// Restore the input context on scope exit.
+Input_context::~Input_context()
 {
-  set_input_location(saved);
+  buf_ = saved_buf;
+  loc_ = saved_loc;
 }
 
 

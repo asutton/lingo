@@ -108,7 +108,7 @@ protected:
 
 
 // -------------------------------------------------------------------------- //
-//                               Input buffer
+//                               Input context
 //
 // It's often useful to have lexers and parsers simply update a global
 // input location for the purpose of simplifying diagnostics. This
@@ -123,28 +123,17 @@ void set_input_buffer(Buffer&);
 void set_input_location(Location);
 
 
-// This RAII class sets the current input buffer. When 
-// the guard goes out of scope, the previous input buffer
-// is restored.
-struct Use_buffer
+// The input context is a facility used to manage the
+// current input buffer and source location.
+struct Input_context
 {
-  Use_buffer(Buffer&);
-  ~Use_buffer();
+  Input_context(Location);
+  Input_context(Buffer&);
+  Input_context(Buffer&, Location);
+  ~Input_context();
 
-  Buffer* prev;
-};
-
-
-// This RAII class sets the current input location. It
-// generally used prior establish source context before
-// invoking semantic actions. The previous input source
-// is restored when this object goes out of scope.
-struct Use_location
-{
-  Use_location(Location);
-  ~Use_location();
-
-  Location saved;
+  Buffer*  saved_buf;
+  Location saved_loc;
 };
 
 
