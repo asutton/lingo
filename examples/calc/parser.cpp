@@ -284,6 +284,41 @@ parse(Token_stream& ts)
 }
 
 
+// Parse the given buffer.
+Expr const* 
+parse(Buffer& buf)
+{
+  Input_context cxt(buf);
+
+  // Transform character input into tokens.
+  Character_stream cs(buf);
+  Token_list toks = lex(cs);
+  if (error_count()) {
+    reset_diagnostics();
+    return make_error_node<Expr>();
+  }
+
+  // Transform tokens into abstract syntax.
+  Token_stream ts(toks);
+  Expr const* expr = parse(ts);
+  if (error_count()) {
+    reset_diagnostics();
+    return make_error_node<Expr>();
+  }
+
+  return expr;
+}
+
+
+Expr const* 
+parse(std::string const& str)
+{
+  Buffer buf(str);
+  return parse(buf);
+}
+
+
+
 // Initialize the grammar production rules.
 void
 init_grammar()

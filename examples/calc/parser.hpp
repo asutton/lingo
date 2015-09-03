@@ -28,6 +28,8 @@ struct Parser
 
 
 Expr const* parse(Token_stream&);
+Expr const* parse(Buffer&);
+Expr const* parse(std::string const&);
 
 
 void init_grammar();

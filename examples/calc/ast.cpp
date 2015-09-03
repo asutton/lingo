@@ -11,6 +11,32 @@
 namespace calc
 {
 
+Span
+Int::span() const
+{
+  // FIXME: We shouldn't need to render this to a string
+  // just to see how long it is.
+  String str = to_string(first);
+
+  return {location(), Location(location().offset() + str.size())};
+}
+
+
+// Compute the span of a unary expression.
+Span
+Unary::span() const
+{
+  return {location(), arg()->span().end()};
+}
+
+
+// Compute the span of a binary expression.
+Span
+Binary::span() const
+{
+  return {left()->span().start(), right()->span().end()};
+}
+
 
 // -------------------------------------------------------------------------- //
 //                                  Evaluations
@@ -111,15 +137,19 @@ precedence(Expr const* e)
 // greater than that of the subexpression. Note that we could
 // easily implement the following policies:
 //
-//    1. Also use parens for equal precence expressions
-//    2. Only use parens for primary expressions
-//    3. Others?
+//    1. Use parens for less or equal precedence expressions.
+//       This minimizes the use of parens.
+//    2. Use parens for non-primary expressions.
+//       This reflects the parse.
+//    3. Always use parens.
+//       Ths is unnecessarily verbose.
 //
-// This currently implements extended policy #1.
+// This currently implements extended policy #2.
 inline bool
 needs_parens(Expr const* expr, Expr const* sub)
 {
-  return precedence(expr) <= precedence(sub);
+  return precedence(sub) != 0;
+  // return precedence(expr) <= precedence(sub);
 }
 
 

@@ -49,6 +49,7 @@ struct Expr
   virtual void accept(Visitor&) const = 0;
 
   Location location() const  { return loc_; }
+  virtual Span span() const = 0;
 
   Location loc_;
 };
@@ -76,6 +77,8 @@ struct Unary : Expr
     : Expr(loc), first(e)
   { }
 
+  Span span() const;
+
   Expr const* arg() const { return first; }
 
   Expr const* first;
@@ -89,6 +92,8 @@ struct Binary : Expr
   Binary(Location loc, Expr const* l, Expr const* r)
     : Expr(loc), first(l), second(r)
   { }
+
+  Span span() const;
 
   Expr const* left() const { return first; }
   Expr const* right() const { return second; }
@@ -106,6 +111,8 @@ struct Int : Expr
   { }
 
   void accept(Visitor& v) const { v.visit(this); }
+
+  Span span() const;
 
   Integer value() const { return first; }
 

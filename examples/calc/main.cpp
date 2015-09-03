@@ -4,11 +4,14 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "ast.hpp"
+#include "directive.hpp"
+#include "step.hpp"
 
 #include "lingo/error.hpp"
 #include "lingo/memory.hpp"
 
 #include <iostream>
+
 
 using namespace lingo;
 using namespace calc;
@@ -22,10 +25,13 @@ prompt(std::string& line)
 }
 
 
-int main()
+int 
+main()
 {
   init_tokens();
   init_grammar();
+
+  evaluation_mode(eval_mode);
 
   std::string line;
   while (prompt(line)) {
@@ -38,6 +44,13 @@ int main()
     // Establish the input context.
     Input_context cxt(buf);
 
+    // If the input contains a directive, then process
+    // that and continue.
+    if (contains_directive(buf)) {
+      process_directive(buf);
+      continue;
+    }
+
     // Transform character input into tokens.
     Character_stream cs(buf);
     Token_list toks = lex(cs);
@@ -45,8 +58,6 @@ int main()
       reset_diagnostics();
       continue;
     }
-
-    // debug(toks);
 
     // Transform tokens into abstract syntax.
     Token_stream ts(toks);
@@ -62,6 +73,9 @@ int main()
       continue;
     }
 
-    std::cout << expr << " == " << evaluate(expr) << '\n';
+    if (is_step_mode())
+      step_eval(expr);
+    else      
+      std::cout << expr << " == " << evaluate(expr) << '\n';
   }
 }
