@@ -92,7 +92,10 @@ public:
   // Returns a bound location for the offset. Behavior is
   // undefined if `loc` does not represent a location in
   // this buffer.
-  Bound_location location(Location loc) const { return {*this,loc}; }
+  Bound_location location(Location loc) const { return {*this, loc}; }
+  
+  // Returns a bound span for that given.
+  Bound_span span(Span span) const { return {*this, span}; }
 
   // Iterators
   char const* begin() const { return text_.c_str(); }

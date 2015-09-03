@@ -40,7 +40,7 @@ public:
   // Returns the offset into a buffer.
   int offset() const { return loc_; }
 
-  explicit operator bool() const { return (*this == none); }
+  explicit operator bool() const { return (*this != none); }
 
   bool operator==(Location l) const { return loc_ == l.loc_; }
   bool operator!=(Location l) const { return loc_ != l.loc_; }
@@ -65,6 +65,10 @@ struct Span
   Location start() const { return start_; }
   Location end() const { return end_; }
 
+  // Contextually converts to true iff both the start and
+  // end are valid offsets.
+  explicit operator bool() const { return start_ && end_; }
+
   Location start_;
   Location end_;
 };
@@ -73,29 +77,59 @@ struct Span
 // A Bound location associates a location reference with its
 // originating buffer. Bound locations are returned from
 // the location() method of a buffer.
+//
+// FIXME: Don't call this "bound"
 struct Bound_location
 {
   Bound_location(Buffer const& b, Location l)
-    : buf_(b), loc_(l)
+    : buf_(&b), loc_(l)
   { }
   
-  bool is_valid() const { return loc_ != Location::none; }
+  bool is_valid() const { return (bool)loc_; }
   bool is_file_location() const;
 
-  Buffer const& buffer() const { return buf_; }
-  
+  Buffer const& buffer() const { return *buf_; }
   File const& file() const;
   Line const& line() const;
   
   int line_no() const;
   int column_no() const;
 
-  Buffer const&  buf_;
-  Location       loc_;
+  Buffer const*  buf_;
+  Location      loc_;
+};
+
+
+// A Bound span associates a location reference with its
+// originating buffer. 
+//
+// TODO: Support line iterators?
+struct Bound_span
+{
+  Bound_span(Buffer const& b, Span s)
+    : buf_(&b), span_(s)
+  { }
+  
+  bool is_valid() const     { return (bool)span_; }
+  bool is_multiline() const { return start_line_no() != end_line_no(); }
+  bool is_file_location() const;
+
+  Buffer const& buffer() const { return *buf_; }
+  File const& file() const;
+  Line const& line() const;
+  
+  int start_line_no() const;
+  int end_line_no() const;
+  int start_column_no() const;
+  int end_column_no() const;
+
+  Buffer const* buf_;
+  Span          span_;
 };
 
 
 std::ostream& operator<<(std::ostream&, Bound_location const&);
+std::ostream& operator<<(std::ostream&, Bound_span const&);
 
 
 } // namespace lingo

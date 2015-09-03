@@ -51,6 +51,80 @@ namespace
 #define font_location   font_start font_bold "m"
 #define font_caret      font_start font_bold ";" font_cyan "m"
  
+
+// Print the source code location for a bound location or
+// span.
+void
+show_location(std::ostream& os, Diagnostic_info const& info)
+{
+  if (info.kind == Diagnostic_info::loc_info) {
+    Bound_location const& loc = info.data.loc;
+    if (loc.is_valid())
+      os << font_location << loc << font_end << ':';
+  } else {
+    Bound_span const& span = info.data.span;
+    if (span.is_valid())
+      os << font_location << span << font_end << ':';
+  }
+}
+
+
+// The indent string used to show context.
+char const* indent_ = "|    ";
+
+
+// Show the line at which an error occurred along with a second
+// line showing the context. The location must be valid.
+//
+// TODO: How much should we indent the context?
+//
+// TODO: Show line numbers in the context?
+void
+show_line(std::ostream& os, Bound_location const& loc)
+{
+  Line const& line = loc.line();
+  os << indent_ << line.str() << '\n';
+  
+  // Show the caret, but only if if the caret is valid.
+  int caret = loc.column_no() - 1;
+  if (caret < 0)
+    return;
+  os << indent_ << std::string(caret, ' ');
+  os << font_caret << '^' << font_end << '\n';
+}
+
+
+// TODO: What if we have multiple lines in the span?
+void
+show_span(std::ostream& os, Bound_span const& span)
+{
+  Line const& line = span.line();
+  os << indent_ << line.str() << '\n';
+
+  // TODO: Do something better than this. We could print
+  // all of the lines like this:
+  //
+  //  > line1
+  //  > line2
+  //  > line3
+  //
+  // Where '>' serves as the caret.
+  if (span.is_multiline()) {
+    os << indent_ << "...";
+    return;
+  }
+
+  // Show the underscore, but only if the start position
+  // is valid.
+  int start = span.start_column_no() - 1;
+  int end = span.end_column_no() - 1;
+  if (start < 0)
+    return;
+  os << indent_ << std::string(start, ' ');
+  os << font_caret << std::string(end - start, '~') << font_end << '\n';
+}
+
+
 } // namespace
 
 
@@ -67,30 +141,30 @@ operator<<(std::ostream& os, Diagnostic_kind k)
 }
 
 
+void
+show_context(std::ostream& os, Diagnostic_info const& info)
+{
+  if (info.kind == Diagnostic_info::loc_info) {
+    Bound_location const& loc = info.data.loc;
+    if (loc.is_valid()) {
+      show_line(os, loc);
+    }
+  } else {
+    Bound_span const& span = info.data.span;
+    if (span.is_valid())
+      show_span(os, span);
+  }
+}
+
+
+
 std::ostream&
 operator<<(std::ostream& os, Diagnostic const& diag)
 {
-  Bound_location const& loc = diag.loc;
-
-  // Print the error header and general message.
   os << diag.kind << ':';
-  if (loc.is_valid())
-    os << font_location << loc << font_end << ": ";
+  show_location(os, diag.info);
   os << ' ' << diag.msg << '\n';
-
-  // If we can, we should retrieve and print the line of
-  // code indicated by the diagnostics.
-  //
-  // TODO: How much should we indent? Should we include line
-  // numbers? Maybe some contextual information. 
-  if (loc.is_valid()) {
-    Line const& line = loc.line();
-    os << "|    " << line.str() << '\n';
-    os << "|    " << std::string(diag.caret, ' ');
-    os << font_caret << '^' << font_end << '\n';
-
-  } 
-
+  show_context(os, diag.info);
   return os;
 }
 
@@ -107,22 +181,17 @@ std::stack<Diagnostic_context*> diags_;
 Diagnostic_context root_;
 
 
-// Return the index of the caret for the given location.
-int
-get_caret(Bound_location loc)
-{
-  if (loc.is_valid())
-    return loc.column_no() - 1;
-  else
-    return -1;
-}
-
 } // namespace
 
 
 
 Diagnostic::Diagnostic(Diagnostic_kind k, Bound_location l, String const& m)
-  : kind(k), loc(l), caret(get_caret(l)), msg(m)
+  : kind(k), info(l), msg(m)
+{ }
+
+
+Diagnostic::Diagnostic(Diagnostic_kind k, Bound_span s, String const& m)
+  : kind(k), info(s), msg(m)
 { }
 
 
@@ -199,8 +268,7 @@ error_count()
 }
 
 
-// Construct a new error diagnostic for the given source
-// location.
+// Emit an error diagnostic at the given source location.
 void
 error(Bound_location loc, String const& msg)
 {
@@ -208,17 +276,32 @@ error(Bound_location loc, String const& msg)
 }
 
 
-// Construct a new warning diagnostic for the given source
-// location.
+// Emit an error diagnostic over the given text span.
+void
+error(Bound_span span, String const& msg)
+{
+  diags_.top()->emit({error_diag, span, msg});
+}
+
+
+// Emit a warning diagnostic at the given source location.
 //
-// TODO: Generate errors if warnings are being treated as
-// errors, with some additional information about how to
-// turn those off.
+// TODO: Allow warnings to be treated as errors? This
+// requires additional configuration information.
 void
 warning(Bound_location loc, String const& msg)
 {
   diags_.top()->emit({warning_diag, loc, msg});
 }
+
+
+// Emit a warning diagnost over the given text span.
+void
+warning(Bound_span span, String const& msg)
+{
+  diags_.top()->emit({warning_diag, span, msg});
+}
+
 
 
 // Emit a note diagnostic.
@@ -229,6 +312,13 @@ void
 note(Bound_location loc, String const& msg)
 {
   diags_.top()->emit({note_diag, loc, msg});
+}
+
+
+void
+note(Bound_span span, String const& msg)
+{
+  diags_.top()->emit({note_diag, span, msg});
 }
 
 } // namespace lingo
