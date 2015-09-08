@@ -119,13 +119,10 @@ class Token_stream
 public:
   using value_type = Token;
 
-  // Construct a token stream over a non-empty range of
-  // token pointers. Behavior is undefind if f == l.
+  // Construct a token stream over a non-empty range of token pointers.
   Token_stream(Token const* f, Token const* l)
     : first_(f), last_(l)
-  { 
-    lingo_assert(first_ != last_);
-  }
+  { }
 
   Token_stream(Token_list const& toks)
     : Token_stream(toks.data(), toks.data() + toks.size())
