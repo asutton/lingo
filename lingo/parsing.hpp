@@ -288,42 +288,41 @@ Enclosed_term<Term> const*
 parse_enclosed(Parser& p, Stream& s, int k1, int k2, Rule rule)
 {
   using Result = Enclosed_term<Term>;
-  if (auto const* left = require_token(s, k1)) {
+  
+  auto const* left = require_token(s, k1);
     
-    // Match the empty enclosure.
-    if (auto const* right = match_token(s, k2)) 
-      return Result::make(left, right);
-    
-    // Check the rule. Note to be careful about copying the
-    // parsed term. Note that no allocations occur when returning
-    // an error. Note that we've covered the emtpy case above,
-    // so this term is required.
-    if (Required<Term> term = rule(p, s)) {
-      if (auto const* right = expect_token(p, s, k2)) {
-        return Result::make(left, right, *term);
-      } else {
-        // Unbalanced brace.
-        //
-        // TODO: It would be nice to point at the end of the
-        // enclosed term, but that requires more extensive
-        // range support (which we should probably provide).
-        //
-        // TODO: Show the position of the starting bracket
-        // to improve diagnostics?
-        error(left->location(), "expected '{}' after {}", 
-              get_token_spelling(k2),
-              get_grammar_name(rule));
-      }
+  // Match the empty enclosure.
+  if (auto const* right = match_token(s, k2)) 
+    return Result::make(left, right);
+  
+  // Check the rule. Note to be careful about copying the
+  // parsed term. Note that no allocations occur when returning
+  // an error. Note that we've covered the emtpy case above,
+  // so this term is required.
+  if (Required<Term> term = rule(p, s)) {
+    if (auto const* right = expect_token(p, s, k2)) {
+      return Result::make(left, right, *term);
     } else {
-      // Failed to parse the enclosed term.
-      if (term.is_empty())
-        error(left->location(), "expected {} after '{}'",
-              get_grammar_name(rule),
-              get_token_spelling(k1));
+      // Unbalanced brace.
+      //
+      // TODO: It would be nice to point at the end of the
+      // enclosed term, but that requires more extensive
+      // range support (which we should probably provide).
+      //
+      // TODO: Show the position of the starting bracket
+      // to improve diagnostics?
+      error(left->location(), "expected '{}' after {}", 
+            get_token_spelling(k2),
+            get_grammar_name(rule));
     }
-    return make_error_node<Result>();
+  } else {
+    // Failed to parse the enclosed term.
+    if (term.is_empty())
+      error(left->location(), "expected {} after '{}'",
+            get_grammar_name(rule),
+            get_token_spelling(k1));
   }
-  lingo_unreachable();
+  return make_error_node<Result>();
 }
 
 

@@ -169,7 +169,7 @@ debug(Printer& p, Token const& tok)
 
 // Streaming
 std::ostream&
-operator<<(std::ostream& os, Token tok)
+operator<<(std::ostream& os, Token const& tok)
 {
   return os << *tok.str();
 }
