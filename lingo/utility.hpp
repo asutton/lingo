@@ -13,14 +13,6 @@ namespace lingo
 {
 
 // -------------------------------------------------------------------------- //
-//                              Useful types
-
-// Like void, but has a value. This is used as
-// a replacement for void types in some templates.
-struct Void { };
-
-
-// -------------------------------------------------------------------------- //
 //                    String representation of types
 
 String 
@@ -39,66 +31,157 @@ type_str(T const& t)
 // -------------------------------------------------------------------------- //
 //                            Generic visitors
 
+
+struct void_tag { };
+struct non_void_tag { };
+
+
 // This class provides support for caching the result
 // of visitor functors, with appropriate support for
 // void return types. F is the function type containing
 // the dispatch table, and T is the return type of that
 // function.
+//
+// TODO: Build a specialization for reference return types.
+// That has more to do with initialization than anything
+// else.
 template<typename F, typename T>
 struct Generic_visitor
 {
-  // Determine a reasonable result type. Note that
-  // void cannot be the type of a member.
-  using R = typename std::conditional<std::is_void<T>::value, Void, T>::type;
-
-  // A tag type used for dispatch. This is either
-  // std::true_type or std::false_type.
-  using X = typename std::is_void<T>::type;
-
   Generic_visitor(F f)
     : fn(f), r()
   { }
 
-  ~Generic_visitor()
-  { }
-
-  // Called when the result of fn(u) is void.
+  // Dispatch to the wrapped function object.
   template<typename U>
-  void invoke(U const* u, std::true_type) { fn(u); }
+  void invoke(U const* u) { r = fn(u); }
 
-  // Called when the resyult of fn(u) is non-void.
-  template<typename U>
-  void invoke(U const* u, std::false_type) { 
-    r = fn(u); 
-  }
-
-  // Invoke one of the functions above.
-  template<typename U>
-  void invoke(U const* u) { invoke(u, X()); }
+  // Enable tag dispatch.
+  static non_void_tag tag() { return {}; }
 
   F fn;
-  R r;
+  T r;
 };
 
 
-// Apply the function f to the type t. This overload
-// is valid when the result type of R is void.
-template<typename T, typename V, typename R = typename V::R>
-inline typename std::enable_if<std::is_same<R, Void>::value, void>::type
-accept(T const* t, V v)
+template<typename F>
+struct Generic_visitor<F, void>
+{
+  Generic_visitor(F f)
+    : fn(f)
+  { }
+
+  // Dispatch to the wrapped function object.
+  template<typename U>
+  void invoke(U const* u) { fn(u); }
+
+  // Enable tag dispatch.
+  static void_tag tag() { return {}; }
+
+  F fn;
+};
+
+
+// Invoke the visitor, returning the function's value.
+template<typename T, typename V>
+inline auto
+accept(T const* t, V& v, non_void_tag)
+{
+  t->accept(v);
+  return v.r;
+}
+
+
+// Invoke the visitor. This does not return a value.
+template<typename T, typename V>
+inline void
+accept(T const* t, V& v, void_tag)
 {
   t->accept(v);
 }
 
 
-// Apply the function f to the type t. This overload
-// is valid when the result type of R is non-void.
-template<typename T, typename V, typename R = typename V::R>
-inline typename std::enable_if<!std::is_same<R, Void>::value, R>::type
-accept(T const* t, V v)
+
+// Invoke the visitor, returning the function's value.
+template<typename T, typename V>
+inline auto
+accept(T const* t, V& v)
+{
+  return accept(t, v, v.tag());
+}
+
+
+// -------------------------------------------------------------------------- //
+//                            Generic mutators
+
+
+// A visitor that allows modification of values. 
+//
+// TODO: Build a specialization for reference return types.
+// That has more to do with initialization than anything
+// else.
+template<typename F, typename T>
+struct Generic_mutator
+{
+  Generic_mutator(F f)
+    : fn(f), r()
+  { }
+
+  // Dispatch to the wrapped function object.
+  template<typename U>
+  void invoke(U* u) { r = fn(u); }
+
+  // Enable tag dispatch.
+  static non_void_tag tag() { return {}; }
+
+  F fn;
+  T r;
+};
+
+
+template<typename F>
+struct Generic_mutator<F, void>
+{
+  Generic_mutator(F f)
+    : fn(f)
+  { }
+
+  // Dispatch to the wrapped function object.
+  template<typename U>
+  void invoke(U* u) { fn(u); }
+
+  // Enable tag dispatch.
+  static void_tag tag() { return {}; }
+
+  F fn;
+};
+
+
+// Invoke the visitor, returning the function's value.
+template<typename T, typename V>
+inline auto
+accept(T* t, V& v, non_void_tag)
 {
   t->accept(v);
   return v.r;
+}
+
+
+// Invoke the visitor. This does not return a value.
+template<typename T, typename V>
+inline void
+accept(T* t, V& v, void_tag)
+{
+  t->accept(v);
+}
+
+
+// Invoke the visitor, returning the function's value.
+template<typename T, typename V>
+inline auto
+accept(T* t, V& v)
+{
+  return accept(t, v, v.tag());
 }
 
 

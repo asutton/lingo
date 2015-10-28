@@ -231,7 +231,7 @@ struct Basic_visitor : Visitor, Generic_visitor<F, T>
 
 // Apply the function f to the type t.
 // The return type is that of the function object F.
-template<typename F, typename T = typename std::result_of<F(Int*)>::type>
+template<typename F, typename T = typename std::result_of<F(Int const*)>::type>
 inline T
 apply(Expr const* e, F fn)
 {
