@@ -17,9 +17,10 @@
 namespace lingo
 {
 
-
+// Returns the name of the object pointed to
+// by t.
 template<typename T>
-inline String 
+inline String
 get_node_name(T const* t)
 {
   return type_str(*t);
@@ -45,7 +46,7 @@ is_empty_node(T const* t)
 // The type of the node is explicitly given as a template
 // argument.
 template<typename T>
-inline T* 
+inline T*
 make_error_node()
 {
   return (T*)0x01;
@@ -74,7 +75,7 @@ is_valid_node(T const* t)
 //                        Dynamic type information
 
 
-// Returns true if the object pointed to by `u` has 
+// Returns true if the object pointed to by `u` has
 // the dynamic type `T`.
 template<typename T, typename U>
 inline bool
@@ -84,7 +85,7 @@ is(U const* u)
 }
 
 
-// Statically cast a pointer to a Node of type T to a 
+// Statically cast a pointer to a Node of type T to a
 // pointer to a Node of type U. This is not a checked
 // operation (except in debug mode).
 //
@@ -92,7 +93,7 @@ is(U const* u)
 // interpreted as nodes of the given type (as their
 // values are considered common to all).
 template<typename T, typename U>
-inline T* 
+inline T*
 cast(U* u)
 {
   lingo_assert(is_valid_node(u) ? is<T>(u) : true);
@@ -141,9 +142,9 @@ modify(T const* t)
 // -------------------------------------------------------------------------- //
 //                              Concepts
 //
-// There are several concepts describing the kinds of nodes over  
-// which an algorithm can operate generically. The primary 
-// characterization // of node types is based on their arity. 
+// There are several concepts describing the kinds of nodes over
+// which an algorithm can operate generically. The primary
+// characterization of node types is based on their arity.
 //
 // ## The Node concept
 //
@@ -153,8 +154,8 @@ modify(T const* t)
 //
 // ## Node arity
 //
-// Nodes with fixed arity have tuple-like member names (e.g., 
-// first, second, third). These accessor members correspond to 
+// Nodes with fixed arity have tuple-like member names (e.g.,
+// first, second, third). These accessor members correspond to
 // the sub-terms of each node. Accessor members may have different
 // tpyes, and are not required to be nodes.
 //
@@ -165,8 +166,8 @@ modify(T const* t)
 //
 // Note that more arity nodes can be defined if needed.
 //
-// A k-ary has k sub-terms, and that range of terms is accessed 
-// by its `begin()` and `end()` members. The types of these 
+// A k-ary has k sub-terms, and that range of terms is accessed
+// by its `begin()` and `end()` members. The types of these
 // sub-terms are the same.
 
 
@@ -307,7 +308,7 @@ template<typename T>
 constexpr bool
 is_unary_node()
 {
-  return traits::has_first<T>() 
+  return traits::has_first<T>()
       && !traits::has_second<T>();
 }
 
@@ -317,7 +318,7 @@ template<typename T>
 constexpr bool
 is_binary_node()
 {
-  return traits::has_second<T>() 
+  return traits::has_second<T>()
       && !traits::has_third<T>();
 }
 
@@ -328,7 +329,7 @@ constexpr bool
 is_ternary_node()
 {
   return traits::has_first<T>()
-      && traits::has_second<T>() 
+      && traits::has_second<T>()
       && traits::has_third<T>();
 }
 
@@ -346,13 +347,13 @@ is_kary_node()
 // -------------------------------------------------------------------------- //
 //                        Reqiured term
 
-// The Maybe template is typically used to declare node 
+// The Maybe template is typically used to declare node
 // pointers within condition declarations.
 //
 //    if (Required<Var_decl> var = ...)
 //
 // This class contextually evaluates to `true` whenever
-// it is initialized to a non-null, non-error value. 
+// it is initialized to a non-null, non-error value.
 template<typename T>
 struct Required
 {
@@ -382,7 +383,7 @@ struct Required
 // -------------------------------------------------------------------------- //
 //                        Optional results
 
-// The Optional template is typically used to declare node 
+// The Optional template is typically used to declare node
 // pointers within condition declarations.
 //
 //    if (Optional<Var_decl> var = ...)
@@ -417,14 +418,14 @@ struct Optional
 // -------------------------------------------------------------------------- //
 //                        Nonempty results
 
-// The Nonempty template is typically used to declare node 
+// The Nonempty template is typically used to declare node
 // pointers within condition declarations.
 //
 //    if (Nonempty<Var_decl> var = ...)
 //
 // This class contextually evaluates to `true` whenever
 // is non-empty. Note that error conditions are treated as
-// valid results. 
+// valid results.
 template<typename T>
 struct Nonempty
 {
