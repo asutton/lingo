@@ -56,6 +56,9 @@ struct Generic_visitor
   template<typename U>
   void invoke(U const* u) { r = fn(u); }
 
+  template<typename U>
+  void invoke(U const& u) { r = fn(u); }
+
   // Enable tag dispatch.
   static non_void_tag tag() { return {}; }
 
@@ -74,6 +77,9 @@ struct Generic_visitor<F, void>
   // Dispatch to the wrapped function object.
   template<typename U>
   void invoke(U const* u) { fn(u); }
+
+  template<typename U>
+  void invoke(U const& u) { fn(u); }
 
   // Enable tag dispatch.
   static void_tag tag() { return {}; }
@@ -111,6 +117,14 @@ accept(T const* t, V& v)
 }
 
 
+template<typename T, typename V>
+inline auto
+accept(T const& t, V& v)
+{
+  return accept(&t, v, v.tag());
+}
+
+
 // -------------------------------------------------------------------------- //
 //                            Generic mutators
 
@@ -131,6 +145,9 @@ struct Generic_mutator
   template<typename U>
   void invoke(U* u) { r = fn(u); }
 
+  template<typename U>
+  void invoke(U& u) { r = fn(u); }
+
   // Enable tag dispatch.
   static non_void_tag tag() { return {}; }
 
@@ -149,6 +166,9 @@ struct Generic_mutator<F, void>
   // Dispatch to the wrapped function object.
   template<typename U>
   void invoke(U* u) { fn(u); }
+
+  template<typename U>
+  void invoke(U& u) { fn(u); }
 
   // Enable tag dispatch.
   static void_tag tag() { return {}; }
@@ -182,6 +202,14 @@ inline auto
 accept(T* t, V& v)
 {
   return accept(t, v, v.tag());
+}
+
+
+template<typename T, typename V>
+inline auto
+accept(T& t, V& v)
+{
+  return accept(&t, v, v.tag());
 }
 
 
