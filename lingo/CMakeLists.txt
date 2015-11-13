@@ -5,16 +5,17 @@ set(contrib_src
   ${PROJECT_SOURCE_DIR}/cppformat/format.cc
 )
 
-# FIXME: Move JSON into examples.
+
 
 # The lingo library
 add_library(lingo
   ${contrib_src}
   format.cpp
   assert.cpp
+  string.cpp
+  io.cpp
   node.cpp
   memory.cpp
-  string.cpp
   integer.cpp
   utility.cpp
   location.cpp
@@ -28,6 +29,5 @@ add_library(lingo
   token.cpp
   algorithm.cpp
   lexing.cpp
-  parsing.cpp
-  )
+  parsing.cpp)
 target_link_libraries(lingo ${GMP_LIBRARIES} ${Boost_LIBRARIES})

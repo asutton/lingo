@@ -6,6 +6,10 @@ macro(add_test_program target)
   target_link_libraries(${target} lingo)
 endmacro()
 
+
+add_test_program(test-font font.cpp)
+
+
 # FIXME: This should be in examples.
 
 # # Testing tools
