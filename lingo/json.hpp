@@ -15,9 +15,9 @@
 //
 // TODO: Move this into examples.
 
-#include "lingo/node.hpp"
-#include "lingo/integer.hpp"
-#include "lingo/string.hpp"
+#include <lingo/node.hpp>
+#include <lingo/integer.hpp>
+#include <lingo/string.hpp>
 
 #include <unordered_map>
 #include <vector>
@@ -82,7 +82,7 @@ using Pair = Object_impl::value_type;
 //                                JSON Values
 
 
-// The value class is the base class of all json values. 
+// The value class is the base class of all json values.
 //
 // Note that this is the internal representation of those values;
 // we don't keep source locations for these.
@@ -116,14 +116,14 @@ struct Null : Value
 
 
 // Represents the literal values true and false.
-struct Bool : Literal<bool> 
+struct Bool : Literal<bool>
 {
   using Literal<bool>::Literal;
 };
 
 
 // Represents integer-valued literals.
-struct Int : Literal<Integer> 
+struct Int : Literal<Integer>
 {
   using Literal<Integer>::Literal;
 };
@@ -132,7 +132,7 @@ struct Int : Literal<Integer>
 // Represents real-valued literals.
 //
 // FIXME: Use a more general purpose real number for the value.
-struct Real : Literal<double> 
+struct Real : Literal<double>
 {
   using Literal<double>::Literal;
 };
@@ -141,8 +141,8 @@ struct Real : Literal<double>
 // Represents string-valued literals.
 //
 // TODO: Strings are immutable. Perhaps we could use a shared
-// representation to minimize allocations? 
-struct String : Literal<std::string> 
+// representation to minimize allocations?
+struct String : Literal<std::string>
 {
   using Literal<std::string>::Literal;
 };
@@ -163,7 +163,7 @@ struct Array : Value, Array_impl
 };
 
 
-// A mapping of strings to values, or a set of 
+// A mapping of strings to values, or a set of
 // name/value pairs.
 struct Object : Value, Object_impl
 {

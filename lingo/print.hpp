@@ -29,8 +29,8 @@
 // to accept pointers would eliminate a lot of the
 // redundancies applied here. Same with debug printing.
 
-#include "lingo/format.hpp"
-#include "lingo/string.hpp"
+#include <lingo/format.hpp>
+#include <lingo/string.hpp>
 
 #include <cstdint>
 
@@ -63,7 +63,7 @@ struct Printer
 
 // Increase the indentation depth of the printer by
 // one level.
-inline void 
+inline void
 indent(Printer& p)
 {
   ++p.depth;
@@ -106,7 +106,7 @@ void print_indent(Printer&);
 
 
 // Print the character `c`.
-inline void 
+inline void
 print(Printer& p, char c)
 {
   print_chars(p, c);
@@ -114,7 +114,7 @@ print(Printer& p, char c)
 
 
 // Print the C-string `s`.
-inline void 
+inline void
 print(Printer& p, char const* s)
 {
   print_chars(p, s);
@@ -122,7 +122,7 @@ print(Printer& p, char const* s)
 
 
 // Print the string `s`.
-inline void 
+inline void
 print(Printer& p, String const& s)
 {
   print_chars(p, s);
@@ -130,7 +130,7 @@ print(Printer& p, String const& s)
 
 
 // Print the string pointed to by `s`.
-inline void 
+inline void
 print(Printer& p, String const* s)
 {
   print_chars(p, *s);
@@ -173,8 +173,8 @@ print(Printer& p, double n)
 
 
 // Return a string containing the textual representation
-// of `x`, using the `print` function to generate the 
-// resulting text. 
+// of `x`, using the `print` function to generate the
+// resulting text.
 //
 // Requires that `print(p, x)` is well-formed.
 template<typename T, typename P>
@@ -189,7 +189,7 @@ to_string(T const& x, P print)
 
 
 // Returns a string containing the textual representation
-// of `x`. 
+// of `x`.
 //
 // Requires that `T` is a Printable type.
 template<typename T>
@@ -255,7 +255,7 @@ print_enclosed(Printer& p, char left, char right, T const& x)
 }
 
 
-// Print an element enclosed in quotes. 
+// Print an element enclosed in quotes.
 template<typename T>
 inline void
 print_quoted(Printer& p, T const& x)
@@ -284,7 +284,7 @@ print_list(Printer& p, T const& range)
 {
   auto first = range.begin();
   auto last = range.end();
-  
+
   // Don't print anything for empty ranges.
   if (first == last)
     return;
@@ -308,7 +308,7 @@ print_nested(Printer& p, T const& range)
 {
   auto first = range.begin();
   auto last = range.end();
-  
+
   // Don't print anything for empty ranges.
   if (first == last)
     return;
@@ -331,7 +331,7 @@ print_nested(Printer& p, T const& range)
 
 // Print the given element, followed by a newline.
 template<typename T>
-inline void 
+inline void
 print(T const& x)
 {
   Printer p(default_print_stream());

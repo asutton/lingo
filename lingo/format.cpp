@@ -7,7 +7,7 @@ namespace lingo {
 
 // Returns the integer base of the current stream.
 int
-stream_base(const std::ios_base& s) 
+stream_base(const std::ios_base& s)
 {
   std::ios_base::fmtflags f = s.flags() & std::ios_base::basefield;
   if (f == std::ios_base::hex)

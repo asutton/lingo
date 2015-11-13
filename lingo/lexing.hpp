@@ -11,11 +11,11 @@
 // These algorithms are based on a Lexer concept. Every
 // lexer must expose a number of operations.
 
-#include "lingo/string.hpp"
-#include "lingo/location.hpp"
-#include "lingo/token.hpp"
-#include "lingo/algorithm.hpp"
-#include "lingo/error.hpp"
+#include <lingo/string.hpp>
+#include <lingo/location.hpp>
+#include <lingo/token.hpp>
+#include <lingo/algorithm.hpp>
+#include <lingo/error.hpp>
 
 
 namespace lingo
@@ -25,7 +25,7 @@ namespace lingo
 //                             Character classes
 
 
-// Returns true if c starts an identifier. 
+// Returns true if c starts an identifier.
 inline bool
 is_identifier_start(char c)
 {

@@ -1,10 +1,10 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "location.hpp"
-#include "buffer.hpp"
-#include "file.hpp"
-#include "error.hpp"
+#include "lingo/location.hpp"
+#include "lingo/buffer.hpp"
+#include "lingo/file.hpp"
+#include "lingo/error.hpp"
 
 #include <iostream>
 
@@ -26,7 +26,7 @@ Bound_location::is_file_location() const
 }
 
 
-File const& 
+File const&
 Bound_location::file() const
 {
   lingo_assert(is_file_location());
@@ -43,7 +43,7 @@ Bound_location::line() const
 
 
 // Returns the line number for this location.
-int 
+int
 Bound_location::line_no() const
 {
   return buf_->line_no(loc_);
@@ -51,7 +51,7 @@ Bound_location::line_no() const
 
 
 // Returns the column number for this location.
-int 
+int
 Bound_location::column_no() const
 {
   return buf_->column_no(loc_);
@@ -67,7 +67,7 @@ Bound_span::is_file_location() const
 }
 
 
-File const& 
+File const&
 Bound_span::file() const
 {
   lingo_assert(is_file_location());
@@ -84,7 +84,7 @@ Bound_span::line() const
 
 
 // Returns the line number for this location.
-int 
+int
 Bound_span::start_line_no() const
 {
   return buf_->line_no(span_.start());
@@ -99,7 +99,7 @@ Bound_span::end_line_no() const
 
 
 // Returns the start column for the span.
-int 
+int
 Bound_span::start_column_no() const
 {
   return buf_->column_no(span_.start());
@@ -107,14 +107,14 @@ Bound_span::start_column_no() const
 
 
 // Returns the end column for the span.
-int 
+int
 Bound_span::end_column_no() const
 {
   return buf_->column_no(span_.end());
 }
 
 
-std::ostream& 
+std::ostream&
 operator<<(std::ostream& os, Bound_location const& loc)
 {
   if (!loc.is_valid())
@@ -127,7 +127,7 @@ operator<<(std::ostream& os, Bound_location const& loc)
 }
 
 
-std::ostream& 
+std::ostream&
 operator<<(std::ostream& os, Bound_span const& span)
 {
   if (!span.is_valid())

@@ -4,7 +4,7 @@
 #ifndef LINGO_MEMORY_HPP
 #define LINGO_MEMORY_HPP
 
-#include "lingo/node.hpp"
+#include <lingo/node.hpp>
 
 #include <list>
 #include <set>
@@ -29,7 +29,7 @@ struct Unique_factory : std::set<T, C>
 {
   // Create an object of type T.
   template<typename... Args>
-  T* make(Args&&... args) 
+  T* make(Args&&... args)
   {
     auto ins = this->emplace(std::forward<Args>(args)...);
     return const_cast<T*>(&*ins.first);
@@ -86,8 +86,8 @@ struct Collectable
 
 // The following functions support the mark and sweep
 // garbage collection algorithm. We define mark() for a
-// large number of types, especially nodes. This provides 
-// a generic facility for traversing the common structure 
+// large number of types, especially nodes. This provides
+// a generic facility for traversing the common structure
 // of those nodes.
 
 
@@ -267,8 +267,8 @@ class Reach : std::vector<Collectable*>
   friend class Collecting_factory;
 public:
   Reach()
-  { 
-    gc().declare(this); 
+  {
+    gc().declare(this);
   }
 
   // Declare a new garbage collection root, initialized
@@ -276,7 +276,7 @@ public:
   template<typename T>
   Reach(T* t)
     : Reach()
-  { 
+  {
     declare(t);
   }
 
@@ -289,7 +289,7 @@ public:
     declare(t);
   }
 
-  ~Reach() 
+  ~Reach()
   {
     gc().undeclare(this);
   }
@@ -310,7 +310,7 @@ private:
   declare(T* t)
   {
     if (Collectable* obj = dynamic_cast<Collectable*>(t))
-      push_back(obj); 
+      push_back(obj);
   }
 
 
@@ -324,8 +324,8 @@ private:
   // Mark all nodes reachable from this root with
   // the given value. This is used by the garbage
   // collector.
-  void reach() 
-  { 
+  void reach()
+  {
     for (Collectable* r : *this)
       r->reach();
   }

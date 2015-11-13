@@ -1,7 +1,7 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "parsing.hpp"
+#include "lingo/parsing.hpp"
 
 #include <unordered_map>
 
@@ -20,7 +20,7 @@ std::unordered_map<void(*)(), char const*> rules_;
 // that `name` must be a C-string literal.
 //
 // TODO: Should we strdup `name`?
-void 
+void
 install_grammar(void(*rule)(), char const* name)
 {
   lingo_alert(rules_.count(rule) == 0, "existing grammar named '{}'", name);
@@ -30,7 +30,7 @@ install_grammar(void(*rule)(), char const* name)
 
 // Return a name associated with the rule. If the rule does not
 // have an associated name, return a placeholder string.
-char const* 
+char const*
 get_grammar_name(void(*rule)())
 {
   auto iter = rules_.find(rule);

@@ -1,5 +1,4 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "lexing.hpp"
-
+#include "lingo/lexing.hpp"

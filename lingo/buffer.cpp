@@ -1,8 +1,8 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "buffer.hpp"
-#include "error.hpp"
+#include "lingo/buffer.hpp"
+#include "lingo/error.hpp"
 
 #include <iostream>
 
@@ -26,7 +26,7 @@ Line_map::finish_line(Line& line, char const* ptr)
 }
 
 
-// Returns the line number for the character offset. 
+// Returns the line number for the character offset.
 Line const&
 Line_map::line(Location loc) const
 {
@@ -41,7 +41,7 @@ Line_map::line(Location loc) const
 
 
 // Returns the line number for the given location.
-int 
+int
 Line_map::line_no(Location loc) const
 {
   return line(loc).number();
@@ -124,7 +124,7 @@ set_input_location(Location loc)
 // Update the current source location.
 Input_context::Input_context(Location loc)
   : saved_buf(buf_), saved_loc(loc_)
-{ 
+{
   loc_ = loc;
 }
 

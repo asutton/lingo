@@ -18,7 +18,7 @@
 //
 // TODO: This is a configuration library, not just CLI stuff.
 
-#include "lingo/json.hpp"
+#include <lingo/json.hpp>
 
 namespace lingo
 {
@@ -29,7 +29,7 @@ namespace cli
 // Different kinds of parameters. A flag is a simple switch
 // used to enable or disable a feature. A value parameter
 // associates the flag with a value.
-enum Parameter_kind 
+enum Parameter_kind
 {
   flag,
   value,
@@ -37,7 +37,7 @@ enum Parameter_kind
 
 
 // A parameter is a specification of arguments that can be accepted
-// on the command line. 
+// on the command line.
 //
 // A parameter name can have two forms: a short form and a long
 // form. These are combined by the parameter's constructor as:
@@ -86,7 +86,7 @@ struct Parsed_arguments : std::pair<json::Object*, json::Array*>
 
   json::Object&       named_arguments()            { return *first; }
   json::Object const& named_arguments() const      { return *first; }
-  
+
   json::Array&        positional_arguments()       { return *second; }
   json::Array const&  positional_arguments() const { return *second; }
 
@@ -111,7 +111,7 @@ Parsed_arguments::~Parsed_arguments()
 
 // Returns a pointer to the parsed argument with the given
 // name, or nullptr if no such argument was parsed.
-inline json::Value const* 
+inline json::Value const*
 Parsed_arguments::operator[](char const* name) const
 {
   // return named_arguments()[name];
@@ -121,7 +121,7 @@ Parsed_arguments::operator[](char const* name) const
 
 // Returns a pointer to the nth positional argument, or
 // nullptr if there is no such argument.
-inline json::Value const* 
+inline json::Value const*
 Parsed_arguments::operator[](std::size_t n) const
 {
   if (n < positional_arguments().size())
@@ -141,7 +141,7 @@ struct Parser
 {
   using Name_lookup = std::unordered_map<std::string, Parameter*>;
   using Char_lookup = std::unordered_map<char, Parameter*>;
-  
+
   Parser(Parameter_list& p);
 
   Parsed_arguments const& operator()(int, char**);

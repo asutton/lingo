@@ -28,14 +28,14 @@ std::unordered_map<int, Symbol*> spelling_;
 
 // Install the name of a grammar, mapping `rule` to `name`. Note
 // that `name` must be a C-string literal.
-void 
+void
 install_token(int kind, char const* name, char const* spelling)
 {
   lingo_alert(name_.count(kind) == 0, "existing token kind '{}'", name);
 
   // Save the token name.
   name_.insert({kind, name});
-  
+
   // Save the symbol for the spelling of the token.
   spelling_.insert({kind, &get_symbol(spelling, kind)});
 }
@@ -43,7 +43,7 @@ install_token(int kind, char const* name, char const* spelling)
 
 // Return a name associated with the rule. If the rule does not
 // have an associated name, return a placeholder string.
-char const* 
+char const*
 get_token_name(int kind)
 {
   auto iter = name_.find(kind);
@@ -56,7 +56,7 @@ get_token_name(int kind)
 
 // Return a name associated with the rule. If the rule does not
 // have an associated name, return a placeholder string.
-char const* 
+char const*
 get_token_spelling(int kind)
 {
   auto iter = spelling_.find(kind);
@@ -99,7 +99,7 @@ Token::Token(Location loc, int k, char const* str, int len)
 // add the symbol to the symbol table.
 //
 // FIXME: This potentially allows an existing symbol with
-// an unknown binding to 
+// an unknown binding to
 Token::Token(Location loc, int k, char const* first, char const* last)
   : loc_(loc), sym_(&get_symbol(first, last, k))
 { }
@@ -114,7 +114,7 @@ Token::Token(Location loc, Symbol& sym)
 // -------------------------------------------------------------------------- //
 //                              Token stream
 
-Token const& 
+Token const&
 Token_stream::peek() const
 {
   assert(!eof());
@@ -130,7 +130,7 @@ Token_stream::peek(int n) const
 }
 
 
-Token const& 
+Token const&
 Token_stream::get()
 {
   assert(!eof());
@@ -139,7 +139,7 @@ Token_stream::get()
   set_input_location(location());
 
   // Advance the token, return the previous value.
-  Token const& tok = *first_;  
+  Token const& tok = *first_;
   ++first_;
   return tok;
 }
@@ -150,7 +150,7 @@ Token_stream::get()
 
 
 // Pretty print the given token.
-void 
+void
 print(Printer& p, Token const& tok)
 {
   print(p, tok.str());

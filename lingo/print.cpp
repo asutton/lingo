@@ -18,24 +18,24 @@ namespace
 // output stream.
 struct Last_char_guard
 {
-  Last_char_guard(Printer& p, char c) 
+  Last_char_guard(Printer& p, char c)
     : printer(p), last(c)
   { }
 
 
-  Last_char_guard(Printer& p, char const* str) 
+  Last_char_guard(Printer& p, char const* str)
     : printer(p), last(str[std::strlen(str) - 1])
   { }
 
 
-  Last_char_guard(Printer& p, std::string const& str) 
+  Last_char_guard(Printer& p, std::string const& str)
     : printer(p), last(str[str.size() - 1])
   { }
 
   ~Last_char_guard()
   {
     printer.last = last;
-  }  
+  }
 
   Printer& printer;
   char     last;
@@ -47,7 +47,7 @@ struct Last_char_guard
 
 Printer::~Printer()
 {
-  if (needs_space && last != ' ') 
+  if (needs_space && last != ' ')
     print_space(*this);
   if (needs_newline && last != '\n')
     print_newline(*this);
@@ -70,7 +70,7 @@ print_chars(Printer& p, char const* s)
 }
 
 
-void 
+void
 print_chars(Printer& p, char const* first, char const* last)
 {
   if (first == last)
@@ -107,7 +107,7 @@ print_value(Printer& p, double n)
 }
 
 
-void 
+void
 print_space(Printer& p)
 {
   Last_char_guard _(p, ' ');
@@ -116,7 +116,7 @@ print_space(Printer& p)
 
 
 // Print a newline and indent to the nest indented position.
-void 
+void
 print_newline(Printer& p)
 {
   p.os << '\n';
@@ -128,7 +128,7 @@ print_newline(Printer& p)
 
 
 // Print spaces for an indentation.
-void 
+void
 print_indent(Printer& p)
 {
   for (int n = 0; n < 2 * p.depth; ++n)

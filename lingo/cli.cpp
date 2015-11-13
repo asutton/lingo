@@ -106,7 +106,7 @@ parse_long_arg(Parser& p, int& argc, char** argv)
     ++last;
 
 
-  // Find the parameter.  
+  // Find the parameter.
   // TODO: Can we avoid allocating memory here?
   std::string name(first, last);
   auto iter = p.names.find(name);

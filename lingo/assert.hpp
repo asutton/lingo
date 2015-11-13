@@ -7,7 +7,7 @@
 // The assert facility provides macros for asserting
 // and diagnosing logical errors in a program.
 
-#include "lingo/format.hpp"
+#include <lingo/format.hpp>
 
 
 // Expands to a call to the unreachable function and inserts
@@ -55,7 +55,7 @@ namespace lingo
 // braces. That's not particularly good for a compiler. I might
 // need to revert to using something more printf-like.
 template<typename... Args>
-[[noreturn]] 
+[[noreturn]]
 inline void
 abort(char const* msg, Args const&... args)
 {

@@ -44,41 +44,41 @@ Binary::span() const
 // Dispatch table for evaluation.
 struct Eval_fn
 {
-  Integer operator()(Int const* e) const 
+  Integer operator()(Int const* e) const
   {
-    return e->value(); 
+    return e->value();
   }
-  
-  Integer operator()(Add const* e) const 
-  { 
-    return evaluate(e->left()) + evaluate(e->right()); 
+
+  Integer operator()(Add const* e) const
+  {
+    return evaluate(e->left()) + evaluate(e->right());
   }
-  
+
   Integer operator()(Sub const* e)
   {
     return evaluate(e->left()) - evaluate(e->right());
   }
-  
+
   Integer operator()(Mul const* e)
   {
     return evaluate(e->left()) * evaluate(e->right());
   }
-  
+
   Integer operator()(Div const* e)
   {
     return evaluate(e->left()) / evaluate(e->right());
   }
-  
+
   Integer operator()(Mod const* e)
   {
     return evaluate(e->left()) % evaluate(e->right());
   }
-  
+
   Integer operator()(Neg const* e)
   {
     return -evaluate(e->arg());
   }
-  
+
   Integer operator()(Pos const* e)
   {
     return evaluate(e->arg());
@@ -126,7 +126,7 @@ struct Precedence_fn
 //    1   unary expressions
 //    2   multiplicative expressoins
 //    3   additive expressions
-int 
+int
 precedence(Expr const* e)
 {
   return apply(e, Precedence_fn());
@@ -240,7 +240,7 @@ struct Print_fn
 
 
 // Pretty print the given expression.
-void 
+void
 print(Printer& p, Expr const* e)
 {
   lingo_assert(is_valid_node(e));
@@ -278,7 +278,7 @@ struct Debug_fn
 
 
 // Emit a debug representation of the given expression.
-void 
+void
 debug(Printer& p, Expr const* e)
 {
   if (!e) {
@@ -291,7 +291,7 @@ debug(Printer& p, Expr const* e)
     return;
   }
 
-  apply(e, Debug_fn(p));  
+  apply(e, Debug_fn(p));
 }
 
 

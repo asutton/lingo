@@ -86,7 +86,7 @@ parse_primary_expression(Parser& p, Token_stream& toks)
   if (Nonempty<Expr> e = parse_paren_expression(p, toks))
     return *e;
 
-  // If the expression was none of the above, the program 
+  // If the expression was none of the above, the program
   // is ill-formed. Emit a resaonable diagnostic.
   //
   // TODO: Maybe let fail gracefully so that the error gets
@@ -137,7 +137,7 @@ parse_unary_expression(Parser& p, Token_stream& toks)
 inline bool
 is_multiplicative_operator(Token const& tok)
 {
-  return tok.kind() == star_tok 
+  return tok.kind() == star_tok
       || tok.kind() == slash_tok
       || tok.kind() == percent_tok;
 }
@@ -147,7 +147,7 @@ is_multiplicative_operator(Token const& tok)
 inline bool
 is_additive_operator(Token const& tok)
 {
-  return tok.kind() == plus_tok 
+  return tok.kind() == plus_tok
       || tok.kind() == minus_tok;
 }
 
@@ -211,7 +211,7 @@ parse_additive_expression(Parser& p, Token_stream& toks)
 }
 
 
-// Parse a binary expression. This is the top-level entry point 
+// Parse a binary expression. This is the top-level entry point
 // for the binary precedence parser.
 inline Expr const*
 parse_binary_expression(Parser& p, Token_stream& toks)
@@ -223,7 +223,7 @@ parse_binary_expression(Parser& p, Token_stream& toks)
 // -------------------------------------------------------------------------- //
 //                           Expression parser
 
-// Parse an expression. 
+// Parse an expression.
 Expr const*
 parse_expression(Parser& p, Token_stream& toks)
 {
@@ -273,7 +273,7 @@ Parser::on_binary_expression(Token const* tok, Expr const* e1, Expr const* e2)
 }
 
 
-Expr const* 
+Expr const*
 parse(Token_stream& ts)
 {
   Parser p;
@@ -285,7 +285,7 @@ parse(Token_stream& ts)
 
 
 // Parse the given buffer.
-Expr const* 
+Expr const*
 parse(Buffer& buf)
 {
   Input_context cxt(buf);
@@ -310,7 +310,7 @@ parse(Buffer& buf)
 }
 
 
-Expr const* 
+Expr const*
 parse(std::string const& str)
 {
   Buffer buf(str);

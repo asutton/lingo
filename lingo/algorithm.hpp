@@ -12,8 +12,8 @@
 // Note that more specialized algorithms can be found in the lexing
 // and parsing modules.
 
-#include "lingo/location.hpp"
-#include "lingo/error.hpp"
+#include <lingo/location.hpp>
+#include <lingo/error.hpp>
 
 #include <algorithm>
 #include <type_traits>
@@ -83,7 +83,7 @@ using Range_over = Range<Iterator_type<T>>;
 
 // Returns true if the next element in the stream is equal to x.
 template<typename Stream, typename T>
-inline bool 
+inline bool
 next_element_is(Stream const& s, T const& x)
 {
   return !s.eof() && s.peek() == x;
@@ -93,7 +93,7 @@ next_element_is(Stream const& s, T const& x)
 // Returns true if the next element in the stream is distinct
 // from x.
 template<typename Stream, typename T>
-inline bool 
+inline bool
 next_element_is_not(Stream const& s, T const& x)
 {
   return !s.eof() && s.peek() != x;
@@ -102,7 +102,7 @@ next_element_is_not(Stream const& s, T const& x)
 
 // Returns true if the nth element in the stream is equal to x.
 template<typename Stream, typename T>
-inline bool 
+inline bool
 nth_element_is(Stream const& s, int n, T const& x)
 {
   return !s.eof() && s.peek(n) == x;
@@ -111,7 +111,7 @@ nth_element_is(Stream const& s, int n, T const& x)
 
 // Returns true if the next element satisfies the given predicate.
 template<typename Stream, typename Pred>
-inline bool 
+inline bool
 next_element_if_unguarded(Stream const& s, Pred pred)
 {
   return pred(s.peek());
@@ -119,7 +119,7 @@ next_element_if_unguarded(Stream const& s, Pred pred)
 
 // Returns true if the next element satisfies the given predicate.
 template<typename Stream, typename Pred>
-inline bool 
+inline bool
 next_element_if(Stream const& s, Pred pred)
 {
   return !s.eof() && pred(s.peek());
@@ -177,7 +177,7 @@ next_elements_past_n_are(Stream const& s, int n, T const& first, Args const&... 
 
 // Returns true when the next elements in match those given
 // in by args.... Note that this operation requires lookahead
-// of sizeof...(Args). 
+// of sizeof...(Args).
 //
 // If the required lookahead exceeds the buffer, this returns
 // false.
@@ -190,7 +190,7 @@ next_elements_are(Stream const& s, Args const&... args)
 
 
 // -------------------------------------------------------------------------- //
-//                               Match 
+//                               Match
 //
 // The matching algorithms operate on streams. A stream `s` is required
 // to support the following operations:
@@ -199,13 +199,13 @@ next_elements_are(Stream const& s, Args const&... args)
 // - `s.peek()` -- returns a reference to the current element
 // - `s.get()` -- returns a reference to the current element and advances
 //
-// Additionally, the iterator type must be the same `&s.get()`, 
-// and default constructing the iterator type must be contextually 
+// Additionally, the iterator type must be the same `&s.get()`,
+// and default constructing the iterator type must be contextually
 // convertible to bool. This is typically a pointer into the stream.
 
 
 // If the current element of the stream exactly matches t, then
-// return an iterator to that element and advance the stream. 
+// return an iterator to that element and advance the stream.
 // Otherwise, return a null iterator.
 //
 // If the stream is past the end, then it does not match.
@@ -222,7 +222,7 @@ match(Stream& s, T const& t)
 
 
 // If the current element stream satisfis the predicate `pred`,
-// then return an iterator to that element. Otherwise, return the 
+// then return an iterator to that element. Otherwise, return the
 // null iterator.
 template<typename Stream, typename P>
 inline Iterator_type<Stream>
@@ -321,7 +321,7 @@ match_all(Stream& s, A const& a, Args const&... args)
 
 // Returns an iterator range corresponding to a sequence
 // of matched elements in the stream when the current element
-// of the stream satisfies `pred`. 
+// of the stream satisfies `pred`.
 template<typename Stream, typename P>
 inline Range_over<Stream>
 match_range_after_first(Stream& s, P pred)
@@ -339,7 +339,7 @@ match_range_after_first(Stream& s, P pred)
 // Returns an iterator range corresponding to a sequence
 // of matched elements in the stream. If the current element
 // is not in the set designated by match, the resulting range
-// is empty. 
+// is empty.
 template<typename Stream, typename P>
 inline Range_over<Stream>
 match_range(Stream& s, P pred)
@@ -399,10 +399,10 @@ discard_if(Stream& s, P pred)
 //    s.location()
 //
 // returns the current location in the underlying file or buffer. The
-// only requirement for this type is that it is semiregular. 
+// only requirement for this type is that it is semiregular.
 
 
-// If the current element matches of the stream the given kind, 
+// If the current element matches of the stream the given kind,
 // advance the stream, returning an iterator to the matched
 // element. Otherwise, calls the on_expected error in the
 // context.
@@ -412,7 +412,7 @@ expect(Context& cxt, Stream& s, T const& t)
 {
   if (auto iter = match(s, t))
     return iter;
-  
+
   if (!s.eof())
     error(s.location(), "expected '{}' but got '{}'", t, s.peek());
   else

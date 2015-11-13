@@ -16,7 +16,7 @@ namespace
 
 // FIXME: This is not especially good. We can probably do
 // better in tems of selecting font colors. In fact, I'm
-// sure this can be *much* better. 
+// sure this can be *much* better.
 
 // These are designed to be concatenated during preprocessing
 
@@ -50,7 +50,7 @@ namespace
 // Coloring for source code locations and carets
 #define font_location   font_start font_bold "m"
 #define font_caret      font_start font_bold ";" font_cyan "m"
- 
+
 
 // Print the source code location for a bound location or
 // span.
@@ -84,7 +84,7 @@ show_line(std::ostream& os, Bound_location const& loc)
 {
   Line const& line = loc.line();
   os << indent_ << line.str() << '\n';
-  
+
   // Show the caret, but only if if the caret is valid.
   int caret = loc.column_no() - 1;
   if (caret < 0)
@@ -177,7 +177,7 @@ std::stack<Diagnostic_context*> diags_;
 
 
 // The root diagnostic context. Note that this self-registers
-// as the top diagnostic context. 
+// as the top diagnostic context.
 Diagnostic_context root_;
 
 
@@ -210,7 +210,7 @@ Diagnostic_context::~Diagnostic_context()
 
 // Emit a single diagnostic. If this context is suppressing
 // diagnostics, then the save them for later.
-void 
+void
 Diagnostic_context::emit(Diagnostic const& diag)
 {
   if (diag.kind == error_diag)
@@ -306,9 +306,9 @@ warning(Bound_span span, String const& msg)
 
 // Emit a note diagnostic.
 //
-// TODO: Allow the attachment of notes to other diagnostic 
+// TODO: Allow the attachment of notes to other diagnostic
 // objects, allowing them to be nested rather than flat.
-void 
+void
 note(Bound_location loc, String const& msg)
 {
   diags_.top()->emit({note_diag, loc, msg});

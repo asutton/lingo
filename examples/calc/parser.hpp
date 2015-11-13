@@ -4,8 +4,8 @@
 #ifndef CALC_PARSER_HPP
 #define CALC_PARSER_HPP
 
-#include "lingo/parsing.hpp"
-#include "lingo/buffer.hpp"
+#include <lingo/parsing.hpp>
+#include <lingo/buffer.hpp>
 
 namespace calc
 {

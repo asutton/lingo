@@ -4,8 +4,8 @@
 #ifndef LINGO_BUFFER_HPP
 #define LINGO_BUFFER_HPP
 
-#include "lingo/string.hpp"
-#include "lingo/location.hpp"
+#include <lingo/string.hpp>
+#include <lingo/location.hpp>
 
 #include <map>
 
@@ -93,7 +93,7 @@ public:
   // undefined if `loc` does not represent a location in
   // this buffer.
   Bound_location location(Location loc) const { return {*this, loc}; }
-  
+
   // Returns a bound span for that given.
   Bound_span span(Span span) const { return {*this, span}; }
 

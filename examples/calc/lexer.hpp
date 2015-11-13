@@ -1,13 +1,15 @@
+// Copyright (c) 2015 Andrew Sutton
+// All rights reserved
 
 #ifndef CALC_LEXER_HPP
 #define CALC_LEXER_HPP
 
-// The calc lexer defines the additional tokens used by the 
-// language and the machine used to recognize those tokens 
+// The calc lexer defines the additional tokens used by the
+// language and the machine used to recognize those tokens
 // in input source.
 
-#include "lingo/character.hpp"
-#include "lingo/lexing.hpp"
+#include <lingo/character.hpp>
+#include <lingo/lexing.hpp>
 
 #include <string>
 

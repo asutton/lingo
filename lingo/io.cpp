@@ -1,7 +1,7 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "io.hpp"
+#include "lingo/io.hpp"
 
 #include <unistd.h>
 
@@ -24,7 +24,7 @@ bool color_error = false;
 
 // Determine if colors should be enabled on the
 // output and error devices.
-void 
+void
 init_colors()
 {
   color_output = isatty(1);
@@ -67,7 +67,7 @@ get_foreground_color(Text_color c)
     "34", // Blue
     "35", // Magenta
     "36", // Cyan
-    "37", // White    
+    "37", // White
   };
   if (c > 0)
     return fg[c - 1];
@@ -84,7 +84,7 @@ get_effects(Text_effects)
 }
 
 
-void 
+void
 start_font(std::ostream& os, Font_spec font)
 {
   if (!enable_color(os))

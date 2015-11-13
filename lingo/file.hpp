@@ -7,7 +7,7 @@
 // The file module contains facilities for managing open
 // files and their text.
 
-#include "lingo/buffer.hpp"
+#include <lingo/buffer.hpp>
 
 #include <unordered_map>
 #include <vector>
@@ -45,7 +45,7 @@ class File : public Buffer
 public:
   // Observers
   Path const& path() const { return path_; }
-  
+
   int index() const { return index_; }
 
 private:

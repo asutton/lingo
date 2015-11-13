@@ -19,7 +19,7 @@ namespace lingo
 
 
 // Colors for text
-enum Text_color 
+enum Text_color
 {
   default_text, // Use the default color.
   black_text,
@@ -34,7 +34,7 @@ enum Text_color
 
 
 // Text weight
-enum Text_weight 
+enum Text_weight
 {
   normal_text,
   bright_text,
@@ -43,7 +43,7 @@ enum Text_weight
 
 
 // Additional formatting or effects.
-enum Text_effects 
+enum Text_effects
 {
   plain_text,
   underlined_text,
@@ -332,7 +332,7 @@ void end_font(std::ostream&);
 
 
 template<typename T>
-std::ostream& 
+std::ostream&
 operator<<(std::ostream& os, Styled_text<T> const& txt)
 {
   start_font(os, txt.font);

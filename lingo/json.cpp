@@ -1,15 +1,15 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "json.hpp"
-#include "memory.hpp"
-#include "character.hpp"
-#include "lexing.hpp"
-#include "parsing.hpp"
+#include "lingo/json.hpp"
+#include "lingo/memory.hpp"
+#include "lingo/character.hpp"
+#include "lingo/lexing.hpp"
+#include "lingo/parsing.hpp"
 
 #include <iostream>
 
-namespace lingo 
+namespace lingo
 {
 
 namespace json
@@ -26,7 +26,7 @@ String_hash::operator()(String const* p) const
 
 
 // Compare two strings for equality.
-bool 
+bool
 String_eq::operator()(String const* a, String const* b) const
 {
   assert(a && b);
@@ -38,7 +38,7 @@ String_eq::operator()(String const* a, String const* b) const
 // Returns a reference to the object at the given position.
 // If the object does not exist, a new entry is created, allowing
 // assignment.
-inline Value*& 
+inline Value*&
 Object::operator[](String const* key)
 {
   return Object_impl::operator[](key);
@@ -47,7 +47,7 @@ Object::operator[](String const* key)
 
 // Returns the value with the given key. If the key does not
 // exist, returns nullptr.
-Value*  
+Value*
 Object::operator[](String const* key) const
 {
   auto iter = find(key);
@@ -92,13 +92,13 @@ Object::operator[](std::string const& key) const
 //                            Value creation
 //
 // This implementation uses a mixed allocation strategy to represent
-// values in memory. Specific values (null, true, and false) are 
+// values in memory. Specific values (null, true, and false) are
 // singleton objects and must never be deleted. All other values
 // (strings, ints, doubles, arrays, and objects) are always dynamically
 // allocated as needed.
 //
-// Allocation of these objects must be done using the make_*() 
-// functions and the destroy() function. Never use new and delete 
+// Allocation of these objects must be done using the make_*()
+// functions and the destroy() function. Never use new and delete
 // with JSON values.
 
 namespace
@@ -227,7 +227,7 @@ namespace
 
 // Delete an allocated literal value.
 template<typename T>
-inline void 
+inline void
 destroy_literal(T* p)
 {
   delete p;
@@ -281,22 +281,22 @@ destroy(Value* v)
 {
   switch (v->kind()) {
     case null_value:
-    case bool_value: 
+    case bool_value:
       return;
 
-    case int_value: 
+    case int_value:
       return destroy_literal(cast<Int>(v));
-    
-    case real_value: 
+
+    case real_value:
       return destroy_literal(cast<Real>(v));
-    
-    case string_value: 
+
+    case string_value:
       return destroy_literal(cast<String>(v));
-    
-    case array_value: 
+
+    case array_value:
       return destroy_array(cast<Array>(v));
-    
-    case object_value: 
+
+    case object_value:
       return destroy_object(cast<Object>(v));
   }
 }
@@ -306,7 +306,7 @@ destroy(Value* v)
 // also allows for proper memory cleanup.
 struct Temp_array : Array_impl
 {
-  ~Temp_array() 
+  ~Temp_array()
   {
     destroy_sequence(*this);
   }
@@ -317,7 +317,7 @@ struct Temp_array : Array_impl
 // also allows for proper memory cleanup.
 struct Temp_object : Object_impl
 {
-  ~Temp_object() 
+  ~Temp_object()
   {
     destroy_mapping(*this);
   }
@@ -353,7 +353,7 @@ print_string(Printer& p, String const* value)
 
 
 void
-print_array(Printer& p, Array const* value) 
+print_array(Printer& p, Array const* value)
 {
   print(p, '[');
   print_nested(p, *value);
@@ -379,8 +379,8 @@ print(Printer& p, Pair const& pair)
 }
 
 
-void 
-print_value(Printer& p, Value const* v) 
+void
+print_value(Printer& p, Value const* v)
 {
   lingo_assert(v != nullptr);
 
@@ -423,7 +423,7 @@ namespace
 // The parse context provides information about the state
 // of a parse. It provides the hooks for transforming characters
 // into values and emitting errors.
-struct Context 
+struct Context
 {
   using result_type = Value*;
 
@@ -539,7 +539,7 @@ Value* parse_value(Context&, Stream&);
 // Support for parsing literal values exactly.
 //
 // TODO: For the specializations below, it would be more efficient
-// to have an unbounded lookahead to search for the next non-punctuation 
+// to have an unbounded lookahead to search for the next non-punctuation
 // character and then analyze the result.
 template<int N>
 struct Literal_parser;
@@ -579,7 +579,7 @@ struct Literal_parser<5>
 };
 
 
-// TODO: Improve diagnostics. Emit the sequence of tokens up 
+// TODO: Improve diagnostics. Emit the sequence of tokens up
 // to the first non-alphabetical character.
 //
 // TODO: Use the parser for semantic actions.
@@ -590,7 +590,7 @@ parse_literal(Context& cxt, Stream& s, char const* str, Make make)
   Literal_parser<N> parse;
   if (Value* v = parse(cxt, s, str, make))
     return v;
-  throw std::runtime_error(format("invalid {} literal", str));  
+  throw std::runtime_error(format("invalid {} literal", str));
 }
 
 
@@ -646,7 +646,7 @@ parse_negative_number(Context& cxt, Stream& s)
 {
   s.get();
   Int* num = cast<Int>(lex_decimal_integer(cxt, s, Location::none));
-  num->first.neg(); 
+  num->first.neg();
   return num;
 }
 
@@ -698,7 +698,7 @@ Array*
 parse_array(Context& cxt, Stream& s)
 {
   require(s, '[');
-  
+
   if (Array* a = parse_empty_array(cxt, s))
     return a;
 
@@ -708,7 +708,7 @@ parse_array(Context& cxt, Stream& s)
     arr.push_back(v);
   } while (match(s, ','));
   expect(cxt, s, ']');
-  
+
   return cxt.on_array(Location::none, std::move(arr));
 }
 
@@ -781,8 +781,8 @@ parse_object(Context& cxt, Stream& s)
 }
 
 
-// Parse a value from the stream. Note that 
-Value* 
+// Parse a value from the stream. Note that
+Value*
 parse_value(Context& cxt, Stream& s)
 {
   Whitespace_guard ws(s);
@@ -793,16 +793,16 @@ parse_value(Context& cxt, Stream& s)
   switch (s.peek()) {
   case 'n':
     return parse_null(cxt, s);
-  
+
   case 't':
     return parse_true(cxt, s);
-  
+
   case 'f':
     return parse_false(cxt, s);
 
   case '-':
     return parse_negative_number(cxt, s);
-  
+
   case '0':
   case '1':
   case '2':
@@ -820,7 +820,7 @@ parse_value(Context& cxt, Stream& s)
 
   case '[':
     return parse_array(cxt, s);
-  
+
   case '{':
     return parse_object(cxt, s);
 
@@ -833,9 +833,9 @@ parse_value(Context& cxt, Stream& s)
 } // namespace
 
 
-// Parse the value in the character range `[first, last)`. An 
-// exception is thrown if [first, last) does not contain a valid 
-// JSON value. 
+// Parse the value in the character range `[first, last)`. An
+// exception is thrown if [first, last) does not contain a valid
+// JSON value.
 //
 // Note that this will return `nullptr` if the
 // range `[first, last)` is empty or only whitespace.
@@ -869,7 +869,7 @@ parse(char const* str)
 //
 // Note that this will return `nullptr` if the
 // range `[first, last)` is empty or only whitespace.Value*
-Value* 
+Value*
 parse(std::string const& str)
 {
   return parse(str.c_str(), str.c_str() + str.size());
@@ -878,5 +878,4 @@ parse(std::string const& str)
 
 } // namespace json
 
-} // namespace lingo 
-
+} // namespace lingo

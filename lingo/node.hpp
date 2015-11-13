@@ -4,7 +4,7 @@
 #ifndef LINGO_NODE_HPP
 #define LINGO_NODE_HPP
 
-#include "lingo/utility.hpp"
+#include <lingo/utility.hpp>
 
 #include <cassert>
 #include <vector>

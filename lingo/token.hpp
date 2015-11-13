@@ -4,14 +4,14 @@
 #ifndef LINGO_TOKEN_HPP
 #define LINGO_TOKEN_HPP
 
-#include "lingo/location.hpp"
-#include "lingo/buffer.hpp"
-#include "lingo/error.hpp"
-#include "lingo/symbol.hpp"
-#include "lingo/string.hpp"
-#include "lingo/integer.hpp"
-#include "lingo/print.hpp"
-#include "lingo/debug.hpp"
+#include <lingo/location.hpp>
+#include <lingo/buffer.hpp>
+#include <lingo/error.hpp>
+#include <lingo/symbol.hpp>
+#include <lingo/string.hpp>
+#include <lingo/integer.hpp>
+#include <lingo/print.hpp>
+#include <lingo/debug.hpp>
 
 #include <cstdint>
 #include <vector>
@@ -37,12 +37,12 @@ char const* get_token_spelling(int);
 // -------------------------------------------------------------------------- //
 //                            Token class
 
-// The Token class represents the occurrence of a lexeme  within a 
-// source file. It associates the class of the the lexeme with its 
+// The Token class represents the occurrence of a lexeme  within a
+// source file. It associates the class of the the lexeme with its
 // associated value (if any) and its location in the source file.
 //
-// Each token indexes an entry in the symbol table, which stores 
-// additional attributes associated with the token  (e.g. scope 
+// Each token indexes an entry in the symbol table, which stores
+// additional attributes associated with the token  (e.g. scope
 // bindings, numeric interpretation of values, etc.).
 //
 // Note that -1 is reserved as a special token kind, indicating an
@@ -65,13 +65,13 @@ public:
 
   // Observers
   char const* token_name() const { return get_token_name(kind()); }
-  
+
   // Source location and span.
   Location  location() const { return loc_; }
   Span      span() const;
 
   int kind() const { return sym_->kind; }
-  
+
   // Symbol/text representation
   Symbol const& symbol() const { return *sym_; }
   String const* str() const    { return &sym_->str; }
@@ -110,7 +110,7 @@ std::ostream& operator<<(std::ostream&, Token const&);
 //                              Token stream
 
 
-// A token stream provides a sequence of tokens and has a very 
+// A token stream provides a sequence of tokens and has a very
 // simple streaming interface consisting of only 5 functions:
 // peek(), get(), and eof(), begin(), and end(). Character streams
 // are the input to lexical analyzers.
@@ -154,7 +154,7 @@ public:
 
 
 // Debug print a token string.
-inline void 
+inline void
 debug(Printer& p, Token_stream const& toks)
 {
   for (const Token& tok : toks) {

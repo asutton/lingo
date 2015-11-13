@@ -49,7 +49,7 @@ Stringbuf::Stringbuf(std::istream& is)
 
 void
 Stringbuf::assign(std::istream& is)
-{ 
+{
   buf_.assign(Iter(is), Iter());
 }
 

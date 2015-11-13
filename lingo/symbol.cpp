@@ -27,7 +27,7 @@ Symbol_table::~Symbol_table()
 // exists, do nothing and return its index.
 //
 // Note that a symbol's kind cannot be changed by re-insertion.
-// This means that inserting a symbol as an identifier when it has 
+// This means that inserting a symbol as an identifier when it has
 // been previously installed as a keyword, will simply return the
 // keyword.
 //
@@ -69,7 +69,7 @@ Symbol_table sym_;
 
 
 // Returns the global symbol table.
-Symbol_table& 
+Symbol_table&
 symbols()
 {
   return sym_;

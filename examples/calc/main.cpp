@@ -25,7 +25,7 @@ prompt(std::string& line)
 }
 
 
-int 
+int
 main()
 {
   init_tokens();
@@ -40,7 +40,7 @@ main()
 
     // Construct a buffer for the line.
     Buffer buf(line);
-    
+
     // Establish the input context.
     Input_context cxt(buf);
 
@@ -75,7 +75,7 @@ main()
 
     if (is_step_mode())
       step_eval(expr);
-    else      
+    else
       std::cout << expr << " == " << evaluate(expr) << '\n';
   }
 }

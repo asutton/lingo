@@ -1,8 +1,8 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "file.hpp"
-#include "error.hpp"
+#include "lingo/file.hpp"
+#include "lingo/error.hpp"
 
 #include <fstream>
 #include <iterator>
@@ -21,21 +21,21 @@ read_file(Path const& p)
   std::ifstream f(p.native());
 
   String text;
-  f.seekg(0, std::ios::end);   
+  f.seekg(0, std::ios::end);
   text.reserve(f.tellg());
   f.seekg(0, std::ios::beg);
 
   std::istreambuf_iterator<char> first = f;
   std::istreambuf_iterator<char> last;
   text.assign(first, last);
-  
+
   return text;
 }
 
 } // namespace
 
 
-// Construct file with the given index. This will cache the 
+// Construct file with the given index. This will cache the
 // text of the file.
 File::File(Path const& p, int n)
   : Buffer(read_file(p)), path_(p), index_(n)
@@ -78,7 +78,7 @@ File_manager::open(Path const& p)
 }
 
 
-File& 
+File&
 File_manager::file(int n)
 {
   lingo_assert(0 <= n && n << files_.size());

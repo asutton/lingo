@@ -8,8 +8,8 @@
 // facilities. A symbol is a view of a string in a source
 // file and affiliated data (e.g., bindings).
 
-#include "lingo/string.hpp"
-#include "lingo/integer.hpp"
+#include <lingo/string.hpp>
+#include <lingo/integer.hpp>
 
 #include <cstring>
 #include <list>
@@ -28,7 +28,7 @@ constexpr int unknown_tok = -1;
 
 
 // A Symbol represents a lexeme saved in the symbol table and
-// its associated attributes. The string representation of symbols 
+// its associated attributes. The string representation of symbols
 // are represented as a pair of pointers into a character array.
 // Additional attributes include the kind of token and the token
 // specific data.
@@ -40,7 +40,7 @@ constexpr int unknown_tok = -1;
 // token construction. Most symbols are inserted with the token
 // kind already known. However, for tokens like identifiers, integers,
 // and real values, the token kind must be assigned later.
-// 
+//
 struct Symbol
 {
   Symbol(String const& s, int k)
@@ -72,11 +72,11 @@ operator!=(Symbol const& a, Symbol const& b)
 //                           Symbol table
 
 // A symbol table stores unique representations of strings in
-// a program and their affiliated information (e.g., token kind, 
-// etc.). The symbol table also supports efficient insertion and 
+// a program and their affiliated information (e.g., token kind,
+// etc.). The symbol table also supports efficient insertion and
 // lookup of those strings.
 //
-// The symbol table is implemented as a linked list of symbols 
+// The symbol table is implemented as a linked list of symbols
 // with a side table to support efficient lookup.
 //
 // TODO: Use a bump alloctor for the hash table and the strings.
@@ -112,7 +112,7 @@ Symbol_table::insert(char const* s, int k)
 }
 
 
-inline Symbol& 
+inline Symbol&
 Symbol_table::insert(char const* f, char const* l, int k)
 {
   return insert(String_view(f, l), k);
@@ -126,7 +126,7 @@ Symbol_table::lookup(char const* s) const
 }
 
 
-inline Symbol* 
+inline Symbol*
 Symbol_table::lookup(char const* f, char const* l) const
 {
   return lookup(String_view(f, l));
@@ -137,7 +137,7 @@ Symbol_table& symbols();
 
 
 // Returns the symbol correspondng to `str`, inserting a new
-// symbol if it is not already present. 
+// symbol if it is not already present.
 inline Symbol&
 get_symbol(char const* str, int k = unknown_tok)
 {

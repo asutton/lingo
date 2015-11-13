@@ -1,3 +1,5 @@
+// Copyright (c) 2015 Andrew Sutton
+// All rights reserved
 
 #include "lexer.hpp"
 
@@ -141,7 +143,7 @@ Lexer::on_integer(Location loc, char const* first, char const* last, int base)
 
 
 // Lex all tokens in the character stream.
-Token_list 
+Token_list
 lex(Character_stream& cs)
 {
   Lexer lexer;
@@ -157,7 +159,7 @@ lex(Character_stream& cs)
 //                           Elaboration
 
 
-// Return the integer value of the token. 
+// Return the integer value of the token.
 Integer
 as_integer(Token const& tok)
 {

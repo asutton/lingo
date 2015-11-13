@@ -4,9 +4,9 @@
 #ifndef LINGO_CHARACTER_HPP
 #define LINGO_CHARACTER_HPP
 
-#include "lingo/location.hpp"
-#include "lingo/buffer.hpp"
-#include "lingo/string.hpp"
+#include <lingo/location.hpp>
+#include <lingo/buffer.hpp>
+#include <lingo/string.hpp>
 
 namespace lingo
 {
@@ -65,7 +65,7 @@ public:
 
 private:
   int offset() const { return first_ - base_; }
-  
+
   Buffer&       buf_;  // The stream's source file
   char const*   base_;  // The beginning of the stream
   char const*   first_; // Current character pointer

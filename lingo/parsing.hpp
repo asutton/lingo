@@ -4,10 +4,10 @@
 #ifndef LINGO_PARSING_HPP
 #define LINGO_PARSING_HPP
 
-#include "lingo/token.hpp"
-#include "lingo/memory.hpp"
-#include "lingo/algorithm.hpp"
-#include "lingo/error.hpp"
+#include <lingo/token.hpp>
+#include <lingo/memory.hpp>
+#include <lingo/algorithm.hpp>
+#include <lingo/error.hpp>
 
 namespace lingo
 {
@@ -26,7 +26,7 @@ char const* get_grammar_name(void(*)());
 
 // Install a grammar name for the given function.
 template<typename T, typename... Args>
-inline void 
+inline void
 install_grammar(T(*fn)(Args...), char const* name)
 {
   return install_grammar(reinterpret_cast<void(*)()>(fn), name);
@@ -35,7 +35,7 @@ install_grammar(T(*fn)(Args...), char const* name)
 
 // Lookup a name for the given rule.
 template<typename T, typename... Args>
-inline char const* 
+inline char const*
 get_grammar_name(T(*fn)(Args...))
 {
   return get_grammar_name(reinterpret_cast<void(*)()>(fn));
@@ -77,7 +77,7 @@ is_token(int k)
 }
 
 
-// Returns a function that evaluates if a token does not have 
+// Returns a function that evaluates if a token does not have
 // the given kind.
 inline is_not_token_fn
 is_not_token(int k)
@@ -176,7 +176,7 @@ require_token(Stream& s, int k)
 
 // Strip information from the return type of a rule.
 template<typename T>
-using get_term_type = 
+using get_term_type =
   typename std::remove_const<
     typename std::remove_pointer<T>::type
   >::type;
@@ -187,11 +187,11 @@ using get_term_type =
 //
 //    Node const* parse_foo(Parsre&, Stream&);
 //
-// Then the term type of the rule is `Node`. 
+// Then the term type of the rule is `Node`.
 template<typename Parser, typename Stream, typename Rule>
-using Term_type = 
+using Term_type =
   get_term_type<
-    decltype(std::declval<Rule>()(std::declval<Parser&>(), 
+    decltype(std::declval<Rule>()(std::declval<Parser&>(),
                                   std::declval<Stream&>()))
   >;
 
@@ -202,8 +202,8 @@ using Term_type =
 
 // Parse a term, guaranteeing that this emits a diagnostics if
 // the term cannot be matched.
-template<typename Parser, 
-         typename Stream, 
+template<typename Parser,
+         typename Stream,
          typename Rule,
          typename Term = Term_type<Parser, Stream, Rule>>
 inline Term const*
@@ -258,7 +258,7 @@ struct Enclosed_term
 
 
 template<typename T>
-inline Enclosed_term<T>* 
+inline Enclosed_term<T>*
 Enclosed_term<T>::make(Token const* o, Token const* c)
 {
   return new Enclosed_term(o, c);
@@ -266,7 +266,7 @@ Enclosed_term<T>::make(Token const* o, Token const* c)
 
 
 template<typename T>
-inline Enclosed_term<T>* 
+inline Enclosed_term<T>*
 Enclosed_term<T>::make(Token const* o, Token const* c, T const* t)
 {
   return new Enclosed_term(o, c, t);
@@ -277,24 +277,24 @@ Enclosed_term<T>::make(Token const* o, Token const* c, T const* t)
 //
 //    enclosed-term ::= k1 [rule] k2
 //
-// Here, `k1` and `k2` are token kinds and `rule` is the 
+// Here, `k1` and `k2` are token kinds and `rule` is the
 // enclose grammar production. Note that an empty enclosure
 // is allowed.
-template<typename Parser, 
-         typename Stream, 
+template<typename Parser,
+         typename Stream,
          typename Rule,
          typename Term = Term_type<Parser, Stream, Rule>>
 Enclosed_term<Term> const*
 parse_enclosed(Parser& p, Stream& s, int k1, int k2, Rule rule)
 {
   using Result = Enclosed_term<Term>;
-  
+
   auto const* left = require_token(s, k1);
-    
+
   // Match the empty enclosure.
-  if (auto const* right = match_token(s, k2)) 
+  if (auto const* right = match_token(s, k2))
     return Result::make(left, right);
-  
+
   // Check the rule. Note to be careful about copying the
   // parsed term. Note that no allocations occur when returning
   // an error. Note that we've covered the emtpy case above,
@@ -311,7 +311,7 @@ parse_enclosed(Parser& p, Stream& s, int k1, int k2, Rule rule)
       //
       // TODO: Show the position of the starting bracket
       // to improve diagnostics?
-      error(left->location(), "expected '{}' after {}", 
+      error(left->location(), "expected '{}' after {}",
             get_token_spelling(k2),
             get_grammar_name(rule));
     }
@@ -385,8 +385,8 @@ Sequence_term<T>::make(std::initializer_list<T const*> list)
 //
 // Note that an empty sequence will produce a valid (i.e.,
 // non-empty) node.
-template<typename Parser, 
-         typename Stream, 
+template<typename Parser,
+         typename Stream,
          typename Rule,
          typename Term = Term_type<Parser, Stream, Rule>>
 inline Sequence_term<Term> const*
@@ -411,8 +411,8 @@ parse_sequence(Parser& p, Stream& s, Rule rule)
 //    list ::= <empty> | rule | rule <token> list
 //
 // Here, <token> is the punctuator for the list.
-template<typename Parser, 
-         typename Stream, 
+template<typename Parser,
+         typename Stream,
          typename Rule,
          typename Term = Term_type<Parser, Stream, Rule>>
 inline Sequence_term<Term> const*
@@ -420,7 +420,7 @@ parse_list(Parser& p, Stream& s, int k, Rule rule)
 {
   using Result = Sequence_term<Term>;
   Result result;
-  
+
   // Match the first term. Note that this can be empty.
   if (Optional<Term> first = rule(p, s)) {
 
@@ -455,7 +455,7 @@ parse_list(Parser& p, Stream& s, int k, Rule rule)
 //                           Prefix parsing
 
 
-// Parse a prefix term. A prefix term (or unary, in some grammars) 
+// Parse a prefix term. A prefix term (or unary, in some grammars)
 // has the following form:
 //
 //    prefix-term ::= rule | op prefix-term
@@ -467,7 +467,7 @@ parse_list(Parser& p, Stream& s, int k, Rule rule)
 //
 // Where `p` is the the parser and `s` is the token stream. The
 // `rule` is a Parse_function that parses the next higher precedence
-// term in the grammar. 
+// term in the grammar.
 //
 // The `act` parameter specifies an action to execute whenever
 // the prefix term is matched. It must be invokable as:
@@ -476,9 +476,9 @@ parse_list(Parser& p, Stream& s, int k, Rule rule)
 //
 // Where `k` is a token pointer and `t` is the nested term. The
 // return type of the pointer must be the same as that of `rule`.
-template<typename Parser, 
-         typename Stream, 
-         typename Op, 
+template<typename Parser,
+         typename Stream,
+         typename Op,
          typename Rule,
          typename Action,
          typename Term = Term_type<Parser, Stream, Rule>>
@@ -491,7 +491,7 @@ parse_prefix_term(Parser& p, Stream& s, Op op, Rule rule, Action act)
     } else {
       // Failed to parse the sub-term after the prefix token.
       if (term.is_empty()) {
-        error(tok->location(), "expected {} after '{}'", 
+        error(tok->location(), "expected {} after '{}'",
               get_grammar_name(rule),
               tok->str());
         return make_error_node<Term>();
@@ -518,7 +518,7 @@ parse_prefix_term(Parser& p, Stream& s, Op op, Rule rule, Action act)
 //
 // Where `p` is the the parser and `s` is the token stream. The
 // `rule` is a Parse_function that parses the next higher precedence
-// term in the grammar. 
+// term in the grammar.
 //
 // The `act` parameter specifies an action to execute whenever
 // the prefix term is matched. It must be invokable as:
@@ -527,9 +527,9 @@ parse_prefix_term(Parser& p, Stream& s, Op op, Rule rule, Action act)
 //
 // Where `k` is a token pointer and `t` is the nested term. The
 // return type of the pointer must be the same as that of `rule`.
-template<typename Parser, 
-         typename Stream, 
-         typename Op, 
+template<typename Parser,
+         typename Stream,
+         typename Op,
          typename Rule,
          typename Action,
          typename Term = Term_type<Parser, Stream, Rule>>
@@ -551,7 +551,7 @@ parse_left_infix_term(Parser& p, Stream& s, Op op, Rule rule, Action act)
         }
       }
     }
-    
+
     // We matched the left term, but not the operator.
     return *left;
   } else if (left.is_empty()) {
@@ -579,7 +579,7 @@ parse_left_infix_term(Parser& p, Stream& s, Op op, Rule rule, Action act)
 //
 // Where `p` is the the parser and `s` is the token stream. The
 // `rule` is a Parse_function that parses the next higher precedence
-// term in the grammar. 
+// term in the grammar.
 //
 // The `act` parameter specifies an action to execute whenever
 // the prefix term is matched. It must be invokable as:
@@ -590,9 +590,9 @@ parse_left_infix_term(Parser& p, Stream& s, Op op, Rule rule, Action act)
 // return type of the pointer must be the same as that of `rule`.
 //
 // TODO: Make this iterative?
-template<typename Parser, 
-         typename Stream, 
-         typename Op, 
+template<typename Parser,
+         typename Stream,
+         typename Op,
          typename Rule,
          typename Action,
          typename Term = Term_type<Parser, Stream, Rule>>

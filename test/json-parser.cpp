@@ -18,13 +18,13 @@ using namespace lingo;
 
 using Iter = std::istreambuf_iterator<char>;
 
-int 
+int
 main(int argc, char* argv[])
 {
   if (argc != 2) {
     std::cerr << "usage: json-parser '<json-value>'\n";
     return -1;
-  } 
+  }
 
   // Parse the text.
   if (json::Value* value = json::parse(argv[1]))

@@ -15,7 +15,7 @@ using namespace lingo;
 // -nodebug     // OK: false
 // -debug true  // error
 
-int 
+int
 main(int argc, char* argv[])
 {
   cli::Parameter_list parms {
