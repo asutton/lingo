@@ -10,6 +10,8 @@ set(contrib_src
 # The lingo library
 add_library(lingo
   ${contrib_src}
+  format.cpp
+  assert.cpp
   node.cpp
   memory.cpp
   string.cpp
@@ -27,7 +29,5 @@ add_library(lingo
   algorithm.cpp
   lexing.cpp
   parsing.cpp
-  # json.cpp
-  # cli.cpp
   )
 target_link_libraries(lingo ${GMP_LIBRARIES} ${Boost_LIBRARIES})

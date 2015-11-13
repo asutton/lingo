@@ -17,58 +17,12 @@
 #include "lingo/algorithm.hpp"
 #include "lingo/error.hpp"
 
+
 namespace lingo
 {
 
 // -------------------------------------------------------------------------- //
 //                             Character classes
-
-// Returns true if c is white space.
-inline bool
-is_space(char c)
-{
-  return std::isspace(c);
-}
-
-
-// Returns true if c is alphabetical.
-inline bool
-is_alpha(char c)
-{
-  return std::isalpha(c);
-}
-
-
-// Returns true if c is a binary digit.
-inline bool
-is_binary_digit(char c)
-{
-  return c == '0' || c == '1';
-}
-
-
-// Returns true if c is an octal digit.
-inline bool
-is_octal_digit(char c)
-{
-  return '0' <= c && c <= '7';
-}
-
-
-// Returns true if c is a decimial digit.
-inline bool
-is_decimal_digit(char c)
-{
-  return std::isdigit(c);
-}
-
-
-// Returns true if c is a hexadecimal digit.
-inline bool
-is_hexadecimal_digit(char c)
-{
-  return std::isxdigit(c);
-}
 
 
 // Returns true if c starts an identifier. 

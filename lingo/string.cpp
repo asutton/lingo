@@ -8,6 +8,9 @@
 namespace lingo
 {
 
+// -------------------------------------------------------------------------- //
+//                          String view
+
 // Streaming.
 std::ostream&
 operator<<(std::ostream& os, String_view s)
@@ -29,6 +32,25 @@ String_view::hash() const
   while (p != last)
     h = h << 1 ^ *p++;
   return h;
+}
+
+
+// -------------------------------------------------------------------------- //
+//                          String buffer
+
+using Iter = std::istreambuf_iterator<char>;
+
+// Read the contents of the given input stream
+// into the string buffer.
+Stringbuf::Stringbuf(std::istream& is)
+  : buf_(Iter(is), Iter())
+{ }
+
+
+void
+Stringbuf::assign(std::istream& is)
+{ 
+  buf_.assign(Iter(is), Iter());
 }
 
 
