@@ -3,12 +3,46 @@
 
 #include "io.hpp"
 
+#include <unistd.h>
+
 #include <algorithm>
 #include <iostream>
 
 
 namespace lingo
 {
+
+
+namespace
+{
+
+bool color_output = false;
+bool color_error = false;
+
+} // namespace
+
+
+// Determine if colors should be enabled on the
+// output and error devices.
+void 
+init_colors()
+{
+  color_output = isatty(1);
+  color_error = isatty(2);
+}
+
+
+// Return true if color should be used for the
+// given stream.
+bool
+enable_color(std::ostream& os)
+{
+  if (&os == &std::cout)
+    return color_output;
+  if (&os == &std::cerr)
+    return color_error;
+  return false;
+}
 
 
 char const*
@@ -53,6 +87,8 @@ get_effects(Text_effects)
 void 
 start_font(std::ostream& os, Font_spec font)
 {
+  if (!enable_color(os))
+    return;
 
   char const* codes[3] {
     get_weight(font.weight),
@@ -76,6 +112,9 @@ start_font(std::ostream& os, Font_spec font)
 void
 end_font(std::ostream& os)
 {
+  if (!enable_color(os))
+    return;
+
   os << "\033[0m";
 }
 

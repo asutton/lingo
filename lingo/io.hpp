@@ -342,6 +342,9 @@ operator<<(std::ostream& os, Styled_text<T> const& txt)
 }
 
 
+void init_colors();
+
+
 } // namespace lingo
 
 

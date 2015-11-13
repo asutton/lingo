@@ -11,7 +11,7 @@ using namespace lingo;
 int 
 main()
 {
-
+  init_colors();
   std::cout << bright_red("error") << ": this is a test" << '\n';
   std::cout << bright_magenta("warning") << ": this is a test" << '\n';
   
