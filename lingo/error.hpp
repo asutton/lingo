@@ -6,9 +6,6 @@
 
 // The error module contains facilities for managing error
 // reporting.
-//
-// TODO: Traverse variadic arguments in order to generate
-// an underscore when requested.
 
 #include "lingo/location.hpp"
 #include "lingo/buffer.hpp"
@@ -22,7 +19,13 @@
 // Expands to a call to the unreachable function and inserts
 // the function and line at which the insertion is called.
 #define lingo_unreachable(msg, args...) \
-  ::lingo::abort("{}:{}: " msg, __FUNCTION__, __LINE__, ## args)
+  ::lingo::abort("{}:{}: " msg, __PRETTY_FUNCTION__, __LINE__, ## args)
+
+
+// Like unreachable except that this indicates a feature
+// that should be defined biut is not.
+#define lingo_unimplemented() \
+  ::lingo::abort("{}:{}: unimplemented", __PRETTY_FUNCTION__, __LINE__)
 
 
 // Expands to a call to the assertion function and inserts
@@ -55,15 +58,15 @@ namespace lingo
 // to prevent users from doing the wrong thing.
 //
 // FIXME: cppformat fails to render strings that include
-// braces. That's not particularly good for compiler. I might
+// braces. That's not particularly good for a compiler. I might
 // need to revert to using something more printf-like.
 template<typename... Args>
 [[noreturn]] 
 inline void
 abort(char const* msg, Args const&... args)
 {
-  throw std::runtime_error("internal compiler error");
-  // throw std::runtime_error(to_string(msg, args...));
+  // throw std::runtime_error("internal compiler error");
+  throw std::runtime_error(format(msg, args...));
 }
 
 
