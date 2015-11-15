@@ -5,6 +5,8 @@ cmake_minimum_required(VERSION 3.0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+include(CheckIncludeFileCXX)
+
 # Project configuration
 project(lingo CXX)
 enable_testing()
@@ -17,6 +19,12 @@ find_package(GMP REQUIRED)
 
 # Boost dependencies
 find_package(Boost 1.55.0 REQUIRED COMPONENTS system filesystem)
+
+# Other dependencies
+check_include_file_cxx(unistd.h HAVE_UNISTD_H)
+if(NOT HAVE_UNISTD_H)
+  message(FATAL_ERROR "${PROJECT_NAME} requires the POSIX C header <unistd.h>.")
+endif()
 
 add_subdirectory(lingo)
 add_subdirectory(test)
