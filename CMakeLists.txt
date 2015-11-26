@@ -26,6 +26,10 @@ if(NOT HAVE_UNISTD_H)
   message(FATAL_ERROR "${PROJECT_NAME} requires the POSIX C header <unistd.h>.")
 endif()
 
+if(NOT TARGET check)
+  add_custom_target(check COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target test)
+endif()
+
 add_subdirectory(lingo)
-add_subdirectory(test)
-add_subdirectory(examples)
+add_subdirectory(test EXCLUDE_FROM_ALL)
+add_subdirectory(examples EXCLUDE_FROM_ALL)
