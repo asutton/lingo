@@ -11,8 +11,9 @@
 
 #include <cstring>
 #include <algorithm>
-#include <string>
 #include <iosfwd>
+#include <string>
+#include <vector>
 
 
 namespace lingo
@@ -23,6 +24,10 @@ namespace lingo
 
 // A string is a sequence of characters.
 using String = std::string;
+
+
+// A vector of strings.
+using String_seq = std::vector<String>;
 
 
 // -------------------------------------------------------------------------- //
@@ -180,15 +185,15 @@ private:
 
 
 // Reference equality
-inline bool 
-operator==(String_view const& a, String_view const& b) 
+inline bool
+operator==(String_view const& a, String_view const& b)
 {
   return a.begin() == b.begin() && a.end() == b.end();
 }
 
 
-inline bool 
-operator!=(String_view const& a, String_view const& b) 
+inline bool
+operator!=(String_view const& a, String_view const& b)
 {
   return !(a == b);
 }
@@ -210,10 +215,10 @@ make_view(String const& s)
 // string views.
 struct String_view_hash
 {
-  std::size_t 
+  std::size_t
   operator()(String_view s) const
-  { 
-    return s.hash(); 
+  {
+    return s.hash();
   }
 };
 
@@ -222,7 +227,7 @@ struct String_view_hash
 // in the symbol table when collisions occur.
 struct String_view_eq
 {
-  bool 
+  bool
   operator()(String_view a, String_view b) const
   {
     return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin());
@@ -238,7 +243,7 @@ struct String_view_eq
 // needed to form a string during lexical analysis.
 //
 // TODO: Allow strings greater than 128 bytes in length.
-// Basically, this entails implementing the small-string 
+// Basically, this entails implementing the small-string
 // optimization.
 class String_builder
 {
@@ -255,7 +260,7 @@ public:
   void put(char const*, char const*);
 
   void clear();
-  
+
 private:
   char buf_[init_size];
   int  len_;
@@ -265,7 +270,7 @@ private:
 inline
 String_builder::String_builder()
   : len_(0)
-{ 
+{
   std::fill(buf_, buf_ + init_size, 0);
 }
 
@@ -324,7 +329,7 @@ String_builder::put(char const* first, char const* last)
 
 
 // Reset the string builder so that it's content
-// is empty. 
+// is empty.
 inline void
 String_builder::clear()
 {
@@ -337,8 +342,8 @@ String_builder::clear()
 //                            String buffer
 
 
-// The string buffer class provides implements a simple 
-// string-based buffer for a stream. The string must not 
+// The string buffer class provides implements a simple
+// string-based buffer for a stream. The string must not
 // have null characters.
 class Stringbuf
 {
@@ -367,18 +372,18 @@ Stringbuf::Stringbuf(String const& s)
 
 // Returns an iterator to the beginning of the string
 // buffer.
-inline char const* 
+inline char const*
 Stringbuf::begin() const
-{ 
-  return buf_.c_str(); 
+{
+  return buf_.c_str();
 }
 
 
 // Returns an iterator past the end of the string buffer.
-inline char const* 
+inline char const*
 Stringbuf::end() const
-{ 
-  return begin() + buf_.size(); 
+{
+  return begin() + buf_.size();
 }
 
 
