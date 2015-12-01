@@ -4,217 +4,275 @@
 #ifndef LINGO_SYMBOL_HPP
 #define LINGO_SYMBOL_HPP
 
-// The symbol module defines a symbol table and related
-// facilities. A symbol is a view of a string in a source
-// file and affiliated data (e.g., bindings).
+#include <lingo/utility.hpp>
+#include <lingo/string.hpp>
 
-#include "lingo/string.hpp"
-#include "lingo/integer.hpp"
-
-#include <cstring>
-#include <list>
-#include <string>
 #include <unordered_map>
+#include <typeinfo>
 
 
 namespace lingo
 {
 
+
 // -------------------------------------------------------------------------- //
-//                                  Symbols
+//                            Symbols
 
-// The unknown token kind. No token must ever have this kind.
-constexpr int unknown_tok = -1;
-
-
-// A Symbol represents a lexeme saved in the symbol table and
-// its associated attributes. The string representation of symbols 
-// are represented as a pair of pointers into a character array.
-// Additional attributes include the kind of token and the token
-// specific data.
-//
-// Note that the symbol owns the pointer to its string view and is
-// responsible for de-allocating that memory.
-//
-// The symbol also associates a token kind, allowing for efficient
-// token construction. Most symbols are inserted with the token
-// kind already known. However, for tokens like identifiers, integers,
-// and real values, the token kind must be assigned later.
-// 
-struct Symbol
+// The base class of all symbols of a language. By itself, this 
+// class is capable of representing symbols that have no other 
+// attributes. Examples include punctuators and operators.
+class Symbol
 {
-  Symbol(String const& s, int k)
-    : str(s), kind(k)
+  friend struct Symbol_table;
+
+public:
+  Symbol(int k)
+    : str_(nullptr), tok_(k)
   { }
 
-  String_view view() const { return make_view(str); }
+  virtual ~Symbol() { }
 
-  String str;  // The string view
-  int    kind; // The kind of token
+  String const& spelling() const { return *str_; }
+  int           token() const    { return tok_; }
+
+private:
+  String const* str_; // The textual representation
+  int           tok_; // The associated token kind
 };
 
 
-inline bool
-operator==(Symbol const& a, Symbol const& b)
+// Represents all identifiers.
+//
+// TODO: Track the innermost binding of the identifier?
+struct Identifier_sym : Symbol
 {
-  return a.str == b.str;
-}
+  Identifier_sym(int k)
+    : Symbol(k)
+  { }
+};
 
 
-inline bool
-operator!=(Symbol const& a, Symbol const& b)
+// Represents the integer symbols true and false.
+struct Boolean_sym : Symbol
 {
-  return a.str != b.str;
-}
+  Boolean_sym(int k, bool b)
+    : Symbol(k), value_(b)
+  { }
+
+  bool value() const { return value_; }
+
+  bool value_;
+};
+
+
+// Represents all integer symbols.
+//
+// TODO: Develop and use a good arbitrary precision
+// integer for this representation.
+//
+// TOOD: Track the integer base? Technically, that
+// can be inferred by the spelling, but it might be
+// useful to keep cached.
+struct Integer_sym : Symbol
+{
+  Integer_sym(int k, int n)
+    : Symbol(k), value_(n)
+  { }
+
+  int value() const { return value_; }
+
+  int value_;
+};
+
+
+// Character symbols are represented by their integer
+// encoding in the execution character set. That
+// defaults to extended ASCII. Note that this internall
+// represnted as a system integer for simplicity.
+//
+// TODO: Support wide character encoding in ISO 10646
+// (Unicode).
+//
+// TODO: Support configuration of the execution character
+// set.
+struct Character_sym : Symbol
+{
+  Character_sym(int k, int n)
+    : Symbol(k), value_(n)
+  { }
+
+  int value() const { return value_; }
+
+  int value_;
+};
+
+
+// A string symbol contains the representation of the
+// string literal in the execution character set.
+//
+// TODO: Supporting wide string literals would effectively
+// require this to be a union of narrow and wide string
+// representations.
+struct String_sym : Symbol
+{
+  String_sym(int k, String const& s)
+    : Symbol(k), value_(s)
+  { }
+
+  String const& value() const { return value_; }
+
+  String value_;
+};
+
+
+// Streaming
+std::ostream& operator<<(std::ostream&, Symbol const&);
 
 
 // -------------------------------------------------------------------------- //
 //                           Symbol table
 
-// A symbol table stores unique representations of strings in
-// a program and their affiliated information (e.g., token kind, 
-// etc.). The symbol table also supports efficient insertion and 
-// lookup of those strings.
-//
-// The symbol table is implemented as a linked list of symbols 
-// with a side table to support efficient lookup.
-//
-// TODO: Use a bump alloctor for the hash table and the strings.
-// Because the table is only ever cleared on program exit, it
-// would be far more effecient to simply blow away all pages
-// allocated to the symbol table.
-class Symbol_table
-{
-  using Hash = String_view_hash;
-  using Eq = String_view_eq;
-  using Map = std::unordered_map<String_view, Symbol*, Hash, Eq>;
 
-public:
+// The symbol table maintains a mapping of
+// unique string values to their corresponding
+// symbols.
+struct Symbol_table : std::unordered_map<std::string, Symbol*>
+{
   ~Symbol_table();
 
-  Symbol& insert(String_view, int);
-  Symbol& insert(char const*, int);
-  Symbol& insert(char const*, char const*, int);
+  template<typename T, typename... Args>
+  Symbol* put(int, String const&, Args&&...);
 
-  Symbol* lookup(String_view) const;
-  Symbol* lookup(char const*) const;
-  Symbol* lookup(char const*, char const*) const;
+  template<typename T, typename... Args>
+  Symbol* put(int, char const*, char const*, Args&&...);
 
-private:
-  Map  map_;
+  Symbol* put_symbol(int, String const&);
+  Symbol* put_identifier(int, String const&);
+  Symbol* put_boolean(int, String const&, bool);
+  Symbol* put_integer(int, String const&, int);
+  Symbol* put_character(int, String const&, int);
+  Symbol* put_string(int, String const&, String const&);
+
+  Symbol const* get(String const&) const;
+  Symbol const* get(char const*) const;
 };
 
 
-inline Symbol&
-Symbol_table::insert(char const* s, int k)
+// Delete allocated resources.
+inline
+Symbol_table::~Symbol_table()
 {
-  return insert(String_view(s), k);
+  for (auto const& x : *this)
+    delete x.second;
 }
 
 
-inline Symbol& 
-Symbol_table::insert(char const* f, char const* l, int k)
+// Insert a new symbol into the table. The spelling of the symbol 
+// is given by the string s and the attributes are given in args.
+//
+// Note that the type of the symbol must be given explicitly, and 
+// it must derive from the Symbol class.
+//
+// If the symbol already exists, no insertion is performed. Note 
+// that this must not attempt to re-define the symbol as one of
+// a different kind. That is, the dynamic type of the existing
+// symbol shall be the same as T.
+template<typename T, typename... Args>
+Symbol*
+Symbol_table::put(int k, String const& s, Args&&... args)
 {
-  return insert(String_view(f, l), k);
+  auto x = emplace(s, nullptr);
+  auto iter = x.first;
+  Symbol*& sym = iter->second;
+  if (x.second) {
+    sym = new T(k, std::forward<Args>(args)...);
+    sym->str_ = &iter->first;
+  } else {
+    lingo_assert(typeid(T) != typeid(*sym));
+  }
+  return iter->second;
+}
+
+
+// Insert a symbol with the spelling [first, last) and the 
+// properties in args...
+template<typename T, typename... Args>
+inline Symbol*
+Symbol_table::put(int k, char const* first, char const* last, Args&&... args)
+{
+  String s(first, last);
+  return this->template put<T>(k, s, std::forward<Args>(args)...);
 }
 
 
 inline Symbol*
-Symbol_table::lookup(char const* s) const
+Symbol_table::put_symbol(int k, String const& s)
 {
-  return lookup(String_view(s));
+  return put<Symbol>(k, s);
 }
 
 
-inline Symbol* 
-Symbol_table::lookup(char const* f, char const* l) const
-{
-  return lookup(String_view(f, l));
-}
-
-
-Symbol_table& symbols();
-
-
-// Returns the symbol correspondng to `str`, inserting a new
-// symbol if it is not already present. 
-inline Symbol&
-get_symbol(char const* str, int k = unknown_tok)
-{
-  return symbols().insert(str, k);
-}
-
-
-// Returns the symbol correspondng to the string in `[first, last)`.
-// Insert the symbol if it does not exist.
-inline Symbol&
-get_symbol(char const* first, char const* last, int k = unknown_tok)
-{
-  return symbols().insert(first, last, k);
-}
-
-
-// Returns the symbol corresponding to the stirng `s`. Insert
-// the symbol if it does not exist.
-inline Symbol&
-get_symbol(String_view s, int k = unknown_tok)
-{
-  return symbols().insert(s, k);
-}
-
-
-// Returns the symbol corresponding to the stirng `s`. Insert
-// the symbol if it does not exist.
-inline Symbol&
-get_symbol(String const& s, int k = unknown_tok)
-{
-  return symbols().insert(make_view(s), k);
-}
-
-
-// Return a pointer to a unique representation of the
-// given string. Inserts a symbol into the symbol table
-// where appropreate.
-inline String const*
-get_string(char const* str)
-{
-  return &get_symbol(str).str;
-}
-
-
-// Return a the symbol for the given string or nullptr if the
-// symbol is not in the table.
 inline Symbol*
-lookup_symbol(char const* s)
+Symbol_table::put_identifier(int k, String const& s)
 {
-  return symbols().lookup(s);
+  return put<Identifier_sym>(k, s);
 }
 
 
-// Return a the symbol for the given string or nullptr if the
-// symbol is not in the table.
 inline Symbol*
-lookup_symbol(char const* first, char const* last)
+Symbol_table::put_boolean(int k, String const& s, bool b)
 {
-  return symbols().lookup(first, last);
+  return put<Boolean_sym>(k, s, b);
 }
 
 
-// Return a the symbol for the given string or nullptr if the
-// symbol is not in the table.
 inline Symbol*
-lookup_symbol(String_view s)
+Symbol_table::put_integer(int k, String const& s, int n)
 {
-  return symbols().lookup(s);
+  return put<Integer_sym>(k, s, n);
 }
 
 
-// Return a the symbol for the given string or nullptr if the
-// symbol is not in the table.
 inline Symbol*
-lookup_symbol(String const& s)
+Symbol_table::put_character(int k, String const& s, int c)
 {
-  return symbols().lookup(make_view(s));
+  return put<Integer_sym>(k, s, c);
+}
+
+
+// Insert a string symbol whose spelling in the basic
+// character set is given in s1, and whose spelling in the
+// execution character set is given in s2.
+inline Symbol*
+Symbol_table::put_string(int k, String const& s1, String const& s2)
+{
+  return put<String_sym>(k, s1, s2);
+}
+
+
+// Returns the symbol with the given spelling or
+// nullptr if no such symbol exists.
+inline Symbol const*
+Symbol_table::get(String const& s) const
+{
+  auto iter = find(s);
+  if (iter != end())
+    return iter->second;
+  else
+    return nullptr;
+}
+
+
+// Returns the symbol with the given spelling or
+// nullptr if no such symbol exists.
+inline Symbol const*
+Symbol_table::get(char const* s) const
+{
+  auto iter = find(s);
+  if (iter != end())
+    return iter->second;
+  else
+    return nullptr;
 }
 
 

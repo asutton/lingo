@@ -18,7 +18,7 @@ namespace lingo
 
 // Returns a reference to the current character. Note
 // that the stream must not be at the end of the file.
-char const&
+char
 Character_stream::peek() const
 {
   lingo_assert(!eof());
@@ -43,14 +43,10 @@ Character_stream::peek(int n) const
 // the stream position to the next character. This also
 // checks to see if we've advanced over a newline and
 // updates the source location as needed.
-char const&
+char
 Character_stream::get()
 {
   lingo_assert(!eof());
-
-  // Save the current location as the input location.
-  set_input_location(location());
-
   return *first_++;
 }
 

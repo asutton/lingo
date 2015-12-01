@@ -4,24 +4,26 @@
 #ifndef LINGO_UTILITY_HPP
 #define LINGO_UTILITY_HPP
 
-#include "lingo/string.hpp"
+#include <lingo/assert.hpp>
 
+#include <string>
 #include <typeinfo>
+#include <utility>
 
 
 namespace lingo
 {
 
 // -------------------------------------------------------------------------- //
-//                    String representation of types
+// String representation of types
 
-String 
+std::string
 type_str(std::type_info const&);
 
 
 // Returns the name of an object of type t.
 template<typename T>
-inline String 
+inline std::string
 type_str(T const& t)
 {
   return type_str(typeid(t));
@@ -29,8 +31,82 @@ type_str(T const& t)
 
 
 // -------------------------------------------------------------------------- //
-//                            Generic visitors
+// Dynamic type information
 
+
+// Returns true if the object pointed to by `u` has
+// the dynamic type `T`.
+template<typename T, typename U>
+inline bool
+is(U const* u)
+{
+  return dynamic_cast<T const*>(u);
+}
+
+
+// Statically cast a pointer to a Node of type T to a
+// pointer to a Node of type U. This is not a checked
+// operation (except in debug mode).
+//
+// Note that this allows null and error nodes to be
+// interpreted as nodes of the given type (as their
+// values are considered common to all).
+template<typename T, typename U>
+inline T*
+cast(U* u)
+{
+  lingo_assert(u ? is<T>(u) : true);
+  return static_cast<T*>(u);
+}
+
+
+template<typename T, typename U>
+inline T const*
+cast(U const* u)
+{
+  lingo_assert(u ? is<T>(u) : true);
+  return static_cast<T const*>(u);
+}
+
+
+// Returns `u` with type `T*` iff the object pointed
+// to by `u` has dynamic type `T`.
+template<typename T, typename U>
+inline T*
+as(U* u)
+{
+  return dynamic_cast<T*>(u);
+}
+
+
+template<typename T, typename U>
+inline T const*
+as(U const* u)
+{
+  return dynamic_cast<T const*>(u);
+}
+
+
+// Return a non-const pointer to the term. This is used
+// to modify a term post-initializatoin (which should
+// be rare).
+template<typename T>
+inline T*
+modify(T const* t)
+{
+  return const_cast<T*>(t);
+}
+
+
+// -------------------------------------------------------------------------- //
+// Source code locations
+
+// A locus is a line/column offset within a file. 
+using Locus = std::pair<int, int>;
+
+
+// -------------------------------------------------------------------------- //
+// Generic visitors
 
 struct void_tag { };
 struct non_void_tag { };

@@ -10,12 +10,12 @@
 namespace lingo
 {
 
-String
+std::string
 type_str(std::type_info const& t)
 {
   std::size_t n = 0;
   char* buf = abi::__cxa_demangle(t.name(), nullptr, &n, 0);
-  String result(buf);
+  std::string result(buf);
   std::free(buf);
   return result;
 }

@@ -41,13 +41,13 @@ enum Diagnostic_kind
 // TODO: This could be better designed.
 struct Diagnostic_info
 {
-  Diagnostic_info(Bound_location loc)
+  Diagnostic_info(Location loc)
     : kind(loc_info)
   {
     data.loc = loc;
   }
 
-  Diagnostic_info(Bound_span span)
+  Diagnostic_info(Span span)
     : kind(span_info)
   {
     data.span = span;
@@ -64,8 +64,8 @@ struct Diagnostic_info
   union Data
   {
     Data() { }
-    Bound_location loc;
-    Bound_span     span;
+    Location loc;
+    Span     span;
   };
 
   Kind kind;
@@ -87,8 +87,8 @@ struct Diagnostic_info
 // an error or warning.
 struct Diagnostic
 {
-  Diagnostic(Diagnostic_kind, Bound_location, String const&);
-  Diagnostic(Diagnostic_kind, Bound_span, String const&);
+  Diagnostic(Diagnostic_kind, Location, String const&);
+  Diagnostic(Diagnostic_kind, Span, String const&);
 
   Diagnostic_kind kind;
   Diagnostic_info info;
@@ -139,30 +139,14 @@ void reset_diagnostics();
 int error_count();
 
 
-void error(Bound_location, String const&);
-void error(Bound_span, String const&);
+void error(Location, String const&);
+void error(Span, String const&);
 
-void warning(Bound_location, String const&);
-void warning(Bound_span, String const&);
+void warning(Location, String const&);
+void warning(Span, String const&);
 
-void note(Bound_location, String const&);
-void note(Bound_span, String const&);
-
-
-// Resolve a bound location. This is used internally. Do not call.
-inline Bound_location
-resolve(Buffer const& buf, Location loc)
-{
-  return buf.location(loc);
-}
-
-
-// Resolve a bound text span. This is used internally. Do not call.
-inline Bound_span
-resolve(Buffer const& buf, Span span)
-{
-  return buf.span(span);
-}
+void note(Location, String const&);
+void note(Span, String const&);
 
 
 // -------------------------------------------------------------------------- //
@@ -196,123 +180,97 @@ resolve(Buffer const& buf, Span span)
 // TODO: Find a better strategy for diagnosing multi-line errors.
 
 
-// Emit an error diagnostic.
-template<typename Caret, typename... Ts>
-inline void
-error(Buffer const& buf, Caret caret, char const* msg, Ts const&... args)
-{
-  error(resolve(buf, caret), format(msg, to_string(args)...));
-}
-
-
 // Emit an error diagnostic using the current buffer to resolve
 // the source code location.
-template<typename... Ts>
+template<typename... Args>
 inline void
-error(Location loc, char const* msg, Ts const&... args)
+error(Location loc, char const* msg, Args&&... args)
 {
-  error(input_buffer(), loc, msg, args...);
+  error(loc, format(msg, std::forward<Args>(args)...));
 }
 
 
 // Emit an error diagnostic using the current buffer to resolve
 // the source code span.
-template<typename... Ts>
+template<typename... Args>
 inline void
-error(Span span, char const* msg, Ts const&... args)
+error(Span span, char const* msg, Args&&... args)
 {
-  error(input_buffer(), span, msg, args...);
+  error(span, format(msg, std::forward<Args>(args)...));
 }
 
 
-// Emit an error diagnostic at the current input location.
-template<typename... Ts>
+// Emit an informational diagnostic at the current input location.
+template<typename... Args>
 inline void
-error(char const* msg, Ts const&... args)
+error(char const* msg, Args&&... args)
 {
-  error(input_buffer(), input_location(), msg, args...);
+  error(Location(), format(msg, std::forward<Args>(args)...));
 }
 
 
 // -------------------------------------------------------------------------- //
 //                          Warning messages
 
-// Emit a warning diagnostic.
-template<typename Caret, typename... Ts>
+
+// Emit a warning diagnostic using the current buffer to resolve
+// the source code location.
+template<typename... Args>
 inline void
-warning(Buffer& buf, Caret caret, char const* msg, Ts const&... args)
+warning(Location loc, char const* msg, Args&&... args)
 {
-  warning(resolve(buf, caret), format(msg, to_string(args)...));
+  warning(loc, format(msg, std::forward<Args>(args)...));
 }
 
 
 // Emit a warning diagnostic using the current buffer to resolve
 // the source code location.
-template<typename... Ts>
+template<typename... Args>
 inline void
-warning(Location loc, char const* msg, Ts const&... args)
+warning(Span span, char const* msg, Args&&... args)
 {
-  warning(input_buffer(), loc, msg, args...);
+  warning(span, format(msg, std::forward<Args>(args)...));
 }
 
 
-// Emit a warning diagnostic using the current buffer to resolve
-// the source code location.
-template<typename... Ts>
+// Emit an informational diagnostic at the current input location.
+template<typename... Args>
 inline void
-warning(Span span, char const* msg, Ts const&... args)
+warning(char const* msg, Args&&... args)
 {
-  warning(input_buffer(), span, msg, args...);
-}
-
-
-// Emit a warning diagnostic at the current input location.
-template<typename... Ts>
-inline void
-warning(char const* msg, Ts const&... args)
-{
-  warning(input_buffer(), input_location(), msg, args...);
+  warning(Location(), format(msg, std::forward<Args>(args)...));
 }
 
 
 // -------------------------------------------------------------------------- //
 //                          Notes
 
-// Emit a diagnostic note.
-template<typename Caret, typename... Ts>
+// Emit a note diagnostic using the current buffer to resolve
+// the source code location.
+template<typename... Args>
 inline void
-note(Buffer& buf, Caret caret, char const* msg, Ts const&... args)
+note(Location loc, char const* msg, Args&&... args)
 {
-  note(resolve(buf, caret), format(msg, to_string(args)...));
+  note(loc, format(msg, std::forward<Args>(args)...));
 }
 
 
 // Emit a note diagnostic using the current buffer to resolve
 // the source code location.
-template<typename... Ts>
+template<typename... Args>
 inline void
-note(Location loc, char const* msg, Ts const&... args)
+note(Span span, char const* msg, Args&&... args)
 {
-  note(input_buffer(), loc, msg, args...);
-}
-
-
-// Emit a note diagnostic using the current buffer to resolve
-// the source code location.
-template<typename... Ts>
-inline void
-note(Span span, char const* msg, Ts const&... args)
-{
-  note(input_buffer(), span, msg, args...);
+  note(span, format(msg, std::forward<Args>(args)...));
 }
 
 
 // Emit an informational diagnostic at the current input location.
-template<typename... Ts>
+template<typename... Args>
 inline void
-note(char const* msg, Ts const&... args)
+note(char const* msg, Args&&... args)
 {
-  note(input_buffer(), input_location(), msg, args...);
+  note(Location(), format(msg, std::forward<Args>(args)...));
 }
 
 

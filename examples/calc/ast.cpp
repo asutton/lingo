@@ -26,7 +26,9 @@ Int::span() const
 Span
 Unary::span() const
 {
-  return {location(), arg()->span().end()};
+  Location start = location();
+  Location end = arg()->span().end_location();
+  return {start, end};
 }
 
 
@@ -34,7 +36,9 @@ Unary::span() const
 Span
 Binary::span() const
 {
-  return {left()->span().start(), right()->span().end()};
+  Location start = left()->span().start_location();
+  Location end = right()->span().end_location();
+  return {start, end};
 }
 
 

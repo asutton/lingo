@@ -18,6 +18,7 @@ add_library(lingo
   memory.cpp
   integer.cpp
   utility.cpp
+  line.cpp
   location.cpp
   buffer.cpp
   file.cpp
@@ -27,7 +28,5 @@ add_library(lingo
   character.cpp
   symbol.cpp
   token.cpp
-  algorithm.cpp
-  lexing.cpp
-  parsing.cpp)
+  algorithm.cpp)
 target_link_libraries(lingo ${GMP_LIBRARIES} ${Boost_LIBRARIES})

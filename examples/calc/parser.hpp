@@ -4,8 +4,9 @@
 #ifndef CALC_PARSER_HPP
 #define CALC_PARSER_HPP
 
-#include "lingo/parsing.hpp"
-#include "lingo/buffer.hpp"
+
+#include "lexer.hpp"
+
 
 namespace calc
 {
@@ -21,18 +22,36 @@ struct Expr;
 // tokens. This supports the resolution of source code locations.
 struct Parser
 {
-  Expr const* on_int_expression(Token const*);
-  Expr const* on_unary_expression(Token const*, Expr const*);
-  Expr const* on_binary_expression(Token const*, Expr const*, Expr const*);
+  Parser(Token_stream& ts)
+    : ts_(ts)
+  { }
+
+  Expr const* operator()();
+
+  Expr const* paren();
+  Expr const* primary();
+  Expr const* unary();
+  Expr const* multiplicative();
+  Expr const* additive();
+  Expr const* binary();
+  Expr const* expr();
+
+  Expr const* on_int(Token);
+  Expr const* on_unary(Token, Expr const*);
+  Expr const* on_binary(Token, Expr const*, Expr const*);
+
+  Token_kind lookahead() const;
+  Token_kind lookahead(int) const;
+  Token      match(Token_kind);
+  Token      match_if(Token_kind);
+  Token      require(Token_kind);
+  Token      accept();
+
+  Token_stream& ts_;
 };
 
 
-Expr const* parse(Token_stream&);
-Expr const* parse(Buffer&);
-Expr const* parse(std::string const&);
-
-
-void init_grammar();
+Expr const* parse(String const&);
 
 
 } // nammespace calc

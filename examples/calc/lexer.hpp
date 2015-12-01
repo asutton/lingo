@@ -1,3 +1,5 @@
+// Copyright (c) 2015 Andrew Sutton
+// All rights reserved
 
 #ifndef CALC_LEXER_HPP
 #define CALC_LEXER_HPP
@@ -6,10 +8,9 @@
 // language and the machine used to recognize those tokens 
 // in input source.
 
-#include "lingo/character.hpp"
-#include "lingo/lexing.hpp"
+#include <lingo/character.hpp>
+#include <lingo/token.hpp>
 
-#include <string>
 
 namespace calc
 {
@@ -18,9 +19,9 @@ using namespace lingo;
 
 // -------------------------------------------------------------------------- //
 //                              Tokens
-
 enum Token_kind
 {
+  error_tok = -1,
   lparen_tok,
   rparen_tok,
   plus_tok,
@@ -32,13 +33,7 @@ enum Token_kind
 };
 
 
-void init_tokens();
-
-
-// -------------------------------------------------------------------------- //
-//                              Elaboration
-
-Integer as_integer(Token const&);
+char const* get_spelling(Token_kind);
 
 
 // -------------------------------------------------------------------------- //
@@ -53,21 +48,35 @@ struct Lexer
   using argument_type = char;
   using result_type = Token;
 
+  Lexer(Symbol_table& s, Character_stream& cs, Token_stream& ts)
+    : syms_(s), cs_(cs), ts_(ts)
+  { }
+
+  void operator()();
+
+  // Scanners
+  Token scan();
+  Token eof();
+  Token symbol1();
+  Token integer();
+
+  // Consumers
+  void error();
+  void space();
+  void digit();
+
   // Semantic actions.
-  Token on_lparen(Location, char const*);
-  Token on_rparen(Location, char const*);
+  Token on_symbol();
+  Token on_integer();
 
-  Token on_plus(Location, char const*);
-  Token on_minus(Location, char const*);
-  Token on_star(Location, char const*);
-  Token on_slash(Location, char const*);
-  Token on_percent(Location, char const*);
+  void save();
 
-  Token on_integer(Location, char const*, char const*, int);
+  Symbol_table&     syms_;
+  Character_stream& cs_;
+  Token_stream&     ts_;
+  String_builder    str_;
+  Location          loc_;
 };
-
-
-Token_list lex(Character_stream&);
 
 
 } // namespace calc

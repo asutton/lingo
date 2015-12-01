@@ -58,12 +58,12 @@ void
 show_location(std::ostream& os, Diagnostic_info const& info)
 {
   if (info.kind == Diagnostic_info::loc_info) {
-    Bound_location const& loc = info.data.loc;
-    if (loc.is_valid())
+    Location const& loc = info.data.loc;
+    if (loc)
       os << font_location << loc << font_end << ':';
   } else {
-    Bound_span const& span = info.data.span;
-    if (span.is_valid())
+    Span const& span = info.data.span;
+    if (span)
       os << font_location << span << font_end << ':';
   }
 }
@@ -80,13 +80,13 @@ char const* indent_ = "|    ";
 //
 // TODO: Show line numbers in the context?
 void
-show_line(std::ostream& os, Bound_location const& loc)
+show_line(std::ostream& os, Location const& loc)
 {
   Line const& line = loc.line();
   os << indent_ << line.str() << '\n';
   
   // Show the caret, but only if if the caret is valid.
-  int caret = loc.column_no() - 1;
+  int caret = loc.column_number() - 1;
   if (caret < 0)
     return;
   os << indent_ << std::string(caret, ' ');
@@ -96,7 +96,7 @@ show_line(std::ostream& os, Bound_location const& loc)
 
 // TODO: What if we have multiple lines in the span?
 void
-show_span(std::ostream& os, Bound_span const& span)
+show_span(std::ostream& os, Span const& span)
 {
   Line const& line = span.line();
   os << indent_ << line.str() << '\n';
@@ -116,8 +116,8 @@ show_span(std::ostream& os, Bound_span const& span)
 
   // Show the underscore, but only if the start position
   // is valid.
-  int start = span.start_column_no() - 1;
-  int end = span.end_column_no() - 1;
+  int start = span.start_column_number() - 1;
+  int end = span.end_column_number() - 1;
   if (start < 0)
     return;
   os << indent_ << std::string(start, ' ');
@@ -145,13 +145,13 @@ void
 show_context(std::ostream& os, Diagnostic_info const& info)
 {
   if (info.kind == Diagnostic_info::loc_info) {
-    Bound_location const& loc = info.data.loc;
-    if (loc.is_valid()) {
+    Location const& loc = info.data.loc;
+    if (loc) {
       show_line(os, loc);
     }
   } else {
-    Bound_span const& span = info.data.span;
-    if (span.is_valid())
+    Span const& span = info.data.span;
+    if (span)
       show_span(os, span);
   }
 }
@@ -185,12 +185,12 @@ Diagnostic_context root_;
 
 
 
-Diagnostic::Diagnostic(Diagnostic_kind k, Bound_location l, String const& m)
+Diagnostic::Diagnostic(Diagnostic_kind k, Location l, String const& m)
   : kind(k), info(l), msg(m)
 { }
 
 
-Diagnostic::Diagnostic(Diagnostic_kind k, Bound_span s, String const& m)
+Diagnostic::Diagnostic(Diagnostic_kind k, Span s, String const& m)
   : kind(k), info(s), msg(m)
 { }
 
@@ -270,7 +270,7 @@ error_count()
 
 // Emit an error diagnostic at the given source location.
 void
-error(Bound_location loc, String const& msg)
+error(Location loc, String const& msg)
 {
   diags_.top()->emit({error_diag, loc, msg});
 }
@@ -278,7 +278,7 @@ error(Bound_location loc, String const& msg)
 
 // Emit an error diagnostic over the given text span.
 void
-error(Bound_span span, String const& msg)
+error(Span span, String const& msg)
 {
   diags_.top()->emit({error_diag, span, msg});
 }
@@ -289,7 +289,7 @@ error(Bound_span span, String const& msg)
 // TODO: Allow warnings to be treated as errors? This
 // requires additional configuration information.
 void
-warning(Bound_location loc, String const& msg)
+warning(Location loc, String const& msg)
 {
   diags_.top()->emit({warning_diag, loc, msg});
 }
@@ -297,7 +297,7 @@ warning(Bound_location loc, String const& msg)
 
 // Emit a warning diagnost over the given text span.
 void
-warning(Bound_span span, String const& msg)
+warning(Span span, String const& msg)
 {
   diags_.top()->emit({warning_diag, span, msg});
 }
@@ -309,14 +309,14 @@ warning(Bound_span span, String const& msg)
 // TODO: Allow the attachment of notes to other diagnostic 
 // objects, allowing them to be nested rather than flat.
 void 
-note(Bound_location loc, String const& msg)
+note(Location loc, String const& msg)
 {
   diags_.top()->emit({note_diag, loc, msg});
 }
 
 
 void
-note(Bound_span span, String const& msg)
+note(Span span, String const& msg)
 {
   diags_.top()->emit({note_diag, span, msg});
 }

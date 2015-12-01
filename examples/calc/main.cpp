@@ -13,8 +13,29 @@
 #include <iostream>
 
 
+
+namespace calc
+{
+
+Symbol_table syms;
+
+} 
+
 using namespace lingo;
 using namespace calc;
+
+
+// Initialize the token set used by the language.
+void
+init_tokens(Symbol_table& syms)
+{
+  syms.put_symbol(lparen_tok, "(");
+  syms.put_symbol(rparen_tok, ")");
+  syms.put_symbol(plus_tok, "+");
+  syms.put_symbol(minus_tok, "-");
+  syms.put_symbol(star_tok, "*");
+  syms.put_symbol(slash_tok, "/");
+}
 
 
 std::istream&
@@ -28,10 +49,9 @@ prompt(std::string& line)
 int 
 main()
 {
-  init_tokens();
-  init_grammar();
-
+  init_tokens(syms);
   evaluation_mode(eval_mode);
+
 
   std::string line;
   while (prompt(line)) {
@@ -40,9 +60,6 @@ main()
 
     // Construct a buffer for the line.
     Buffer buf(line);
-    
-    // Establish the input context.
-    Input_context cxt(buf);
 
     // If the input contains a directive, then process
     // that and continue.
@@ -51,17 +68,20 @@ main()
       continue;
     }
 
-    // Transform character input into tokens.
+    Token_stream ts;
     Character_stream cs(buf);
-    Token_list toks = lex(cs);
+    Lexer lex(syms, cs, ts);
+    Parser parse(ts);
+    
+    // Transform characters into tokens.
+    lex();
     if (error_count()) {
       reset_diagnostics();
       continue;
     }
 
     // Transform tokens into abstract syntax.
-    Token_stream ts(toks);
-    Expr const* expr = parse(ts);
+    Expr const* expr = parse();
     if (error_count()) {
       reset_diagnostics();
       continue;
