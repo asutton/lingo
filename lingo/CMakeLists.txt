@@ -27,6 +27,5 @@ add_library(lingo
   debug.cpp
   character.cpp
   symbol.cpp
-  token.cpp
-  algorithm.cpp)
+  token.cpp)
 target_link_libraries(lingo ${GMP_LIBRARIES} ${Boost_LIBRARIES})
