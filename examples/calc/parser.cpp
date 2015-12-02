@@ -126,7 +126,6 @@ Parser::primary()
     return on_int(tok);
   if (lookahead() == lparen_tok)
     return paren();
-
   error(ts_.location(), "expected primary-expression");
   throw Parse_error("primary");
 }

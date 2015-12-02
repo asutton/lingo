@@ -80,18 +80,20 @@ main()
         continue;
       }
 
-      // FIXME: This is an error. Why didn't we fail before.
-      if (!expr) {
-        std::cout << "internal error: parsing failed\n";
+      // This isn't an error. It's essentially an empty
+      // sequence of tokens.
+      if (!expr)
         continue;
-      }
 
       if (is_step_mode())
         step_eval(expr);
       else      
         std::cout << expr << " == " << evaluate(expr) << '\n';
-    } catch (Parse_error& err) {
-      // Just continue processing.
+    } 
+    catch (Parse_error& err) {
+      // Clear the diagnostic count and resume
+      // taking input and parsing.
+      reset_diagnostics();
     }
   }
 }

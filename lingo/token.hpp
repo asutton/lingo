@@ -8,6 +8,7 @@
 #include <lingo/location.hpp>
 
 #include <list>
+#include <iosfwd>
 
 
 namespace lingo
@@ -150,6 +151,9 @@ Token::string_symbol() const
 }
 
 
+std::ostream& operator<<(std::ostream&, Token);
+
+
 // -------------------------------------------------------------------------- //
 // Token buffer
 
@@ -199,7 +203,7 @@ public:
   // of a stream position.
   Position position() const;
 
-private:
+// private:
   Tokenbuf buf_;
   Position pos_;
 };
