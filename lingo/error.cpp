@@ -1,70 +1,33 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "lingo/error.hpp"
+#include "error.hpp"
+#include "io.hpp"
 
 #include <iostream>
 #include <stdexcept>
 #include <stack>
 
+
 namespace lingo
 {
 
-// Color support.
 namespace
 {
 
-// FIXME: This is not especially good. We can probably do
-// better in tems of selecting font colors. In fact, I'm
-// sure this can be *much* better. 
-
-// These are designed to be concatenated during preprocessing
-
-#define font_start   "\033["
-#define font_end     "\033[0m"
-
-#define font_normal     "00" // No color, bold or underline
-#define font_bold       "01" // Bold
-#define font_underscore "04" // Underscore
-
-#define font_black      "30" // Black text
-#define font_red        "31" // Red text
-#define font_green      "32" // Green text
-#define font_yellow     "33" // Yellow text
-#define font_blue       "34" // Blue text
-#define font_magenta    "35" // Magenta text
-#define font_cyan       "36" // Cyan text
-#define font_white      "37" // White text
-
-
-// Generate the common start of diagnostic headers.
-#define fmt_diagnostic(color) font_start font_bold ";" font_ ## color "m"
-
-
-// Start coloring font strings
-#define font_error      fmt_diagnostic(red)
-#define font_warning    fmt_diagnostic(magenta)
-#define font_note       fmt_diagnostic(cyan)
-
-
-// Coloring for source code locations and carets
-#define font_location   font_start font_bold "m"
-#define font_caret      font_start font_bold ";" font_cyan "m"
- 
-
-// Print the source code location for a bound location or
-// span.
+// Print the source code location for a bound location 
+// or span.
 void
 show_location(std::ostream& os, Diagnostic_info const& info)
 {
   if (info.kind == Diagnostic_info::loc_info) {
     Location const& loc = info.data.loc;
     if (loc)
-      os << font_location << loc << font_end << ':';
+      os << bright_white(loc) << ':';
   } else {
     Span const& span = info.data.span;
     if (span)
-      os << font_location << span << font_end << ':';
+      os << bright_white(span) << ':';
   }
 }
 
@@ -90,7 +53,7 @@ show_line(std::ostream& os, Location const& loc)
   if (caret < 0)
     return;
   os << indent_ << std::string(caret, ' ');
-  os << font_caret << '^' << font_end << '\n';
+  os << bright_cyan('^') << '\n';
 }
 
 
@@ -121,7 +84,7 @@ show_span(std::ostream& os, Span const& span)
   if (start < 0)
     return;
   os << indent_ << std::string(start, ' ');
-  os << font_caret << std::string(end - start, '~') << font_end << '\n';
+  os << bright_cyan(std::string(end - start, '~')) << '\n';
 }
 
 
@@ -132,9 +95,9 @@ std::ostream&
 operator<<(std::ostream& os, Diagnostic_kind k)
 {
   switch (k) {
-  case error_diag: return os << font_error "error" font_end;
-  case warning_diag: return os << font_warning "warning" font_end;
-  case note_diag: return os << font_note "note" << font_end;
+  case error_diag: return os << bright_red("error");
+  case warning_diag: return os << bright_magenta("warning");
+  case note_diag: return os << bright_cyan("note");
   default: break;
   }
   lingo_unreachable("unknown diagnostic kind '{}'", (int)k);

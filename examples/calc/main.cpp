@@ -7,8 +7,9 @@
 #include "directive.hpp"
 #include "step.hpp"
 
-#include "lingo/error.hpp"
-#include "lingo/memory.hpp"
+#include <lingo/error.hpp>
+#include <lingo/memory.hpp>
+#include <lingo/io.hpp>
 
 #include <iostream>
 
@@ -41,10 +42,10 @@ prompt(std::string& line)
 int 
 main()
 {
+  init_colors();
   init_tokens();
+
   evaluation_mode(eval_mode);
-
-
   std::string line;
   while (prompt(line)) {
     if (line.empty())
