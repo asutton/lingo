@@ -44,7 +44,7 @@ public:
 
   // Locations
   int      offset() const   { return first_ - base_; }
-  Location location() const { return Location(offset()); }
+  Location location() const { return Location(&buf_, offset()); }
 
   // Buffer
   Buffer const& buffer() const { return buf_; }

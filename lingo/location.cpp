@@ -127,8 +127,11 @@ operator<<(std::ostream& os, Location const& loc)
     return os;
   if (loc.file())
     os << loc.file()->path().string() << ":";
-  Locus l = loc.locus();
-  return os << l.first << ':' << l.second;
+  if (loc.buffer()) {
+    Locus l = loc.locus();
+    os << l.first << ':' << l.second;
+  }
+  return os;
 }
 
 

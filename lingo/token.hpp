@@ -16,6 +16,10 @@ namespace lingo
 // -------------------------------------------------------------------------- //
 //                            Token class
 
+// The kind of an invalid token.
+constexpr int invalid_tok = -1;
+
+
 // A classified symbol in the source language.
 //
 // Note that tokens internally track their kind as
@@ -75,7 +79,10 @@ Token::operator bool() const
 inline int
 Token::kind() const
 {
-  return sym_->token();
+  if (sym_)
+    return sym_->token();
+  else
+    return -1;
 }
 
 
@@ -186,8 +193,11 @@ public:
   Token get();
   void put(Token);
 
-  Position position() const;
   Location location() const;
+
+  // FIXME: Use iterators, begin, and end instead
+  // of a stream position.
+  Position position() const;
 
 private:
   Tokenbuf buf_;

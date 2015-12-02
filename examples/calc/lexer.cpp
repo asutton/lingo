@@ -14,8 +14,13 @@ namespace calc
 {
 
 // -------------------------------------------------------------------------- //
-// Tokens
+// Symbols
 
+Symbol_table symbols;
+
+
+// -------------------------------------------------------------------------- //
+// Tokens
 
 char const*
 get_spelling(Token_kind k)
@@ -128,7 +133,7 @@ Lexer::integer()
 Token
 Lexer::on_symbol()
 {
-  Symbol const* sym = syms_.get(str_.take());
+  Symbol const* sym = symbols.get(str_.take());
   return Token(loc_, sym);
 }
 
@@ -138,7 +143,7 @@ Lexer::on_integer()
 {
   String str = str_.take();
   int n = string_to_int<int>(str, 10);
-  Symbol* sym = syms_.put_integer(integer_tok, str, n);
+  Symbol* sym = symbols.put_integer(integer_tok, str, n);
   return Token(loc_, sym);
 }
 

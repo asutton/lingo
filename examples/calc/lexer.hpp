@@ -8,8 +8,9 @@
 // language and the machine used to recognize those tokens 
 // in input source.
 
-#include <lingo/character.hpp>
+#include <lingo/symbol.hpp>
 #include <lingo/token.hpp>
+#include <lingo/character.hpp>
 
 
 namespace calc
@@ -17,8 +18,21 @@ namespace calc
 
 using namespace lingo;
 
+
 // -------------------------------------------------------------------------- //
-//                              Tokens
+// Symbols
+
+
+// The symbol table is a global resource.
+//
+// TODO: Consider protecting this with a
+// a set of accessor functions.
+extern Symbol_table symbols;
+
+
+// -------------------------------------------------------------------------- //
+// Tokens
+
 enum Token_kind
 {
   error_tok = -1,
@@ -37,7 +51,7 @@ char const* get_spelling(Token_kind);
 
 
 // -------------------------------------------------------------------------- //
-//                              Lexing
+// Lexing
 
 
 // The Lexer is a facility that translates sequences of
@@ -48,8 +62,8 @@ struct Lexer
   using argument_type = char;
   using result_type = Token;
 
-  Lexer(Symbol_table& s, Character_stream& cs, Token_stream& ts)
-    : syms_(s), cs_(cs), ts_(ts)
+  Lexer(Character_stream& cs, Token_stream& ts)
+    : cs_(cs), ts_(ts)
   { }
 
   void operator()();
@@ -71,7 +85,6 @@ struct Lexer
 
   void save();
 
-  Symbol_table&     syms_;
   Character_stream& cs_;
   Token_stream&     ts_;
   String_builder    str_;

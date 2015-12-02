@@ -17,7 +17,6 @@ namespace lingo
 // -------------------------------------------------------------------------- //
 // Buffers
 
-
 // A buffer is a region of text containing code. This class
 // contains the underlying character sequence and an interface
 // for resolving source code locations.
@@ -28,7 +27,7 @@ namespace lingo
 //
 // TODO: Provide better integration with I/O streams, etc. to
 // avoid unnecessary copies.
-class Buffer : private Line_map
+class Buffer
 {
 public:
   Buffer(String const& str);
@@ -36,7 +35,7 @@ public:
   virtual ~Buffer() { }
 
   // Returns the line map for the buffer.
-  Line_map const& lines() const { return *this; }
+  Line_map const& lines() const { return lines_; }
 
   // Iterators
   char const* begin() const { return text_.c_str(); }
@@ -48,36 +47,7 @@ public:
 
 protected:
   String   text_;
-};
-
-
-// -------------------------------------------------------------------------- //
-//                               Input context
-//
-// It's often useful to have lexers and parsers simply update a global
-// input location for the purpose of simplifying diagnostics. This
-// prevents languages from having to continually pass these tokens
-// through the interface.
-
-
-Buffer& input_buffer();
-Location input_location();
-
-void set_input_buffer(Buffer&);
-void set_input_location(Location);
-
-
-// The input context is a facility used to manage the
-// current input buffer and source location.
-struct Input_context
-{
-  Input_context(Location);
-  Input_context(Buffer&);
-  Input_context(Buffer&, Location);
-  ~Input_context();
-
-  Buffer*  saved_buf;
-  Location saved_loc;
+  Line_map lines_;
 };
 
 

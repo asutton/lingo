@@ -13,6 +13,35 @@
 namespace calc
 {
 
+
+// Denotes a parse error.
+struct Parse_error : std::runtime_error
+{
+  Parse_error()
+    : std::runtime_error("")
+  { }
+};
+
+
+namespace
+{
+
+// Returns a spelling for the current token. If the token
+// stream is at the end of input, then the spelling will
+// reflect that state.
+String const&
+token_spelling(Token_stream& ts)
+{
+  static String end = "end-of-file";
+  if (ts.eof())
+    return end;
+  else
+    return ts.peek().spelling();
+}
+
+} // namespace
+
+
 // Returns the first token of lookahead.
 Token_kind
 Parser::lookahead() const
@@ -34,11 +63,12 @@ Parser::match(Token_kind k)
 {
   if (lookahead() == k)
     return ts_.get();
+
   String msg = format("expected '{}' but got '{}'", 
                       get_spelling(k), 
-                      ts_.peek().spelling());
+                      token_spelling(ts_));
   error(ts_.location(), msg);
-  return {};
+  throw Parse_error();
 }
 
 
@@ -106,7 +136,7 @@ Parser::primary()
   if (lookahead() == lparen_tok)
     return paren();
   error(ts_.location(), "expected primary-expression");
-  return {};
+  throw Parse_error();
 }
 
 
@@ -241,12 +271,10 @@ Parser::operator()()
 Expr const* 
 parse(String const& str)
 {
-  extern Symbol_table syms;
-
   Buffer buf(str);  
   Token_stream ts;
   Character_stream cs(buf);
-  Lexer lex(syms, cs, ts);
+  Lexer lex(cs, ts);
   Parser parse(ts);
 
   // Lex.
