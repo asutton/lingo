@@ -60,6 +60,14 @@ Token::Token()
 { }
 
 
+// Initialize an invalid token at the given source
+// location.
+inline
+Token::Token(Location loc)
+  : Token(loc, nullptr)
+{ }
+
+
 // Initialize a token of kind k with the given
 // symbol table entry.
 inline
@@ -188,14 +196,16 @@ class Token_stream
 public:
   using Position = Tokenbuf::iterator;
 
-  Token_stream();
+  Token_stream(Buffer& b);
 
   bool eof() const;
-
   Token peek() const;
   Token peek(int) const;
   Token get();
   void put(Token);
+
+  // Buffer
+  Buffer const& buffer() const { return input_; }
 
   Location location() const;
 
@@ -204,16 +214,17 @@ public:
   Position position() const;
 
 // private:
-  Tokenbuf buf_;
-  Position pos_;
+  Buffer&  input_;  // The source text buffer
+  Tokenbuf buf_;    // The underlying token buffer
+  Position pos_;    // The current input/output position.
 };
 
 
 // Initialize a token stream with an empty
 // buffer.
 inline
-Token_stream::Token_stream()
-  : buf_(), pos_(buf_.begin())
+Token_stream::Token_stream(Buffer& b)
+  : input_(b), buf_(), pos_(buf_.begin())
 { }
 
 
@@ -225,12 +236,14 @@ Token_stream::eof() const
 }
 
 
-// Returns the current token.
+// Returns the current token. If at the end of file,
+// return an invalid token whose location is past the
+// end of the file.
 inline Token
 Token_stream::peek() const
 {
   if (eof())
-    return Token();
+    return Token(Location(&input_, buf_.size()));
   else
     return *pos_;
 }
@@ -260,7 +273,7 @@ inline Token
 Token_stream::get()
 {
   if (eof())
-    return Token();
+    return Token(Location(&input_, buf_.size() - 1));
   else
     return *pos_++;
 }

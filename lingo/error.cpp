@@ -86,7 +86,7 @@ show_line(std::ostream& os, Location const& loc)
   os << indent_ << line.str() << '\n';
   
   // Show the caret, but only if if the caret is valid.
-  int caret = loc.column_number() - 1;
+  int caret = loc.column_number();
   if (caret < 0)
     return;
   os << indent_ << std::string(caret, ' ');
