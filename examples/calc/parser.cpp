@@ -14,15 +14,6 @@ namespace calc
 {
 
 
-// Denotes a parse error.
-struct Parse_error : std::runtime_error
-{
-  Parse_error()
-    : std::runtime_error("")
-  { }
-};
-
-
 namespace
 {
 
@@ -68,7 +59,7 @@ Parser::match(Token_kind k)
                       get_spelling(k), 
                       token_spelling(ts_));
   error(ts_.location(), msg);
-  throw Parse_error();
+  throw Parse_error("match");
 }
 
 
@@ -135,8 +126,9 @@ Parser::primary()
     return on_int(tok);
   if (lookahead() == lparen_tok)
     return paren();
+
   error(ts_.location(), "expected primary-expression");
-  throw Parse_error();
+  throw Parse_error("primary");
 }
 
 

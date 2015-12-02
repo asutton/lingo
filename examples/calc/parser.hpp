@@ -17,6 +17,14 @@ using namespace lingo;
 struct Expr;
 
 
+// Denotes a parse error.
+struct Parse_error : std::runtime_error
+{
+  using std::runtime_error::runtime_error;
+};
+
+
+
 // The parser is responsible for transforming a stream of tokens
 // into nodes. The parser owns a reference to the buffer for its
 // tokens. This supports the resolution of source code locations.

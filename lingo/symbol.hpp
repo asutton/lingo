@@ -188,7 +188,7 @@ Symbol_table::put(int k, String const& s, Args&&... args)
     sym = new T(k, std::forward<Args>(args)...);
     sym->str_ = &iter->first;
   } else {
-    lingo_assert(typeid(T) != typeid(*sym));
+    lingo_assert(is<T>(sym));
   }
   return iter->second;
 }

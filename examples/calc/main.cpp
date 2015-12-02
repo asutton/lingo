@@ -90,8 +90,8 @@ main()
         step_eval(expr);
       else      
         std::cout << expr << " == " << evaluate(expr) << '\n';
-    } catch(...) {
-      // Just catch the exception and co;ntionue processing.
+    } catch (Parse_error& err) {
+      // Just continue processing.
     }
   }
 }

@@ -115,7 +115,7 @@ Lexer::symbol1()
 void
 Lexer::digit()
 {
-  cs_.get();
+  save();
 }
 
 

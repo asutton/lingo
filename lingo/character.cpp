@@ -21,8 +21,10 @@ namespace lingo
 char
 Character_stream::peek() const
 {
-  lingo_assert(!eof());
-  return *first_;
+  if (eof())
+    return 0;
+  else
+    return *first_;
 }
 
 
@@ -32,7 +34,6 @@ Character_stream::peek() const
 char
 Character_stream::peek(int n) const
 {
-  lingo_assert(!eof());
   if (n >= (last_ - first_))
     return 0;
   return *(first_ + n);
@@ -46,8 +47,10 @@ Character_stream::peek(int n) const
 char
 Character_stream::get()
 {
-  lingo_assert(!eof());
-  return *first_++;
+  if (eof())
+    return 0;
+  else
+    return *first_++;
 }
 
 
