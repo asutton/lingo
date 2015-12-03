@@ -4,9 +4,9 @@
 #ifndef LINGO_BUFFER_HPP
 #define LINGO_BUFFER_HPP
 
-#include "lingo/string.hpp"
-#include "lingo/line.hpp"
-#include "lingo/location.hpp"
+#include <lingo/string.hpp>
+#include <lingo/line.hpp>
+#include <lingo/location.hpp>
 
 #include <map>
 

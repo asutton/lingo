@@ -7,7 +7,7 @@
 // The file module contains facilities for managing open
 // files and their text.
 
-#include "lingo/buffer.hpp"
+#include <lingo/buffer.hpp>
 
 #include <unordered_map>
 #include <vector>

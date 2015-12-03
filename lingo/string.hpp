@@ -7,7 +7,7 @@
 // The string module defines facilities and abstractions for
 // working with character strings.
 
-#include "lingo/assert.hpp"
+#include <lingo/assert.hpp>
 
 #include <cstring>
 #include <algorithm>

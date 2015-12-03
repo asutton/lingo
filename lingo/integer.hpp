@@ -7,9 +7,9 @@
 // The integer module provides arbitrary precision integers
 // and associated functions.
 
-#include "lingo/string.hpp"
-#include "lingo/print.hpp"
-#include "lingo/debug.hpp"
+#include <lingo/string.hpp>
+#include <lingo/print.hpp>
+#include <lingo/debug.hpp>
 
 #include <cassert>
 #include <cstddef>
@@ -19,18 +19,18 @@
 
 #include <gmp.h>
 
-namespace lingo 
+namespace lingo
 {
 
-// The Integer class represents arbitrary precision integer 
+// The Integer class represents arbitrary precision integer
 // values. The integer class also tracks the base in which
 // it was originally written. If unspecified, the base is 10.
 // This allows for pretty printing of tokens in the base in
 // which they were originally written.
 //
-// FIXME: Make a default constructor that takes a width 
+// FIXME: Make a default constructor that takes a width
 // specification.
-class Integer 
+class Integer
 {
 public:
   // Default constructor

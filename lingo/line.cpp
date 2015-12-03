@@ -1,8 +1,8 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "line.hpp"
-#include "assert.hpp"
+#include "lingo/line.hpp"
+#include "lingo/assert.hpp"
 
 
 namespace lingo

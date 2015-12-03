@@ -4,9 +4,9 @@
 #ifndef LINGO_CHARACTER_HPP
 #define LINGO_CHARACTER_HPP
 
-#include "lingo/location.hpp"
-#include "lingo/buffer.hpp"
-#include "lingo/string.hpp"
+#include <lingo/location.hpp>
+#include <lingo/buffer.hpp>
+#include <lingo/string.hpp>
 
 namespace lingo
 {

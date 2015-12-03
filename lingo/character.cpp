@@ -1,14 +1,14 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "character.hpp"
-#include "error.hpp"
+#include "lingo/character.hpp"
+#include "lingo/error.hpp"
 
 // TODO: Let L be the number of lines in a file. The current
-// implementation maintains a mapping of lines using an 
+// implementation maintains a mapping of lines using an
 // sorted structure to support line lookup of offsets. However,
 // we don't actually need to maintain that mapping until we
-// start issuing lookups against it. 
+// start issuing lookups against it.
 //
 // We could run a translation phase that builds the line map
 // prior to whatever phase is happening here.

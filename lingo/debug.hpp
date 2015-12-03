@@ -4,8 +4,8 @@
 #ifndef LINGI_UTIL_DEBUG_HPP
 #define LINGI_UTIL_DEBUG_HPP
 
-#include "lingo/print.hpp"
-#include "lingo/node.hpp"
+#include <lingo/print.hpp>
+#include <lingo/node.hpp>
 
 #include <iosfwd>
 #include <sstream>
@@ -94,7 +94,7 @@ debug(Printer& p, String_view s)
 // This function is provided as an entry point to the
 // usual debbuging facilities.
 template<typename T>
-inline void 
+inline void
 debug(T const& x)
 {
   Printer p(default_debug_stream());
@@ -130,7 +130,7 @@ debug(char const* msg, Args const&... args)
 
 // Debug the given element, and print a space after it.
 template<typename T>
-inline void 
+inline void
 debug_space(Printer& p, T const& x)
 {
   Printer q = p;
@@ -142,7 +142,7 @@ debug_space(Printer& p, T const& x)
 // Debug the given element, and print a newline after it.
 // This also indents after the newline.
 template<typename T>
-inline void 
+inline void
 debug_newline(Printer& p, T const& x)
 {
   Printer q = p;

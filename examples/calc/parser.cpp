@@ -5,7 +5,7 @@
 #include "lexer.hpp"
 #include "ast.hpp"
 
-#include <lingo/error.hpp>
+#include "lingo/error.hpp"
 
 #include <iostream>
 
@@ -55,8 +55,8 @@ Parser::match(Token_kind k)
   if (lookahead() == k)
     return ts_.get();
 
-  String msg = format("expected '{}' but got '{}'", 
-                      get_spelling(k), 
+  String msg = format("expected '{}' but got '{}'",
+                      get_spelling(k),
                       token_spelling(ts_));
   error(ts_.location(), msg);
   throw Parse_error("match");
@@ -193,7 +193,7 @@ Parser::additive()
 }
 
 
-// Parse a binary expression. This is the top-level entry point 
+// Parse a binary expression. This is the top-level entry point
 // for the binary precedence parser.
 inline Expr const*
 Parser::binary()
@@ -202,7 +202,7 @@ Parser::binary()
 }
 
 
-// Parse an expression. 
+// Parse an expression.
 Expr const*
 Parser::expr()
 {
@@ -259,10 +259,10 @@ Parser::operator()()
 
 
 // Parse the given buffer.
-Expr const* 
+Expr const*
 parse(String const& str)
 {
-  Buffer buf(str);  
+  Buffer buf(str);
   Character_stream cs(buf);
   Token_stream ts(buf);
   Lexer lex(cs, ts);

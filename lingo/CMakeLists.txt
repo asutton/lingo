@@ -1,13 +1,11 @@
+# Copyright (c) 2015 Andrew Sutton
+# All rights reserved
 
 # Bypass the usual cppformat build and build the
 # source into this tree.
-set(contrib_src
-  ${PROJECT_SOURCE_DIR}/cppformat/format.cc
-)
+set(contrib_src ${PROJECT_SOURCE_DIR}/cppformat/format.cc)
 
-
-
-# The lingo library
+# Add the Lingo library.
 add_library(lingo
   ${contrib_src}
   format.cpp
@@ -28,4 +26,16 @@ add_library(lingo
   character.cpp
   symbol.cpp
   token.cpp)
-target_link_libraries(lingo ${GMP_LIBRARIES} ${Boost_LIBRARIES})
+target_include_directories(
+  lingo
+    PUBLIC
+      "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_SOURCE_DIR}/cppformat>"
+      ${GMP_INCLUDE_DIRS}
+      ${Boost_INCLUDE_DIRS}
+)
+target_link_libraries(
+  lingo
+    PUBLIC
+      ${GMP_LIBRARIES}
+      ${Boost_LIBRARIES}
+)

@@ -7,9 +7,9 @@
 // The error module contains facilities for managing error
 // reporting.
 
-#include "lingo/location.hpp"
-#include "lingo/buffer.hpp"
-#include "lingo/print.hpp"
+#include <lingo/location.hpp>
+#include <lingo/buffer.hpp>
+#include <lingo/print.hpp>
 
 #include <cstdio>
 #include <string>
@@ -54,7 +54,7 @@ struct Diagnostic_info
   }
 
   // Kinds of info.
-  enum Kind 
+  enum Kind
   {
     loc_info,
     span_info
@@ -83,7 +83,7 @@ struct Diagnostic_info
 //
 // TODO: Allow notes to be attached to diagnostics instead
 // of existing at the same level. Or remove notes altogether.
-// Notes are informational and only provide context for 
+// Notes are informational and only provide context for
 // an error or warning.
 struct Diagnostic
 {
@@ -97,13 +97,13 @@ struct Diagnostic
 
 
 // A diagnostic context is a record of all diagnostic messages that
-// have been emitted as part some processing phase. 
+// have been emitted as part some processing phase.
 //
 // Note that diagnostics may be suppressed until later. This helps
 // to allow tentative processing.
 //
 // When a diagnostic context is declared (as a variable), it becomes
-// the active diagnostic context. When the declaration goes out of 
+// the active diagnostic context. When the declaration goes out of
 // scope, the previous context becomes active.
 class Diagnostic_context : std::vector<Diagnostic>
 {

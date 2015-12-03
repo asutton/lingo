@@ -205,7 +205,7 @@ accept(T const& t, V& v)
 //                            Generic mutators
 
 
-// A visitor that allows modification of values. 
+// A visitor that allows modification of values.
 //
 // TODO: Build a specialization for reference return types.
 // That has more to do with initialization than anything

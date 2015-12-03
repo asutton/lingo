@@ -1,27 +1,27 @@
-
 # Introduction
 
-The `lingo` library is a set of facilities that support the construction 
-of compilers, interpreters, and other language related tools.  In particular,
+The `lingo` library is a set of facilities that supports the construction 
+of compilers, interpreters, and other language related tools. In particular,
 this library aims to provide reasonable implementations of common facilities
-that can be difficult and time-consume to construct as part of a compiler
+that can be difficult and time-consuming to construct as part of a compiler
 implementation.
 
 This library provides the following facilities:
 
-- Memory management -- A set of factories that facilities that allocation
+- Memory management -- A set of factories that facilitates the allocation
   and cleanup of nodes. This includes an opt-in garbage collector that
-  works tree structures that mix collected and non-collected noes.
+  works using tree structures that mix collected and non-collected nodes.
 - String representations -- A lightweight string view that supports
   zero-copy access to parsed text.
-- String formatting -- Using cppformat, tools for formatting strings.
+- String formatting -- Using [C++ Format](http://cppformat.github.io), tools
+  for formatting strings.
 - Source locations -- Facilities for efficiently representing locations in
   source code.
-- Symbol table -- A facility for ensuring that each symbols in a parsed
-  file are uniquely represented. This also allows additional information
+- Symbol table -- A facility for ensuring that each symbol in a parsed
+  file is uniquely represented. This also allows additional information
   to be associated with those symbols. 
 - Token representation -- A lightweight and extensible representation
-  of lexical tokens, integrate with the symbol table for ease of used.
+  of lexical tokens, integrated with the symbol table for ease of use.
 - Error handling -- Tools for asserting logical conditions and control
   flow impossibilities.
 - Diagnostics -- A set of facilities for emitting error and warning
@@ -30,9 +30,9 @@ This library provides the following facilities:
   definition of abstract syntax trees. Many of the other facilities in
   this library are designed on node concepts.
 - Pretty printing -- A facility that supports the generation of formatted
-  string output for languages built on the Node concepts.
-- Debug printing -- An extension of pretty printing that emits an s-expr
-  representation of abstract syntax trees.
+  string output for languages built on the node concepts.
+- Debug printing -- An extension of pretty printing that emits an
+  s-expression representation of abstract syntax trees.
 - Parsing and lexing facilities -- A set of generic algorithms that can
   be used to construct efficient lexers and parsers. These modules
   also define the concepts of character and token streams as well as the
@@ -41,11 +41,11 @@ This library provides the following facilities:
 There are a number of features missing from this library. In particular:
 
 - File management
-- Application configuration (command line parsing, etc).
+- Application configuration (command-line parsing, etc.)
 - Real number types
 - Character and string literal support
 - Unicode support for parsing and lexing
-- Support multithreaded environments
+- Support for multithreaded environments
 - Windows support
 
 Also, note that many of the facilities could be further optimized. In
@@ -57,22 +57,24 @@ could be dramatically improved.
 # Getting the source
 
 This library is designed to be included as a submodule in a larger
-project. For your compiler add this submodule from your top-level
-source directory using the command
+project. For your compiler, add this submodule from your top-level
+source directory using the following command:
 
-    git submodule add https://github.com/asutton/lingo
-
+```shell
+git submodule add https://github.com/asutton/lingo
+```
 
 The `lingo` library also depends on a few external libraries:
 
-  - cppformat -- This is included as a git submodule of `lingo`
-  - GMP -- the GNU Multiprecision library must be installed on
-    your system.
+- [C++ Format](http://cppformat.github.io) -- This is included as a git
+  submodule of `lingo`.
+- [GMP](https://gmplib.org) -- The GNU Multiple Precision Arithmetic Library
+  (GMP) must be installed on your system.
 
 
 # Building `lingo`
 
-The `lingo` library is built using CMake (version 3.0 or greater).
-Adding the cloned `lingo` directory should be sufficient to make it
-build. `lingo` produces a static library named `liblingo`. This should
-be linked against your compiler implementations.
+The `lingo` library is built using [CMake](https://cmake.org) (version 3.0
+or greater). Adding the cloned `lingo` directory should be sufficient to
+make it build. `lingo` produces a static library named `liblingo`. This
+should be linked against your compiler implementations.

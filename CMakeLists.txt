@@ -1,31 +1,35 @@
 # Copyright (c) 2015 Andrew Sutton
 # All rights reserved
 
-# Project configuration.
 cmake_minimum_required(VERSION 3.0)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+include(CheckIncludeFileCXX)
+
+# Project configuration
 project(lingo CXX)
 enable_testing()
-
 
 # Compiler configuration
 set(CMAKE_CXX_FLAGS "-Wall -std=c++1y")
 
-
-# GMP Dependencies
-find_path(GMP_INCLUDE_DIR NAMES gmp.h)
-find_library(GMP_LIBRARIES NAMES gmp libgmp)
-MESSAGE(STATUS "GMP libs: " ${GMP_LIBRARIES})
-
+# GMP dependencies
+find_package(GMP REQUIRED)
 
 # Boost dependencies
-find_package(Boost 1.55.0 REQUIRED
-  COMPONENTS system filesystem)
+find_package(Boost 1.55.0 REQUIRED COMPONENTS system filesystem)
 
+# Other dependencies
+check_include_file_cxx(unistd.h HAVE_UNISTD_H)
+if(NOT HAVE_UNISTD_H)
+  message(FATAL_ERROR "${PROJECT_NAME} requires the POSIX C header <unistd.h>.")
+endif()
 
-# Build configuration.
-include_directories(. ${GMP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
+if(NOT TARGET check)
+  add_custom_target(check COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target test)
+endif()
 
 add_subdirectory(lingo)
-add_subdirectory(test)
-add_subdirectory(examples)
+add_subdirectory(test EXCLUDE_FROM_ALL)
+add_subdirectory(examples EXCLUDE_FROM_ALL)

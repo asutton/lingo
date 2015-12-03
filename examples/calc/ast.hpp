@@ -4,11 +4,11 @@
 #ifndef CALC_HPP
 #define CALC_HPP
 
-#include "lingo/integer.hpp"
-#include "lingo/node.hpp"
-#include "lingo/token.hpp"
-#include "lingo/print.hpp"
-#include "lingo/debug.hpp"
+#include <lingo/integer.hpp>
+#include <lingo/node.hpp>
+#include <lingo/token.hpp>
+#include <lingo/print.hpp>
+#include <lingo/debug.hpp>
 
 namespace calc
 {
@@ -205,7 +205,7 @@ constexpr bool is_binary()
 // -------------------------------------------------------------------------- //
 //                                Generic visitor
 
-// A parameterized visitor that dispatches to a function 
+// A parameterized visitor that dispatches to a function
 // object. F is the type of the function and T is its
 // return type.
 //

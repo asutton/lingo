@@ -30,7 +30,7 @@ evaluation_mode()
 
 
 // Set the evaluation mode.
-void 
+void
 evaluation_mode(Evaluation_mode m)
 {
   mode_ = m;
@@ -46,7 +46,7 @@ process_directive(Buffer const& buf)
   std::size_t end = str.find_first_of(' ');
   String dir = str.substr(1, end);
 
-  // TODO: Use a hash table.  
+  // TODO: Use a hash table.
   if (dir == "step") {
     mode_ = step_mode;
     note("evaluation mode set to 'step'");

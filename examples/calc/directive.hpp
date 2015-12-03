@@ -1,7 +1,7 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "lingo/buffer.hpp"
+#include <lingo/buffer.hpp>
 
 
 namespace calc

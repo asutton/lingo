@@ -4,15 +4,15 @@
 #ifndef LINGO_FORMAT_HPP
 #define LINGO_FORMAT_HPP
 
-// This module imports the cppformat library by Victor 
-// Zverovich. In particular, it makes a number of facilities 
+// This module imports the cppformat library by Victor
+// Zverovich. In particular, it makes a number of facilities
 // available in the lingo namesapce.
 
-#include "cppformat/format.h"
+#include <format.h>
 
 #include <iosfwd>
 
-namespace lingo 
+namespace lingo
 {
 
 // The format facility.
@@ -20,7 +20,7 @@ using fmt::format;
 
 
 // Text formatters.
-using fmt::bin; 
+using fmt::bin;
 using fmt::oct;
 using fmt::hex;
 using fmt::pad;

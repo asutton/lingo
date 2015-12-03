@@ -1,11 +1,11 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "location.hpp"
-#include "buffer.hpp"
-#include "file.hpp"
-#include "error.hpp"
-#include "utility.hpp"
+#include "lingo/location.hpp"
+#include "lingo/buffer.hpp"
+#include "lingo/file.hpp"
+#include "lingo/error.hpp"
+#include "lingo/utility.hpp"
 
 #include <iostream>
 
@@ -113,14 +113,14 @@ Span::end_column_number() const
 
 
 // Returns true if the span covers multiple lines of text.
-bool 
+bool
 Span::is_multiline() const
 {
   return start_line_number() != end_line_number();
 }
 
 
-std::ostream& 
+std::ostream&
 operator<<(std::ostream& os, Location const& loc)
 {
   if (!loc)
@@ -135,7 +135,7 @@ operator<<(std::ostream& os, Location const& loc)
 }
 
 
-std::ostream& 
+std::ostream&
 operator<<(std::ostream& os, Span const& span)
 {
   return os << span.start_location();

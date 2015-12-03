@@ -5,7 +5,7 @@
 #include "ast.hpp"
 #include "parser.hpp"
 
-#include <lingo/error.hpp>
+#include "lingo/error.hpp"
 
 
 namespace calc
@@ -17,7 +17,7 @@ Expr const* next(Expr const*);
 
 // Reduce each operand in turn. Evaluation proceeds left-to-right.
 template<typename T>
-Expr const* 
+Expr const*
 step_binary(T const* e)
 {
   Location loc = e->location();
@@ -68,7 +68,7 @@ step(Expr const* e)
 
 // Search for the next operand to be reduced.
 template<typename T>
-Expr const* 
+Expr const*
 next_binary(T const* e)
 {
   Expr const* e1 = e->left();

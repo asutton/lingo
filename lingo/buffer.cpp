@@ -1,8 +1,8 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "buffer.hpp"
-#include "error.hpp"
+#include "lingo/buffer.hpp"
+#include "lingo/error.hpp"
 
 #include <iostream>
 

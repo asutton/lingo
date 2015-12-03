@@ -1,8 +1,8 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "error.hpp"
-#include "io.hpp"
+#include "lingo/error.hpp"
+#include "lingo/io.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -15,7 +15,7 @@ namespace lingo
 namespace
 {
 
-// Print the source code location for a bound location 
+// Print the source code location for a bound location
 // or span.
 void
 show_location(std::ostream& os, Diagnostic_info const& info)
@@ -47,7 +47,7 @@ show_line(std::ostream& os, Location const& loc)
 {
   Line const& line = loc.line();
   os << indent_ << line.str() << '\n';
-  
+
   // Show the caret, but only if if the caret is valid.
   int caret = loc.column_number();
   if (caret < 0)
@@ -140,7 +140,7 @@ std::stack<Diagnostic_context*> diags_;
 
 
 // The root diagnostic context. Note that this self-registers
-// as the top diagnostic context. 
+// as the top diagnostic context.
 Diagnostic_context root_;
 
 
@@ -173,7 +173,7 @@ Diagnostic_context::~Diagnostic_context()
 
 // Emit a single diagnostic. If this context is suppressing
 // diagnostics, then the save them for later.
-void 
+void
 Diagnostic_context::emit(Diagnostic const& diag)
 {
   if (diag.kind == error_diag)
@@ -269,9 +269,9 @@ warning(Span span, String const& msg)
 
 // Emit a note diagnostic.
 //
-// TODO: Allow the attachment of notes to other diagnostic 
+// TODO: Allow the attachment of notes to other diagnostic
 // objects, allowing them to be nested rather than flat.
-void 
+void
 note(Location loc, String const& msg)
 {
   diags_.top()->emit({note_diag, loc, msg});
