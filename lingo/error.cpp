@@ -1,70 +1,33 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "lingo/error.hpp"
+#include "error.hpp"
+#include "io.hpp"
 
 #include <iostream>
 #include <stdexcept>
 #include <stack>
 
+
 namespace lingo
 {
 
-// Color support.
 namespace
 {
 
-// FIXME: This is not especially good. We can probably do
-// better in tems of selecting font colors. In fact, I'm
-// sure this can be *much* better.
-
-// These are designed to be concatenated during preprocessing
-
-#define font_start   "\033["
-#define font_end     "\033[0m"
-
-#define font_normal     "00" // No color, bold or underline
-#define font_bold       "01" // Bold
-#define font_underscore "04" // Underscore
-
-#define font_black      "30" // Black text
-#define font_red        "31" // Red text
-#define font_green      "32" // Green text
-#define font_yellow     "33" // Yellow text
-#define font_blue       "34" // Blue text
-#define font_magenta    "35" // Magenta text
-#define font_cyan       "36" // Cyan text
-#define font_white      "37" // White text
-
-
-// Generate the common start of diagnostic headers.
-#define fmt_diagnostic(color) font_start font_bold ";" font_ ## color "m"
-
-
-// Start coloring font strings
-#define font_error      fmt_diagnostic(red)
-#define font_warning    fmt_diagnostic(magenta)
-#define font_note       fmt_diagnostic(cyan)
-
-
-// Coloring for source code locations and carets
-#define font_location   font_start font_bold "m"
-#define font_caret      font_start font_bold ";" font_cyan "m"
-
-
-// Print the source code location for a bound location or
-// span.
+// Print the source code location for a bound location 
+// or span.
 void
 show_location(std::ostream& os, Diagnostic_info const& info)
 {
   if (info.kind == Diagnostic_info::loc_info) {
-    Bound_location const& loc = info.data.loc;
-    if (loc.is_valid())
-      os << font_location << loc << font_end << ':';
+    Location const& loc = info.data.loc;
+    if (loc)
+      os << bright_white(loc) << ':';
   } else {
-    Bound_span const& span = info.data.span;
-    if (span.is_valid())
-      os << font_location << span << font_end << ':';
+    Span const& span = info.data.span;
+    if (span)
+      os << bright_white(span) << ':';
   }
 }
 
@@ -80,23 +43,23 @@ char const* indent_ = "|    ";
 //
 // TODO: Show line numbers in the context?
 void
-show_line(std::ostream& os, Bound_location const& loc)
+show_line(std::ostream& os, Location const& loc)
 {
   Line const& line = loc.line();
   os << indent_ << line.str() << '\n';
 
   // Show the caret, but only if if the caret is valid.
-  int caret = loc.column_no() - 1;
+  int caret = loc.column_number();
   if (caret < 0)
     return;
   os << indent_ << std::string(caret, ' ');
-  os << font_caret << '^' << font_end << '\n';
+  os << bright_cyan('^') << '\n';
 }
 
 
 // TODO: What if we have multiple lines in the span?
 void
-show_span(std::ostream& os, Bound_span const& span)
+show_span(std::ostream& os, Span const& span)
 {
   Line const& line = span.line();
   os << indent_ << line.str() << '\n';
@@ -116,12 +79,12 @@ show_span(std::ostream& os, Bound_span const& span)
 
   // Show the underscore, but only if the start position
   // is valid.
-  int start = span.start_column_no() - 1;
-  int end = span.end_column_no() - 1;
+  int start = span.start_column_number() - 1;
+  int end = span.end_column_number() - 1;
   if (start < 0)
     return;
   os << indent_ << std::string(start, ' ');
-  os << font_caret << std::string(end - start, '~') << font_end << '\n';
+  os << bright_cyan(std::string(end - start, '~')) << '\n';
 }
 
 
@@ -132,9 +95,9 @@ std::ostream&
 operator<<(std::ostream& os, Diagnostic_kind k)
 {
   switch (k) {
-  case error_diag: return os << font_error "error" font_end;
-  case warning_diag: return os << font_warning "warning" font_end;
-  case note_diag: return os << font_note "note" << font_end;
+  case error_diag: return os << bright_red("error");
+  case warning_diag: return os << bright_magenta("warning");
+  case note_diag: return os << bright_cyan("note");
   default: break;
   }
   lingo_unreachable("unknown diagnostic kind '{}'", (int)k);
@@ -145,13 +108,13 @@ void
 show_context(std::ostream& os, Diagnostic_info const& info)
 {
   if (info.kind == Diagnostic_info::loc_info) {
-    Bound_location const& loc = info.data.loc;
-    if (loc.is_valid()) {
+    Location const& loc = info.data.loc;
+    if (loc) {
       show_line(os, loc);
     }
   } else {
-    Bound_span const& span = info.data.span;
-    if (span.is_valid())
+    Span const& span = info.data.span;
+    if (span)
       show_span(os, span);
   }
 }
@@ -185,12 +148,12 @@ Diagnostic_context root_;
 
 
 
-Diagnostic::Diagnostic(Diagnostic_kind k, Bound_location l, String const& m)
+Diagnostic::Diagnostic(Diagnostic_kind k, Location l, String const& m)
   : kind(k), info(l), msg(m)
 { }
 
 
-Diagnostic::Diagnostic(Diagnostic_kind k, Bound_span s, String const& m)
+Diagnostic::Diagnostic(Diagnostic_kind k, Span s, String const& m)
   : kind(k), info(s), msg(m)
 { }
 
@@ -270,7 +233,7 @@ error_count()
 
 // Emit an error diagnostic at the given source location.
 void
-error(Bound_location loc, String const& msg)
+error(Location loc, String const& msg)
 {
   diags_.top()->emit({error_diag, loc, msg});
 }
@@ -278,7 +241,7 @@ error(Bound_location loc, String const& msg)
 
 // Emit an error diagnostic over the given text span.
 void
-error(Bound_span span, String const& msg)
+error(Span span, String const& msg)
 {
   diags_.top()->emit({error_diag, span, msg});
 }
@@ -289,7 +252,7 @@ error(Bound_span span, String const& msg)
 // TODO: Allow warnings to be treated as errors? This
 // requires additional configuration information.
 void
-warning(Bound_location loc, String const& msg)
+warning(Location loc, String const& msg)
 {
   diags_.top()->emit({warning_diag, loc, msg});
 }
@@ -297,7 +260,7 @@ warning(Bound_location loc, String const& msg)
 
 // Emit a warning diagnost over the given text span.
 void
-warning(Bound_span span, String const& msg)
+warning(Span span, String const& msg)
 {
   diags_.top()->emit({warning_diag, span, msg});
 }
@@ -309,14 +272,14 @@ warning(Bound_span span, String const& msg)
 // TODO: Allow the attachment of notes to other diagnostic
 // objects, allowing them to be nested rather than flat.
 void
-note(Bound_location loc, String const& msg)
+note(Location loc, String const& msg)
 {
   diags_.top()->emit({note_diag, loc, msg});
 }
 
 
 void
-note(Bound_span span, String const& msg)
+note(Span span, String const& msg)
 {
   diags_.top()->emit({note_diag, span, msg});
 }

@@ -8,21 +8,34 @@
 // language and the machine used to recognize those tokens
 // in input source.
 
+#include <lingo/symbol.hpp>
+#include <lingo/token.hpp>
 #include <lingo/character.hpp>
-#include <lingo/lexing.hpp>
 
-#include <string>
 
 namespace calc
 {
 
 using namespace lingo;
 
+
 // -------------------------------------------------------------------------- //
-//                              Tokens
+// Symbols
+
+
+// The symbol table is a global resource.
+//
+// TODO: Consider protecting this with a
+// a set of accessor functions.
+extern Symbol_table symbols;
+
+
+// -------------------------------------------------------------------------- //
+// Tokens
 
 enum Token_kind
 {
+  error_tok = -1,
   lparen_tok,
   rparen_tok,
   plus_tok,
@@ -34,17 +47,11 @@ enum Token_kind
 };
 
 
-void init_tokens();
+char const* get_spelling(Token_kind);
 
 
 // -------------------------------------------------------------------------- //
-//                              Elaboration
-
-Integer as_integer(Token const&);
-
-
-// -------------------------------------------------------------------------- //
-//                              Lexing
+// Lexing
 
 
 // The Lexer is a facility that translates sequences of
@@ -55,21 +62,34 @@ struct Lexer
   using argument_type = char;
   using result_type = Token;
 
+  Lexer(Character_stream& cs, Token_stream& ts)
+    : cs_(cs), ts_(ts)
+  { }
+
+  void operator()();
+
+  // Scanners
+  Token scan();
+  Token eof();
+  Token symbol1();
+  Token integer();
+
+  // Consumers
+  void error();
+  void space();
+  void digit();
+
   // Semantic actions.
-  Token on_lparen(Location, char const*);
-  Token on_rparen(Location, char const*);
+  Token on_symbol();
+  Token on_integer();
 
-  Token on_plus(Location, char const*);
-  Token on_minus(Location, char const*);
-  Token on_star(Location, char const*);
-  Token on_slash(Location, char const*);
-  Token on_percent(Location, char const*);
+  void save();
 
-  Token on_integer(Location, char const*, char const*, int);
+  Character_stream& cs_;
+  Token_stream&     ts_;
+  String_builder    str_;
+  Location          loc_;
 };
-
-
-Token_list lex(Character_stream&);
 
 
 } // namespace calc

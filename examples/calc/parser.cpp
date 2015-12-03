@@ -5,8 +5,7 @@
 #include "lexer.hpp"
 #include "ast.hpp"
 
-#include "lingo/token.hpp"
-#include "lingo/memory.hpp"
+#include <lingo/error.hpp>
 
 #include <iostream>
 
@@ -14,61 +13,104 @@
 namespace calc
 {
 
-using lingo::print;
-using lingo::debug;
-
 
 namespace
 {
 
-Expr const* parse_expression(Parser&, Token_stream&);
+// Returns a spelling for the current token. If the token
+// stream is at the end of input, then the spelling will
+// reflect that state.
+String const&
+token_spelling(Token_stream& ts)
+{
+  static String end = "end-of-file";
+  if (ts.eof())
+    return end;
+  else
+    return ts.peek().spelling();
+}
+
+} // namespace
+
+
+// Returns the first token of lookahead.
+Token_kind
+Parser::lookahead() const
+{
+  return Token_kind(ts_.peek().kind());
+}
+
+
+// Returns the nth token of lookahead.
+Token_kind
+Parser::lookahead(int n) const
+{
+  return Token_kind(ts_.peek(n).kind());
+}
+
+
+Token
+Parser::match(Token_kind k)
+{
+  if (lookahead() == k)
+    return ts_.get();
+
+  String msg = format("expected '{}' but got '{}'", 
+                      get_spelling(k), 
+                      token_spelling(ts_));
+  error(ts_.location(), msg);
+  throw Parse_error("match");
+}
+
+
+// If the current token matches k, return the token
+// and advance the stream. Otherwise, return an
+// invalid token.
+//
+// Note that invalid tokens evaluate to false.
+Token
+Parser::match_if(Token_kind k)
+{
+  if (lookahead() == k)
+    return ts_.get();
+  else
+    return Token();
+}
+
+
+// Require a token of the given kind. Behavior is
+// udefined if the token does not match.
+Token
+Parser::require(Token_kind k)
+{
+  assert(lookahead() == k);
+  return ts_.get();
+}
+
+
+// Returns the current token and advances the
+// underlying token stream.
+Token
+Parser::accept()
+{
+  return ts_.get();
+}
 
 
 // -------------------------------------------------------------------------- //
 //                          Primary expressions
 
-using Nested_expr = Enclosed_term<Expr>;
-
-
-// Parse an integer literal.
-Expr const*
-parse_integer_literal(Parser& p, Token_stream& toks)
-{
-  // Match integers.
-  if (Token const* tok = match_if(toks, is_token(integer_tok)))
-    return p.on_int_expression(tok);
-  return nullptr;
-}
-
 
 // Parse a paren-enclosed expression.
+//
+// FIXME: Improve diagnostics for matched parens.
 Expr const*
-parse_paren_expression(Parser& p, Token_stream& toks)
+Parser::paren()
 {
-  // Match a nested sub-exprssion.
-  if (Token const* open = match_token(toks, lparen_tok)) {
-
-    // Check for empty parens so we can diagnos an error
-    // more appropriately.
-    if (next_token_is(toks, rparen_tok)) {
-        error(open->location(), "expected expression after '('");
-        return make_error_node<Expr>();
-    }
-
-    // Match the nested expression.
-    if (Required<Expr> e = parse_expression(p, toks)) {
-      if (expect_token(p, toks, rparen_tok)) {
-        return *e;
-      } else {
-        // TODO: Show the location of the first brace.
-        note(open->location(), "unmatched paren is here");
-        return make_error_node<Expr>();
-      }
-    } else {
-      return *e; // Propagate the error.
-    }
-  }
-  return nullptr;
+  this->require(lparen_tok);
+  Expr const* e = expr();
+  match(rparen_tok);
+  return e;
 }
 
 
@@ -78,36 +120,14 @@ parse_paren_expression(Parser& p, Token_stream& toks)
 //        integer-literal
 //      | '(' expression ')'
 Expr const*
-parse_primary_expression(Parser& p, Token_stream& toks)
+Parser::primary()
 {
-  if (Nonempty<Expr> e = parse_integer_literal(p, toks))
-    return *e;
-
-  if (Nonempty<Expr> e = parse_paren_expression(p, toks))
-    return *e;
-
-  // If the expression was none of the above, the program
-  // is ill-formed. Emit a resaonable diagnostic.
-  //
-  // TODO: Maybe let fail gracefully so that the error gets
-  // picked up at the lowest precedence parse?
-  return nullptr;
-}
-
-
-// -------------------------------------------------------------------------- //
-//                            Prefix expressions
-
-// Parse a unary operator.
-//
-//    unary-operator ::= '+' | '-'
-//
-// Note that this is the same as additive-operator.
-Token const*
-parse_unary_operator(Parser& p, Token_stream& toks)
-{
-  extern Token const* parse_additive_operator(Parser&, Token_stream&);
-  return parse_additive_operator(p, toks);
+  if (Token tok = match_if(integer_tok))
+    return on_int(tok);
+  if (lookahead() == lparen_tok)
+    return paren();
+  error(ts_.location(), "expected primary-expression");
+  throw Parse_error("primary");
 }
 
 
@@ -119,51 +139,13 @@ parse_unary_operator(Parser& p, Token_stream& toks)
 //        primary-expression
 //      | unary-operator unary-expression.
 Expr const*
-parse_unary_expression(Parser& p, Token_stream& toks)
+Parser::unary()
 {
-  auto op = parse_unary_operator;
-  auto sub = parse_primary_expression;
-  auto act = [&](Token const* tok, Expr const* e) {
-    return p.on_unary_expression(tok, e);
-  };
-  return parse_prefix_term(p, toks, op, sub, act);
-}
-
-
-// -------------------------------------------------------------------------- //
-//                        Binary precedence parser
-
-// Returns true iff tok is one of the multiplicative operators.
-inline bool
-is_multiplicative_operator(Token const& tok)
-{
-  return tok.kind() == star_tok
-      || tok.kind() == slash_tok
-      || tok.kind() == percent_tok;
-}
-
-
-// Returns true iff tok is one of the additive operators.
-inline bool
-is_additive_operator(Token const& tok)
-{
-  return tok.kind() == plus_tok
-      || tok.kind() == minus_tok;
-}
-
-
-// Parse a multiplicative operator.
-//
-//    multiplicative-operator ::= '*' | '/' | '%'
-//
-// TODO: How do we generalize this. We really need the algorithm
-// header to project the token kind so we can make these kinds
-// of determinations. Same for additive operator and unary operator
-// above.
-inline Token const*
-parse_multiplicative_operator(Parser& p, Token_stream& toks)
-{
-  return match_if(toks, is_multiplicative_operator);
+  if (Token tok = match_if(plus_tok))
+    return on_unary(tok, unary());
+  if (Token tok = match_if(minus_tok))
+    return on_unary(tok, unary());
+  return primary();
 }
 
 
@@ -173,24 +155,20 @@ parse_multiplicative_operator(Parser& p, Token_stream& toks)
 //        unary-expression
 //      | multiplicative-expression multiplicative-operator unary-expression
 Expr const*
-parse_multiplicative_expression(Parser& p, Token_stream& toks)
+Parser::multiplicative()
 {
-  auto op = parse_multiplicative_operator;
-  auto sub = parse_unary_expression;
-  auto act = [&](Token const* tok, Expr const* e1, Expr const* e2) {
-    return p.on_binary_expression(tok, e1, e2);
-  };
-  return parse_left_infix_term(p, toks, op, sub, act);
-}
-
-
-// Parse an additive operator.
-//
-//    additive-operator ::= '+' | '-'
-inline Token const*
-parse_additive_operator(Parser& p, Token_stream& toks)
-{
-  return match_if(toks, is_additive_operator);
+  Expr const* e = unary();
+  while (true) {
+    if (Token tok = match_if(star_tok))
+      e = on_binary(tok, e, unary());
+    else if (Token tok = match_if(slash_tok))
+      e = on_binary(tok, e, unary());
+    else if (Token tok = match_if(percent_tok))
+      e = on_binary(tok, e, unary());
+    else
+      break;
+  }
+  return e;
 }
 
 
@@ -200,68 +178,66 @@ parse_additive_operator(Parser& p, Token_stream& toks)
 //        multiplicative-expression
 //      | additive-expression additive-operator multiplicative-expression
 Expr const*
-parse_additive_expression(Parser& p, Token_stream& toks)
+Parser::additive()
 {
-  auto op = parse_additive_operator;
-  auto sub = parse_multiplicative_expression;
-  auto act = [&](Token const* tok, Expr const* e1, Expr const* e2) {
-    return p.on_binary_expression(tok, e1, e2);
-  };
-  return parse_left_infix_term(p, toks, op, sub, act);
+  Expr const* e = multiplicative();
+  while (true) {
+    if (Token tok = match_if(plus_tok))
+      e = on_binary(tok, e, multiplicative());
+    else if (Token tok = match_if(minus_tok))
+      e = on_binary(tok, e, multiplicative());
+    else
+      break;
+  }
+  return e;
 }
 
 
 // Parse a binary expression. This is the top-level entry point
 // for the binary precedence parser.
 inline Expr const*
-parse_binary_expression(Parser& p, Token_stream& toks)
+Parser::binary()
 {
-  return parse_additive_expression(p, toks);
+  return additive();
 }
 
-
-// -------------------------------------------------------------------------- //
-//                           Expression parser
 
 // Parse an expression.
 Expr const*
-parse_expression(Parser& p, Token_stream& toks)
+Parser::expr()
 {
-  return parse_binary_expression(p, toks);
+  return binary();
 }
-
-
-} // namespace
 
 
 // -------------------------------------------------------------------------- //
 //                            Parser function
 
 Expr const*
-Parser::on_int_expression(Token const* tok)
+Parser::on_int(Token tok)
 {
-  return new Int(tok->location(), as_integer(*tok));
+  return new Int(tok.location(), tok.integer_symbol()->value());
 }
 
 
 Expr const*
-Parser::on_unary_expression(Token const* tok, Expr const* e)
+Parser::on_unary(Token tok, Expr const* e)
 {
-  Location loc = tok->location();
-  switch (tok->kind()) {
+  Location loc = tok.location();
+  switch (tok.kind()) {
     case plus_tok: return new Pos(loc, e);
     case minus_tok: return new Neg(loc, e);
     default: break;
   }
-  lingo_unreachable("invalid unary operator '{}'", tok->token_name());
+  lingo_unreachable("invalid unary operator", tok.spelling());
 }
 
 
 Expr const*
-Parser::on_binary_expression(Token const* tok, Expr const* e1, Expr const* e2)
+Parser::on_binary(Token tok, Expr const* e1, Expr const* e2)
 {
-  Location loc = tok->location();
-  switch (tok->kind()) {
+  Location loc = tok.location();
+  switch (tok.kind()) {
     case plus_tok: return new Add(loc, e1, e2);
     case minus_tok: return new Sub(loc, e1, e2);
     case star_tok: return new Mul(loc, e1, e2);
@@ -269,38 +245,38 @@ Parser::on_binary_expression(Token const* tok, Expr const* e1, Expr const* e2)
     case percent_tok: return new Mod(loc, e1, e2);
     default: break;
   }
-  lingo_unreachable("invalid binary operator '{}'", tok->token_name());
+  lingo_unreachable("invalid binary operator '{}'", tok.spelling());
 }
 
 
 Expr const*
-parse(Token_stream& ts)
+Parser::operator()()
 {
-  Parser p;
-  if (ts.eof())
+  if (ts_.eof())
     return nullptr;
-  else
-    return parse_expression(p, ts);
+  return expr();
 }
 
 
 // Parse the given buffer.
 Expr const*
-parse(Buffer& buf)
+parse(String const& str)
 {
-  Input_context cxt(buf);
-
-  // Transform character input into tokens.
+  Buffer buf(str);  
   Character_stream cs(buf);
-  Token_list toks = lex(cs);
+  Token_stream ts(buf);
+  Lexer lex(cs, ts);
+  Parser parse(ts);
+
+  // Lex.
+  lex();
   if (error_count()) {
     reset_diagnostics();
     return make_error_node<Expr>();
   }
 
-  // Transform tokens into abstract syntax.
-  Token_stream ts(toks);
-  Expr const* expr = parse(ts);
+  // Parse.
+  Expr const* expr = parse();
   if (error_count()) {
     reset_diagnostics();
     return make_error_node<Expr>();
@@ -308,27 +284,5 @@ parse(Buffer& buf)
 
   return expr;
 }
-
-
-Expr const*
-parse(std::string const& str)
-{
-  Buffer buf(str);
-  return parse(buf);
-}
-
-
-
-// Initialize the grammar production rules.
-void
-init_grammar()
-{
-  install_grammar(parse_primary_expression, "primary-expression");
-  install_grammar(parse_unary_expression, "unary-expression");
-  install_grammar(parse_multiplicative_expression, "multiplicative-expression");
-  install_grammar(parse_additive_expression, "additive-expression");
-  install_grammar(parse_expression, "expression");
-}
-
 
 } // namespace calc

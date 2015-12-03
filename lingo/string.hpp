@@ -341,7 +341,6 @@ String_builder::clear()
 // -------------------------------------------------------------------------- //
 //                            String buffer
 
-
 // The string buffer class provides implements a simple
 // string-based buffer for a stream. The string must not
 // have null characters.

@@ -14,12 +14,12 @@
 
 #include <boost/filesystem.hpp>
 
+
 namespace lingo
 {
 
 // -------------------------------------------------------------------------- //
-//                                Files
-
+// Paths
 
 // A path name.
 //
@@ -28,14 +28,12 @@ namespace lingo
 using Path = boost::filesystem::path;
 
 
+// -------------------------------------------------------------------------- //
+// Files
+
 // Represents a file system file. This object is primary used
 // to house the text the file contains, providing long-term
 // storage for its text.
-//
-// A file also includes a line map, which is used to associate
-// file information with lines.
-//
-// TODO: Use std::filesystem when it becomes standard.
 class File : public Buffer
 {
   friend class File_manager;
@@ -43,9 +41,10 @@ class File : public Buffer
   File(Path const&, int);
 
 public:
-  // Observers
+  // Returns the absolute path to the file.
   Path const& path() const { return path_; }
 
+  // Returns the file's index.  
   int index() const { return index_; }
 
 private:
@@ -55,7 +54,7 @@ private:
 
 
 // -------------------------------------------------------------------------- //
-//                            File manager
+// File manager
 
 // The file manager provides a facility for globally managing
 // opened files. This effectively a list of opened (note: not

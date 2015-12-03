@@ -4,163 +4,308 @@
 #ifndef LINGO_TOKEN_HPP
 #define LINGO_TOKEN_HPP
 
-#include <lingo/location.hpp>
-#include <lingo/buffer.hpp>
-#include <lingo/error.hpp>
 #include <lingo/symbol.hpp>
-#include <lingo/string.hpp>
-#include <lingo/integer.hpp>
-#include <lingo/print.hpp>
-#include <lingo/debug.hpp>
+#include <lingo/location.hpp>
 
-#include <cstdint>
-#include <vector>
-#include <tuple>
+#include <list>
+#include <iosfwd>
 
 
 namespace lingo
 {
 
-struct Symbol;
-
-
-
-// -------------------------------------------------------------------------- //
-//                              Management
-
-void install_token(int, char const*, char const*);
-
-char const* get_token_name(int);
-char const* get_token_spelling(int);
-
-
 // -------------------------------------------------------------------------- //
 //                            Token class
 
-// The Token class represents the occurrence of a lexeme  within a
-// source file. It associates the class of the the lexeme with its
-// associated value (if any) and its location in the source file.
+// The kind of an invalid token.
+constexpr int invalid_tok = -1;
+
+
+// A classified symbol in the source language.
 //
-// Each token indexes an entry in the symbol table, which stores
-// additional attributes associated with the token  (e.g. scope
-// bindings, numeric interpretation of values, etc.).
-//
-// Note that -1 is reserved as a special token kind, indicating an
-// error.
+// Note that tokens internally track their kind as
+// an integer value. This allows client languages
+// to define their own token enumeration wihtout
+// having to instantiate a new token class.
 class Token
 {
 public:
-  // Construct an error token.
-  Token()
-    : loc_(), sym_(nullptr)
-  { }
+  Token();
+  Token(Location);
+  Token(Location, Symbol const*);
 
-  Token(Location, char const*, int);
-  Token(Location, char const*, char const*);
-  Token(Location, int, char const*, int);
-  Token(Location, int, char const*, char const*);
-  Token(Location, Symbol&);
+  explicit operator bool() const;
 
-  explicit operator bool() const { return sym_ && kind() != unknown_tok; }
+  int           kind() const;
+  String const& spelling() const;
+  Location      location() const;
 
-  // Observers
-  char const* token_name() const { return get_token_name(kind()); }
-
-  // Source location and span.
-  Location  location() const { return loc_; }
-  Span      span() const;
-
-  int kind() const { return sym_->kind; }
-
-  // Symbol/text representation
-  Symbol const& symbol() const { return *sym_; }
-  String const* str() const    { return &sym_->str; }
+  Symbol const*         symbol() const;
+  Identifier_sym const* identifier_symbol() const;
+  Boolean_sym const*    boolean_symbol() const;
+  Integer_sym const*    integer_symbol() const;
+  Character_sym const*  character_symbol() const;
+  String_sym const*     string_symbol() const;
 
 private:
-  Location   loc_;
-  Symbol*    sym_;
+  Location      loc_;
+  Symbol const* sym_;
 };
 
 
-// Returns the span of the token.
-inline Span
-Token::span() const
+// Initialize the token to the error token.
+inline
+Token::Token()
+  : Token({}, nullptr)
+{ }
+
+
+// Initialize an invalid token at the given source
+// location.
+inline
+Token::Token(Location loc)
+  : Token(loc, nullptr)
+{ }
+
+
+// Initialize a token of kind k with the given
+// symbol table entry.
+inline
+Token::Token(Location loc, Symbol const* s)
+  : loc_(loc), sym_(s)
+{ }
+
+
+// Returns true if the token is valid.
+inline
+Token::operator bool() const
 {
-  Location start = location();
-  Location end(start.offset() + str()->size());
-  return {start, end};
+  return sym_;
 }
 
 
-// A list of tokens.
-using Token_list = std::vector<Token>;
-
-
-// -------------------------------------------------------------------------- //
-//                              Printing
-
-void print(Printer&, Token const&);
-void debug(Printer&, Token const&);
-
-std::ostream& operator<<(std::ostream&, Token const&);
-
-
-
-// -------------------------------------------------------------------------- //
-//                              Token stream
-
-
-// A token stream provides a sequence of tokens and has a very
-// simple streaming interface consisting of only 5 functions:
-// peek(), get(), and eof(), begin(), and end(). Character streams
-// are the input to lexical analyzers.
-class Token_stream
+// Returns the token kind.
+inline int
+Token::kind() const
 {
-public:
-  using value_type = Token;
+  if (sym_)
+    return sym_->token();
+  else
+    return -1;
+}
 
-  // Construct a token stream over a non-empty range of token pointers.
-  Token_stream(Token const* f, Token const* l)
-    : first_(f), last_(l)
-  { }
 
-  Token_stream(Token_list const& toks)
-    : Token_stream(toks.data(), toks.data() + toks.size())
-  { }
+// Returns the spelling of the token.
+inline String const&
+Token::spelling() const
+{
+  return sym_->spelling();
+}
 
-  // Stream control
-  bool eof() const { return first_ == last_; }
-  Token const& peek() const;
-  Token const& peek(int) const;
-  Token const& get();
-  Token const& last() { return *(last_ - 1); }
-  Token const& last() const { return *(last_ - 1); }
 
-  // Iterators
-  Token const* begin()       { return first_; }
-  Token const* begin() const { return first_; }
-  Token const* end()       { return last_; }
-  Token const* end() const { return last_; }
+// Returns the source location of the token.
+inline Location
+Token::location() const
+{
+  return loc_;
+}
 
-  // Returns the source location of the the current token.
-  Location location() const { return eof() ? Location{} : peek().location(); }
 
-  // Returns the last source location for a token in the buffer.
-  Location last_location() const { return last().span().end(); }
+// Returns the token's symbol and attributes.
+inline Symbol const*
+Token::symbol() const
+{
+  return sym_;
+}
 
-  Token const* first_; // Current character pointer
-  Token const* last_;  // Past the end of the character buffer
+
+// Return the identifier symbol for the token.
+inline Identifier_sym const*
+Token::identifier_symbol() const
+{
+  return cast<Identifier_sym>(sym_);
+}
+
+
+// Return the boolean symbol for the token.
+inline Boolean_sym const*
+Token::boolean_symbol() const
+{
+  return cast<Boolean_sym>(sym_);
+}
+
+
+// Returns the integer symbol for the token.
+inline Integer_sym const*
+Token::integer_symbol() const
+{
+  return cast<Integer_sym>(sym_);
+}
+
+
+// Return the character symbol for the token.
+inline Character_sym const*
+Token::character_symbol() const
+{
+  return cast<Character_sym>(sym_);
+}
+
+
+// Return the string symbol for the token.
+inline String_sym const*
+Token::string_symbol() const
+{
+  return cast<String_sym>(sym_);
+}
+
+
+std::ostream& operator<<(std::ostream&, Token);
+
+
+// -------------------------------------------------------------------------- //
+// Token buffer
+
+
+// A token buffer is a finite sequence of tokens.
+//
+// Note that tokens are maintained in a linked list
+// so that modifications to the buffer don't invalidate
+// iterators.
+//
+// TODO: Define appropriate constructors, etc.
+//
+// FIXME: Is this being used?
+struct Tokenbuf : std::list<Token>
+{
+  using std::list<Token>::list;
 };
 
 
-// Debug print a token string.
-inline void
-debug(Printer& p, Token_stream const& toks)
+// -------------------------------------------------------------------------- //
+//                            Token stream
+
+
+// A token stream provides a stream interface to a
+// token buffer.
+//
+// TODO: This is currently modeling a read/write stream.
+// We probably need both a read and write stream position,
+// although the write position is always at the end.
+class Token_stream
 {
-  for (const Token& tok : toks) {
-    debug(p, tok);
-    print(p, " ");
+public:
+  using Position = Tokenbuf::iterator;
+
+  Token_stream(Buffer& b);
+
+  bool eof() const;
+  Token peek() const;
+  Token peek(int) const;
+  Token get();
+  void put(Token);
+
+  // Buffer
+  Buffer const& buffer() const { return input_; }
+
+  Location location() const;
+
+  // FIXME: Use iterators, begin, and end instead
+  // of a stream position.
+  Position position() const;
+
+// private:
+  Buffer&  input_;  // The source text buffer
+  Tokenbuf buf_;    // The underlying token buffer
+  Position pos_;    // The current input/output position.
+};
+
+
+// Initialize a token stream with an empty
+// buffer.
+inline
+Token_stream::Token_stream(Buffer& b)
+  : input_(b), buf_(), pos_(buf_.begin())
+{ }
+
+
+// Returns true if the stream is at the end of the file.
+inline bool
+Token_stream::eof() const
+{
+  return pos_ == buf_.end();
+}
+
+
+// Returns the current token. If at the end of file,
+// return an invalid token whose location is past the
+// end of the file.
+inline Token
+Token_stream::peek() const
+{
+  if (eof())
+    return Token(Location(&input_, buf_.size()));
+  else
+    return *pos_;
+}
+
+
+// Returns the nth token past the current position.
+inline Token
+Token_stream::peek(int n) const
+{
+  // Get the nth token, but restore the stream position
+  // afterwards. Note that this will gracefully handle
+  // an eof during lookahead.
+  Position i = pos_;
+  while (i != buf_.end() && n) {
+    ++i;
+    --n;
   }
+  if (i == buf_.end())
+    return Token();
+  else
+    return *i;
+}
+
+
+// Returns the current token and advances the stream.
+inline Token
+Token_stream::get()
+{
+  if (eof())
+    return Token(Location(&input_, buf_.size() - 1));
+  else
+    return *pos_++;
+}
+
+
+// Puts the given token at the end of the stream.
+inline void
+Token_stream::put(Token tok)
+{
+  buf_.push_back(tok);
+
+  // Make sure that the pos_ isn't pointing past
+  // then end after insertion into an empty list.
+  if (pos_ == buf_.end())
+    pos_ = buf_.begin();
+}
+
+
+// Returns the current position of the stream. This
+// effectively an iterator into the buffer.
+inline Token_stream::Position
+Token_stream::position() const
+{
+  return pos_;
+}
+
+
+// Returns the source location of the current token.
+inline Location
+Token_stream::location() const
+{
+  return peek().location();
 }
 
 

@@ -31,41 +31,29 @@ class Buffer;
 class Character_stream
 {
 public:
-  using value_type = char;
-
-  Character_stream(Buffer& b, char const* f, char const* l)
-    : buf_(b), base_(f), first_(f), last_(l)
-  { }
-
-  Character_stream(Buffer& b, String const& s)
-    : Character_stream(b, s.data(), s.data() + s.size())
-  { }
-
   Character_stream(Buffer& b)
-    : Character_stream(b, b.begin(), b.end())
+    : buf_(b), base_(b.begin()), first_(base_), last_(b.end())
   { }
 
   // Stream control
-  bool        eof() const     { return first_ == last_; }
-  char const& peek() const;
-  char        peek(int) const;
-  char const& get();
-
-  // Iterators
-  char const* begin()       { return first_; }
-  char const* begin() const { return first_; }
-  char const* end()       { return last_; }
-  char const* end() const { return last_; }
+  bool eof() const     { return first_ == last_; }
+  char peek() const;
+  char peek(int) const;
+  char get();
+  void ignore()       { get(); }
 
   // Locations
-  Location location() const { return Location(offset()); }
+  int      offset() const   { return first_ - base_; }
+  Location location() const { return Location(&buf_, offset()); }
 
   // Buffer
   Buffer const& buffer() const { return buf_; }
 
-private:
-  int offset() const { return first_ - base_; }
+  // Iterators
+  char const* begin() const { return first_; }
+  char const* end() const { return last_; }
 
+private:
   Buffer&       buf_;  // The stream's source file
   char const*   base_;  // The beginning of the stream
   char const*   first_; // Current character pointer

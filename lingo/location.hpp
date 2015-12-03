@@ -7,6 +7,9 @@
 // The location module provides facilities for representing
 // locations in source code.
 
+#include <lingo/assert.hpp>
+#include <lingo/utility.hpp>
+
 #include <iosfwd>
 
 namespace lingo
@@ -16,120 +19,120 @@ class Buffer;
 class File;
 class Line;
 
-// The location class is an opaque reference to a location within
-// a source code buffer. The interpretation of a location object
-// requires the bufer from which it is created.
+
+// The location class represents the position of text within
+// a source file. This is a pair: the file in which the text
+// resides and its the starting offset of that text. Note that
+// the ending offset is determined by the kind of element:
+// token, comment, etc.
 //
-// Internally, this is simply the offset of a character within
-// the buffer. The buffer is responsible for associating 
+// Note that for redirected input, the file may be null.
 class Location
 {
 public:
-  // Indicates a program element that does not originate within
-  // a source file.
-  static Location none;
-
   Location()
-    : loc_(-1)
+    : buf_(nullptr), off_(-1)
   { }
 
-  explicit Location(int n)
-    : loc_(n)
+  Location(int n)
+    : buf_(nullptr), off_(n)
   { }
 
-  // Returns the offset into a buffer.
-  int offset() const { return loc_; }
+  Location(Buffer const* b, int n)
+    : buf_(b), off_(n)
+  { }
 
-  explicit operator bool() const { return (*this != none); }
+  Buffer const* buffer() const { return buf_; }
+  File const*   file() const;
+  int           offset() const { return off_; }
+  int           line_number() const;
+  int           column_number() const;
+  Locus         locus() const;
+  Line const&   line() const;
 
-  bool operator==(Location l) const { return loc_ == l.loc_; }
-  bool operator!=(Location l) const { return loc_ != l.loc_; }
+  // Convert to true when the location is valid. This
+  // is the case when the offset is not -1.
+  explicit operator bool() const { return off_ != -1; }
 
 private:
-  int loc_;
+  Buffer const* buf_;
+  int           off_;
 };
 
 
-// A span of text is represented by a pair of source 
-// locations. Like a location, a text span must be
-// resolved against its input buffer.
+inline bool 
+operator==(Location a, Location b)
+{ 
+  return a.buffer() == b.buffer() && a.offset() == b.offset();
+}
+
+
+inline bool
+operator!=(Location a, Location b)
+{ 
+  return !(a == b);
+}
+
+
+
+// A span of text is contiguous region of characters within
+// a file.
+// 
+// The start location shall be less than or equal to the end 
+// location. A span is never empty.
 //
-// The start location shall be less than or equal to
-// the end location. A span is never empty.
+// TODO: Support multi-line spnas?
 struct Span
 {
-  Span(Location s, Location e)
-    : start_(s), end_(e)
+  Span()
+    : buf_(nullptr), start_(-1), end_(-1)
   { }
 
-  Location start() const { return start_; }
-  Location end() const { return end_; }
+  Span(Buffer const* b, int m, int n)
+    : buf_(b), start_(m), end_(n)
+  { }
+
+  // The locations shall be sourced from the same file.
+  Span(Location s, Location e)
+    : buf_(s.buffer()), start_(s.offset()), end_(e.offset())
+  {
+    lingo_assert(buf_ == e.buffer());
+  }
+
+  Buffer const* buffer() const { return buf_; }
+  File const* file() const;
+  
+  // Returns the start and end offsets.
+  int start_offset() const { return start_; }
+  int end_offset() const   { return end_; }
+  
+  // Retursn the start and end source locations.
+  Location start_location() const { return {buf_, start_}; }
+  Location end_location() const   { return {buf_, end_}; }
+
+  Locus start_locus() const;
+  Locus end_locus() const;
+  int   start_line_number() const;
+  int   end_line_number() const;
+  int   start_column_number() const;
+  int   end_column_number() const;
+
+  Line const& line() const;
+
+  bool is_multiline() const;
 
   // Contextually converts to true iff both the start and
   // end are valid offsets.
-  explicit operator bool() const { return start_ && end_; }
-
-  Location start_;
-  Location end_;
-};
-
-
-// A Bound location associates a location reference with its
-// originating buffer. Bound locations are returned from
-// the location() method of a buffer.
-//
-// FIXME: Don't call this "bound"
-struct Bound_location
-{
-  Bound_location(Buffer const& b, Location l)
-    : buf_(&b), loc_(l)
-  { }
-  
-  bool is_valid() const { return (bool)loc_; }
-  bool is_file_location() const;
-
-  Buffer const& buffer() const { return *buf_; }
-  File const& file() const;
-  Line const& line() const;
-  
-  int line_no() const;
-  int column_no() const;
-
-  Buffer const*  buf_;
-  Location      loc_;
-};
-
-
-// A Bound span associates a location reference with its
-// originating buffer. 
-//
-// TODO: Support line iterators?
-struct Bound_span
-{
-  Bound_span(Buffer const& b, Span s)
-    : buf_(&b), span_(s)
-  { }
-  
-  bool is_valid() const     { return (bool)span_; }
-  bool is_multiline() const { return start_line_no() != end_line_no(); }
-  bool is_file_location() const;
-
-  Buffer const& buffer() const { return *buf_; }
-  File const& file() const;
-  Line const& line() const;
-  
-  int start_line_no() const;
-  int end_line_no() const;
-  int start_column_no() const;
-  int end_column_no() const;
+  explicit operator bool() const { return start_ != -1; }
 
   Buffer const* buf_;
-  Span          span_;
+  int           start_;
+  int           end_;
 };
 
 
-std::ostream& operator<<(std::ostream&, Bound_location const&);
-std::ostream& operator<<(std::ostream&, Bound_span const&);
+std::ostream& operator<<(std::ostream&, Location const&);
+std::ostream& operator<<(std::ostream&, Span const&);
 
 
 } // namespace lingo

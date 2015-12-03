@@ -5,6 +5,9 @@
 #include "ast.hpp"
 #include "parser.hpp"
 
+#include <lingo/error.hpp>
+
+
 namespace calc
 {
 
@@ -119,20 +122,15 @@ Expr const*
 step_eval(Expr const* e)
 {
   do {
-    // Rebuild the input context around the current
-    // expression by rendering and re-parsing it. This
-    // guarantees that output will be emitted using the
-    // correct buffer.
-    Buffer buf = to_string(e);
-    Input_context cxt(buf);
-    e = parse(buf);
+    // Reparse the input so that source locations line
+    // up in each printing.
+    e = parse(to_string(e));
 
     // Select the sub-expression being evaluated.
     note(next(e)->span(), "evaluating");
 
     // Perform that evaluation.
     e = step(e);
-
   } while (!is<Int>(e));
   print(e);
   return e;
