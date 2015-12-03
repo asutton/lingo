@@ -1,8 +1,8 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include "error.hpp"
-#include "io.hpp"
+#include "lingo/error.hpp"
+#include "lingo/io.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -15,7 +15,7 @@ namespace lingo
 namespace
 {
 
-// Print the source code location for a bound location 
+// Print the source code location for a bound location
 // or span.
 void
 show_location(std::ostream& os, Diagnostic_info const& info)

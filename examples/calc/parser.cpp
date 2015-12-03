@@ -5,7 +5,7 @@
 #include "lexer.hpp"
 #include "ast.hpp"
 
-#include <lingo/error.hpp>
+#include "lingo/error.hpp"
 
 #include <iostream>
 
@@ -55,8 +55,8 @@ Parser::match(Token_kind k)
   if (lookahead() == k)
     return ts_.get();
 
-  String msg = format("expected '{}' but got '{}'", 
-                      get_spelling(k), 
+  String msg = format("expected '{}' but got '{}'",
+                      get_spelling(k),
                       token_spelling(ts_));
   error(ts_.location(), msg);
   throw Parse_error("match");
@@ -262,7 +262,7 @@ Parser::operator()()
 Expr const*
 parse(String const& str)
 {
-  Buffer buf(str);  
+  Buffer buf(str);
   Character_stream cs(buf);
   Token_stream ts(buf);
   Lexer lex(cs, ts);

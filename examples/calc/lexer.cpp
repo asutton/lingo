@@ -3,7 +3,7 @@
 
 #include "lexer.hpp"
 
-#include <lingo/error.hpp>
+#include "lingo/error.hpp"
 
 #include <cassert>
 #include <cctype>
@@ -44,7 +44,7 @@ get_spelling(Token_kind k)
 // Lexing
 
 
-void 
+void
 Lexer::save()
 {
   str_.put(cs_.get());

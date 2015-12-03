@@ -5,7 +5,7 @@
 #include "lingo/buffer.hpp"
 #include "lingo/file.hpp"
 #include "lingo/error.hpp"
-#include "utility.hpp"
+#include "lingo/utility.hpp"
 
 #include <iostream>
 
@@ -113,7 +113,7 @@ Span::end_column_number() const
 
 
 // Returns true if the span covers multiple lines of text.
-bool 
+bool
 Span::is_multiline() const
 {
   return start_line_number() != end_line_number();

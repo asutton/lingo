@@ -7,9 +7,9 @@
 #include "directive.hpp"
 #include "step.hpp"
 
-#include <lingo/error.hpp>
-#include <lingo/memory.hpp>
-#include <lingo/io.hpp>
+#include "lingo/error.hpp"
+#include "lingo/memory.hpp"
+#include "lingo/io.hpp"
 
 #include <iostream>
 
@@ -66,7 +66,7 @@ main()
       Token_stream ts(buf);
       Lexer lex(cs, ts);
       Parser parse(ts);
-      
+
       // Transform characters into tokens.
       lex();
       if (error_count()) {
@@ -88,9 +88,9 @@ main()
 
       if (is_step_mode())
         step_eval(expr);
-      else      
+      else
         std::cout << expr << " == " << evaluate(expr) << '\n';
-    } 
+    }
     catch (Parse_error& err) {
       // Clear the diagnostic count and resume
       // taking input and parsing.
