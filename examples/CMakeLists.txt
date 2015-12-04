@@ -2,3 +2,4 @@
 # All rights reserved
 
 add_subdirectory(calc)
+add_subdirectory(lambda)

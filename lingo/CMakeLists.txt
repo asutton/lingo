@@ -1,6 +1,7 @@
 # Copyright (c) 2015 Andrew Sutton
 # All rights reserved
 
+
 # Bypass the usual cppformat build and build the
 # source into this tree.
 set(contrib_src ${PROJECT_SOURCE_DIR}/cppformat/format.cc)
@@ -25,7 +26,9 @@ add_library(lingo
   debug.cpp
   character.cpp
   symbol.cpp
-  token.cpp)
+  token.cpp
+  environment.cpp)
+
 target_include_directories(
   lingo
     PUBLIC
@@ -33,6 +36,7 @@ target_include_directories(
       ${GMP_INCLUDE_DIRS}
       ${Boost_INCLUDE_DIRS}
 )
+
 target_link_libraries(
   lingo
     PUBLIC

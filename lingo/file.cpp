@@ -35,6 +35,11 @@ read_file(Path const& p)
 } // namespace
 
 
+File::File(Path const& p)
+  : Buffer(read_file(p)), path_(p), index_(0)
+{ }
+
+
 // Construct file with the given index. This will cache the
 // text of the file.
 File::File(Path const& p, int n)

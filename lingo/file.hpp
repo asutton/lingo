@@ -39,8 +39,9 @@ class File : public Buffer
   friend class File_manager;
 
   File(Path const&, int);
-
 public:
+  File(Path const&);
+
   // Returns the absolute path to the file.
   Path const& path() const { return path_; }
 
