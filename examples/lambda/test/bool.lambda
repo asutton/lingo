@@ -23,5 +23,4 @@ xor false true;
 xor false false;
 
 not true;
-not false
-
+not false;

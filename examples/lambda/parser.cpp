@@ -207,14 +207,16 @@ Parser::expr()
 }
 
 
-// TODO: allow a trailing semicolon as the last token.
 Expr const*
 Parser::seq()
 {
   Expr const* e = postfix();
   while (true) {
-    if (match_if(semicolon_tok))
+    if (match_if(semicolon_tok)) {
+      if (ts_.eof())
+        return e;
       e = on_seq(e, expr());
+    }
     else
       break;
   }
