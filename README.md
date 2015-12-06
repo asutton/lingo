@@ -1,7 +1,7 @@
 # Introduction
 
-The `lingo` library is a set of facilities that supports the construction 
-of compilers, interpreters, and other language related tools. In particular,
+The Lingo library is a set of facilities that supports the construction of
+compilers, interpreters, and other language related tools. In particular,
 this library aims to provide reasonable implementations of common facilities
 that can be difficult and time-consuming to construct as part of a compiler
 implementation.
@@ -64,17 +64,18 @@ source directory using the following command:
 git submodule add https://github.com/asutton/lingo
 ```
 
-The `lingo` library also depends on a few external libraries:
+The Lingo library also depends on a few external libraries:
 
-- [C++ Format](http://cppformat.github.io) -- This is included as a git
-  submodule of `lingo`.
+- [C++ Format](http://cppformat.github.io) -- This is included as the Git
+  submodule 'cppformat'.
 - [GMP](https://gmplib.org) -- The GNU Multiple Precision Arithmetic Library
   (GMP) must be installed on your system.
 
 
-# Building `lingo`
+# Building Lingo
 
-The `lingo` library is built using [CMake](https://cmake.org) (version 3.0
-or greater). Adding the cloned `lingo` directory should be sufficient to
-make it build. `lingo` produces a static library named `liblingo`. This
-should be linked against your compiler implementations.
+The Lingo library is built using [CMake](https://cmake.org) (version 3.0
+or later). Adding the cloned 'lingo' directory to your CMake project should
+be sufficient to make it build. The 'lingo' target produces a static library
+named 'liblingo'. This should be linked against your compiler
+implementations.
