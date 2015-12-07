@@ -9,16 +9,6 @@
 namespace lingo
 {
 
-// Construct an integer with the value in s in base b. Behavior is
-// undefined if s does not represent an integer in base b.
-Integer::Integer(std::string const& s, int b)
-  : base_(b)
-{
-  if (mpz_init_set_str(value_, s.c_str(), base_) == -1)
-    assert(false);
-}
-
-
 namespace
 {
 
