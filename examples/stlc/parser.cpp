@@ -56,8 +56,8 @@ Parser::match(Token_kind k)
   if (lookahead() == k)
     return ts_.get();
 
-  String msg = format("expected '{}' but got '{}'", 
-                      get_spelling(k), 
+  String msg = format("expected '{}' but got '{}'",
+                      get_spelling(k),
                       token_spelling(ts_));
   error(ts_.location(), msg);
   throw Parse_error("match");
@@ -99,22 +99,45 @@ Parser::accept()
 
 
 // -------------------------------------------------------------------------- //
-// Parsing
+// Type parsing
+
+Type const*
+Parser::base_type()
+{
+  Token tok = match(identifier_tok);
+  return on_base_type(tok);
+}
+
+
+// arrow-type: base-type '->' arrow_type
+//             type
+Type const*
+Parser::arrow_type()
+{
+  Type const* t = base_type();
+  if (match_if(arrow_tok))
+    t = on_arrow_type(t, arrow_type());
+  return t;
+}
 
 
 Type const*
 Parser::type()
 {
-  Token tok = match(identifier_tok);
-  return on_type(tok);
+  return arrow_type();
 }
 
+
+// -------------------------------------------------------------------------- //
+// Expression parsing
 
 Var const*
 Parser::var()
 {
-  Token tok = require(identifier_tok);
-  return on_var(tok);
+  Token n = require(identifier_tok);
+  match(colon_tok);
+  Type const* t = type();
+  return on_var(n, t);
 }
 
 
@@ -130,7 +153,7 @@ Expr const*
 Parser::def()
 {
   Var const* v = var();
-  require(equal_tok);
+  match(equal_tok);
   Expr const* e = expr();
   return on_def(v, e);
 }
@@ -142,11 +165,9 @@ Parser::abs()
   Environment env(*this);
   require(backslash_tok);
   Var const* v = var();
-  match(colon_tok);
-  Type const* t = type();
   match(dot_tok);
   Expr const* e = expr();
-  return on_abs(v, t, e);
+  return on_abs(v, e);
 }
 
 
@@ -242,17 +263,24 @@ Parser::operator()()
 
 
 Type const*
-Parser::on_type(Token tok)
+Parser::on_base_type(Token tok)
 {
-  return get_type(tok.symbol());
+  return get_base_type(tok.symbol());
+}
+
+
+Type const*
+Parser::on_arrow_type(Type const* t1, Type const* t2)
+{
+  return get_arrow_type(t1, t2);
 }
 
 
 Var const*
-Parser::on_var(Token tok)
+Parser::on_var(Token tok, Type const* t)
 {
   Symbol const* sym = tok.symbol();
-  Var* v = new Var(sym);
+  Var* v = new Var(sym, t);
   names_.bind(sym, v);
   return v;
 }
@@ -279,9 +307,9 @@ Parser::on_def(Var const* v, Expr const* e)
 
 
 Expr const*
-Parser::on_abs(Var const* v, Type const* t, Expr const* e)
+Parser::on_abs(Var const* v, Expr const* e)
 {
-  return new Abs(v, t, e);
+  return new Abs(v, e);
 }
 
 
@@ -300,10 +328,10 @@ Parser::on_seq(Expr const* e1, Expr const* e2)
 
 
 // Parse the given buffer.
-Expr const* 
+Expr const*
 parse(String const& str)
 {
-  Buffer buf(str);  
+  Buffer buf(str);
   Character_stream cs(buf);
   Token_stream ts(buf);
   Lexer lex(cs, ts);

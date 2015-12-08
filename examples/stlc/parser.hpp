@@ -43,6 +43,9 @@ struct Parser
   Expr const* operator()();
 
   Type const* type();
+  Type const* arrow_type();
+  Type const* base_type();
+
   Var const* var();
   Expr const* id();
   Expr const* def();
@@ -54,11 +57,12 @@ struct Parser
   Expr const* seq();
   Expr const* expr();
 
-  Type const* on_type(Token);
-  Var const* on_var(Token);
+  Type const* on_base_type(Token);
+  Type const* on_arrow_type(Type const*, Type const*);
+  Var const* on_var(Token, Type const*);
   Expr const* on_id(Token);
   Expr const* on_def(Var const*, Expr const*);
-  Expr const* on_abs(Var const*, Type const*, Expr const*);
+  Expr const* on_abs(Var const*, Expr const*);
   Expr const* on_app(Expr const*, Expr const*);
   Expr const* on_seq(Expr const*, Expr const*);
 

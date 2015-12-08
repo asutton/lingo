@@ -25,11 +25,13 @@ init_tokens()
   symbols.put_symbol(backslash_tok, "\\");
   symbols.put_symbol(dot_tok, ".");
   symbols.put_symbol(equal_tok, "=");
+  symbols.put_symbol(colon_tok, ":");
   symbols.put_symbol(semicolon_tok, ";");
+  symbols.put_symbol(arrow_tok, "->");
 }
 
 
-int 
+int
 main(int argc, char* argv[])
 {
   init_colors();

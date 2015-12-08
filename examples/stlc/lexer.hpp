@@ -4,8 +4,8 @@
 #ifndef CALC_LEXER_HPP
 #define CALC_LEXER_HPP
 
-// The calc lexer defines the additional tokens used by the 
-// language and the machine used to recognize those tokens 
+// The calc lexer defines the additional tokens used by the
+// language and the machine used to recognize those tokens
 // in input source.
 
 #include <lingo/symbol.hpp>
@@ -43,6 +43,7 @@ enum Token_kind
   equal_tok,
   colon_tok,
   semicolon_tok,
+  arrow_tok,
   identifier_tok,
   integer_tok,
 };
@@ -73,6 +74,7 @@ struct Lexer
   Token scan();
   Token eof();
   Token symbol1();
+  Token symbol2();
   Token identifier();
 
   // Consumers

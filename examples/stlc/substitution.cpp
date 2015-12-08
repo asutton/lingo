@@ -8,14 +8,14 @@
 namespace calc
 {
 
-Expr const* 
+Expr const*
 Substitution::operator()(Expr const* e) const
 {
   return subst(e);
 }
 
 
-Expr const* 
+Expr const*
 Substitution::subst(Expr const* e) const
 {
   struct Fn
@@ -85,9 +85,8 @@ Expr const*
 Substitution::subst(Abs const* e) const
 {
   Var const* v = cast<Var>(subst(e->var()));
-  Type const* t = e->type();
   Expr const* d = subst(e->expr());
-  return new Abs(v, t, d);
+  return new Abs(v, d);
 }
 
 

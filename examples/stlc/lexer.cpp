@@ -34,6 +34,7 @@ get_spelling(Token_kind k)
     case equal_tok: return "=";
     case colon_tok: return ":";
     case semicolon_tok: return ";";
+    case arrow_tok: return "->";
     case identifier_tok: return "<identifier>";
     case integer_tok: return "<integer>";
   }
@@ -45,7 +46,7 @@ get_spelling(Token_kind k)
 // Lexing
 
 
-void 
+void
 Lexer::save()
 {
   str_.put(cs_.get());
@@ -70,10 +71,16 @@ Lexer::scan()
     case ':': return symbol1();
     case ';': return symbol1();
 
+    case '-':
+      save();
+      if (cs_.peek() == '>')
+        return symbol1();
+      else
+        error();
+
     default:
       if (is_alpha(cs_.peek()))
         return identifier();
-
       error();
     }
   }

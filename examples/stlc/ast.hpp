@@ -16,6 +16,9 @@ namespace calc
 using namespace lingo;
 
 struct Type;
+struct Base_type;
+struct Arrow_type;
+
 struct Expr;
 struct Var;
 struct Ref;
@@ -31,10 +34,30 @@ struct Visitor;
 // Types
 
 // Represents an uninterpreted base type. Each type with
-// a different name is unique.
+// a different name is unique. The set of types is:
+//
+//    t ::= x        -- uninterpreted base type
+//          t1 -> t2 -- arrow types
 struct Type
 {
-  Type(Symbol const* n)
+  struct Visitor;
+
+  virtual ~Type()
+  { }
+};
+
+
+struct Type::Visitor
+{
+  virtual void visit(Base_type const*) = 0;
+  virtual void visit(Arrow_type const*) = 0;
+};
+
+
+// Uninterpreted base types.
+struct Base_type : Type
+{
+  Base_type(Symbol const* n)
     : name_(n)
   { }
 
@@ -44,7 +67,23 @@ struct Type
 };
 
 
-Type const* get_type(Symbol const* n);
+// Arrow types t1 -> t2.
+struct Arrow_type : Type
+{
+  Arrow_type(Type const* t1, Type const* t2)
+    : first(t1), second(t2)
+  { }
+
+  Type const* in() const { return first; }
+  Type const* out() const { return first; }
+
+  Type const* first;
+  Type const* second;
+};
+
+
+Type const* get_base_type(Symbol const* n);
+Type const* get_arrow_type(Type const*, Type const*);
 
 
 // -------------------------------------------------------------------------- //
@@ -61,12 +100,18 @@ Type const* get_type(Symbol const* n);
 //          e1 ; e2 -- sequences
 struct Expr
 {
+  struct Visitor;
+
   Expr()
-    : loc_()
+    : loc_(), type_()
   { }
 
   Expr(Location l)
-    : loc_(l)
+    : loc_(l), type_()
+  { }
+
+  Expr(Location l, Type const* t)
+    : loc_(l), type_(t)
   { }
 
   virtual ~Expr()
@@ -77,12 +122,16 @@ struct Expr
   Location     location() const { return loc_; }
   virtual Span span() const     { return {loc_, loc_}; }
 
-  Location loc_;
+  Type const* type() const              { return type_; }
+  void        type(Type const* t) const { type_ = t; }
+
+  Location            loc_;
+  mutable Type const* type_;
 };
 
 
 // The expression visitor.
-struct Visitor
+struct Expr::Visitor
 {
   virtual void visit(Var const*) = 0;
   virtual void visit(Ref const*) = 0;
@@ -97,8 +146,8 @@ struct Visitor
 // A varaible.
 struct Var : Expr
 {
-  Var(Symbol const* n)
-    : name_(n)
+  Var(Symbol const* n, Type const* t)
+    : Expr({}, t), name_(n)
   { }
 
   void accept(Visitor& v) const { return v.visit(this); }
@@ -117,7 +166,7 @@ struct Ref : Expr
   { }
 
   Ref(Symbol const* s, Var const* v)
-    : name_(s), var_(v)
+    : Expr({}, v->type()), name_(s), var_(v)
   { }
 
   void accept(Visitor& v) const { return v.visit(this); }
@@ -135,7 +184,7 @@ struct Ref : Expr
 struct Def : Expr
 {
   Def(Var const* v, Expr const* e)
-    : first(v), second(e)
+    : Expr({}, v->type()), first(v), second(e)
   { }
 
   void accept(Visitor& v) const { return v.visit(this); }
@@ -152,16 +201,14 @@ struct Def : Expr
 struct Decl : Expr
 {
   Decl(Var const* v, Type const* t)
-    : first(v), second(t)
+    : Expr({}, t), first(v)
   { }
 
   void accept(Visitor& v) const { return v.visit(this); }
 
   Var const*  var() const  { return first; }
-  Type const* type() const { return second; }
 
   Var const* first;
-  Type const* second;
 };
 
 
@@ -169,8 +216,8 @@ struct Decl : Expr
 // An expression abstracted over a variable.
 struct Abs : Expr
 {
-  Abs(Var const* v, Type const* t, Expr const* e)
-    : first(v), second(t), third(e)
+  Abs(Var const* v, Expr const* e)
+    : first(v), third(e)
   { }
 
   void accept(Visitor& v) const { return v.visit(this); }
@@ -220,18 +267,33 @@ struct Seq : Expr
 
 
 // -------------------------------------------------------------------------- //
-//                                Generic visitor
+// Visitors
 
-// A parameterized visitor that dispatches to a function 
-// object. F is the type of the function and T is its
-// return type.
-//
-// This class is never used directly. It is used only in
-// the apply function below.
 template<typename F, typename T>
-struct Basic_visitor : Visitor, Generic_visitor<F, T>
+struct Basic_type_visitor : Type::Visitor, Generic_visitor<F, T>
 {
-  Basic_visitor(F f)
+  Basic_type_visitor(F f)
+    : Generic_visitor<F, T>(f)
+  { }
+
+  void visit(Base_type const* t) { this->invoke(t); }
+  void visit(Arrow_type const* t) { this->invoke(t); }
+};
+
+
+template<typename F, typename T = typename std::result_of<F(Base_type const*)>::type>
+inline T
+apply(Type const* t, F fn)
+{
+  Basic_type_visitor<F, T> v(fn);
+  return accept(t, v);
+}
+
+
+template<typename F, typename T>
+struct Basic_expr_visitor : Expr::Visitor, Generic_visitor<F, T>
+{
+  Basic_expr_visitor(F f)
     : Generic_visitor<F, T>(f)
   { }
 
@@ -245,13 +307,11 @@ struct Basic_visitor : Visitor, Generic_visitor<F, T>
 };
 
 
-// Apply the function f to the type t.
-// The return type is that of the function object F.
 template<typename F, typename T = typename std::result_of<F(Var const*)>::type>
 inline T
 apply(Expr const* e, F fn)
 {
-  Basic_visitor<F, T> v(fn);
+  Basic_expr_visitor<F, T> v(fn);
   return accept(e, v);
 }
 
@@ -260,6 +320,9 @@ apply(Expr const* e, F fn)
 // Facilities
 
 void print(std::ostream&, Type const*);
+void print(std::ostream&, Base_type const*);
+void print(std::ostream&, Arrow_type const*);
+
 void print(std::ostream&, Expr const*);
 void print(std::ostream&, Var const*);
 void print(std::ostream&, Ref const*);
