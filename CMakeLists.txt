@@ -26,6 +26,7 @@ find_package(Boost 1.55.0 REQUIRED COMPONENTS system filesystem)
 # LLVM dependencies
 find_package(LLVM 3.6 REQUIRED CONFIG)
 llvm_map_components_to_libnames(LLVM_LIBRARIES core)
+include_directories(${LLVM_INCLUDE_DIRS})
 
 
 # Other dependencies

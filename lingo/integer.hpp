@@ -16,26 +16,42 @@
 namespace lingo
 {
 
-
-// Represents an arbitrary precision integer.
+// Represents an arbitrary precision integer. The defualt
+// interpretation of this value is as a signed integer.
+// However, unsigned versions of operations are provided
+// as well.
 class Integer
 {
 public:
   Integer();
 
+  // Copy semantics
   Integer(Integer const&);
   Integer& operator=(Integer const&);
 
-  Integer(std::intmax_t);
-  Integer(std::uintmax_t, bool);
-  Integer(int, std::uintmax_t, bool);
+  // Move semantics
+  Integer(Integer&&);
+  Integer& operator=(Integer&&);
 
-  ~Integer();
+  Integer(llvm::APInt const&);
+  Integer& operator=(llvm::APInt const&);
 
-  // Arithmetic compound assignmnt operators.
+  Integer(llvm::APInt&&);
+  Integer& operator=(llvm::APInt&&);
+
+
+  // Value construction.
+  //
+  // TODO: Support initialization from an array.
+  Integer(std::int64_t);
+  Integer(std::uint64_t, bool);
+  Integer(int, std::uint64_t, bool);
+
   Integer& operator+=(Integer const&);
   Integer& operator-=(Integer const&);
   Integer& operator*=(Integer const&);
+  Integer& operator/=(Integer const&);
+  Integer& operator%=(Integer const&);
 
   Integer& operator&=(Integer const&);
   Integer& operator|=(Integer const&);
@@ -43,10 +59,6 @@ public:
 
   Integer& operator<<=(Integer const&);
   Integer& operator>>=(Integer const&);
-
-  Integer& neg();
-  Integer& abs();
-  Integer& comp();
 
   // Sign
   int sign() const;
@@ -59,9 +71,10 @@ public:
   bool truth_value() const;
 
   int bits() const;
-  int base() const;
-  std::uintmax_t getu() const;
-  std::intmax_t gets() const;
+  std::uint64_t getu() const;
+  std::int64_t gets() const;
+
+  llvm::APInt const& impl() const;
 
 private:
   llvm::APInt z;
@@ -72,9 +85,7 @@ private:
 inline
 Integer::Integer() 
   : z(32, 0, true)
-{ 
-  mpz_init(value_); 
-}
+{ }
 
 
 // Copy initialize this object with x.
@@ -93,21 +104,70 @@ Integer::operator=(Integer const& x)
 }
 
 
+inline
+Integer::Integer(Integer&& x)
+  : z(std::move(z))
+{ }
+
+
+inline Integer&
+Integer::operator=(Integer&& x)
+{
+  z = std::move(x.z);
+  return *this;
+}
+
 
 inline
-Integer::Integer(std::intmax_t n)
+Integer::Integer(llvm::APInt const& n)
+  : z(n)
+{ }
+
+
+inline
+Integer& 
+Integer::operator=(llvm::APInt const& n)
+{
+  z = n;
+  return *this;
+}
+
+
+inline
+Integer::Integer(llvm::APInt&& n)
+  : z(std::move(n))
+{ }
+
+
+inline
+Integer& 
+Integer::operator=(llvm::APInt&& n)
+{
+  z = std::move(n);
+  return *this;
+}
+
+
+// Initialize an integer with the (signed) value.
+inline
+Integer::Integer(std::int64_t n)
   : z(32, n, true)
 { }
 
 
+// Initialize an integer with the given value. The
+// value is considered signed if `s` is true.
 inline
-Integer::Integer(std::uintmax_t n, bool s)
+Integer::Integer(std::uint64_t n, bool s)
   : z(32, n, s)
 { }
 
 
+// Initialize an integer value with `w` bits of
+// precision. The value is considered signed if
+// `s` is true.
 inline
-Integewr::Integer(int w, std::uintmax_t, bool s)
+Integer::Integer(int w, std::uint64_t n, bool s)
   : z(w, n, s)
 { }
 
@@ -136,25 +196,20 @@ Integer::operator*=(Integer const& x)
 }
 
 
-// Divide this integer value by x. Integer division is implemented as
-// floor division. A discussion of alternatives can be found in the paper,
-// "The Euclidean definition of the functions div and mod" by Raymond T.
-// Boute (http://dl.acm.org/citation.cfm?id=128862).
+// Signed division.
 inline Integer& 
 Integer::operator/=(Integer const& x) 
 {
-  z += x.z;
+  z = z.sdiv(x.z);
   return *this;
 }
 
 
-// Compute the remainder of the division of this value_ by x. Integer 
-// division is implemented as floor division. See the notes on operator/= 
-// for more discussion.
+// Signed remainder
 inline Integer& 
 Integer::operator%=(Integer const& x) 
 {
-  z += x.z;
+  z = z.srem(x.z);
   return *this;
 }
 
@@ -162,7 +217,7 @@ Integer::operator%=(Integer const& x)
 inline Integer&
 Integer::operator&=(Integer const& x) 
 {
-  mpz_and(value_, value_, x.value_);
+  z &= x.z;
   return *this;
 }
 
@@ -170,7 +225,7 @@ Integer::operator&=(Integer const& x)
 inline Integer&
 Integer::operator|=(Integer const& x) 
 {
-  mpz_ior(value_, value_, x.value_);
+  z |= x.z;
   return *this;
 }
 
@@ -178,63 +233,25 @@ Integer::operator|=(Integer const& x)
 inline Integer&
 Integer::operator^=(Integer const& x) 
 {
-  mpz_xor(value_, value_, x.value_);
+  z &= x.z;
   return *this;
 }
 
 
-// Left-shift the integer value by the specified amount.
 inline Integer&
 Integer::operator<<=(Integer const& x) 
 {
-  mpz_mul_2exp(value_, value_, x.getu());
+  z = z.shl(x.z);
   return *this;
 }
 
 
-// Right-shift the integer value by the specified amount. This will
-// just "do the right thing" and preserves the sign bit when shifting.
-// It is appropriate for both signed and unsigned integer 
-// representations.
+// Arithmetic right shift.
 inline Integer&
 Integer::operator>>=(Integer const& x) 
 {
-  mpz_fdiv_q_2exp(value_, value_, x.getu());
+  z = z.ashr(x.z);
   return *this;
-}
-
-
-// Negate this value.
-inline Integer&
-Integer::neg() 
-{
-  mpz_neg(value_, value_);
-  return *this;
-}
-
-
-// Set this value to its absolute value.
-inline Integer&
-Integer::abs() 
-{
-  mpz_abs(value_, value_);
-  return *this;
-}
-
-
-// Set this value to its one's complement.
-inline Integer&
-Integer::comp() 
-{
-  mpz_com(value_, value_);
-  return *this;
-}
-
-// Returns the signum of the value.
-inline int
-Integer::sign() const 
-{ 
-  return mpz_sgn(value_); 
 }
 
 
@@ -242,7 +259,7 @@ Integer::sign() const
 inline bool
 Integer::is_positive() const 
 { 
-  return sign() > 0; 
+  return z.isStrictlyPositive();
 }
 
 
@@ -250,7 +267,7 @@ Integer::is_positive() const
 inline bool
 Integer::is_negative() const 
 { 
-  return sign() < 0; 
+  return z.isNegative();
 }
 
 
@@ -258,7 +275,7 @@ Integer::is_negative() const
 inline bool
 Integer::is_nonpositive() const 
 { 
-  return sign() <= 0; 
+  return !is_positive();
 }
 
 
@@ -266,17 +283,15 @@ Integer::is_nonpositive() const
 inline bool
 Integer::is_nonnegative() const 
 { 
-  return sign() >= 0; 
+  return !is_negative();
 }
 
 
-// Returns the truth value interpretation of the integer 
-// value. The truth value of 0 is `false`, and the
-// truth value of all non-zero integers is `true`.
+// Returns the truth value interpretation of the integer.
 inline bool
 Integer::truth_value() const
 {
-  return *this != 0;
+  return z.getBoolValue();
 }
 
 
@@ -284,40 +299,32 @@ Integer::truth_value() const
 inline int
 Integer::bits() const 
 { 
-  return mpz_sizeinbase(value_, 2); 
+  return z.getBitWidth();
 }
 
-
-// Returns the base of in which the inteer should be formatted.
-inline int
-Integer::base() const 
-{ 
-  return base_; 
-}
 
 
 // Returns the value as an unsigned integer.
-inline std::uintmax_t
+inline std::uint64_t
 Integer::getu() const 
 { 
-  assert(is_nonnegative());
-  return mpz_get_ui(value_);
+  return z.getZExtValue();
 }
 
 
 // Returns the value as a signed integer.
-inline std::intmax_t
+inline std::int64_t
 Integer::gets() const 
 { 
-  return mpz_get_si(value_);
+  return z.getSExtValue();
 }
 
 
 // Returns a reference to the underlying data.
-inline const mpz_t& 
-Integer::data() const 
+inline llvm::APInt const&
+Integer::impl() const 
 { 
-  return value_; 
+  return z; 
 }
 
 
@@ -326,7 +333,7 @@ Integer::data() const
 inline bool
 operator==(Integer const& a, Integer const& b) 
 {
-  return mpz_cmp(a.data(), b.data()) == 0;
+  return a.impl() == b.impl();
 }
 
 
@@ -337,33 +344,32 @@ operator!=(Integer const& a, Integer const& b)
 }
 
 
-// Ordering
-// Returns true when a is less than b.
+// Ordering, defined for signed integers by default.
 inline bool
 operator<(Integer const& a, Integer const& b) 
 {
-  return mpz_cmp(a.data(), b.data()) < 0;
+  return a.impl().slt(b.impl());
 }
 
 
 inline bool
 operator>(Integer const& a, Integer const& b) 
 { 
-  return b < a; 
+  return a.impl().sgt(b.impl());
 }
 
 
 inline bool
 operator<=(Integer const& a, Integer const& b) 
 { 
-  return !(b < a); 
+  return a.impl().sle(b.impl());
 }
 
 
 inline bool
 operator>=(Integer const& a, Integer const& b) 
 { 
-  return !(a < b); 
+  return a.impl().sge(b.impl());
 }
 
 
@@ -406,7 +412,7 @@ operator%(Integer const& a, Integer const& b)
 inline Integer 
 operator-(Integer const& x) 
 { 
-  return Integer(x).neg(); 
+  return -x.impl();
 }
 
 
@@ -441,7 +447,7 @@ operator^(Integer const& a, Integer const& b)
 inline Integer
 operator~(Integer const& x) 
 { 
-  return Integer(x).comp(); 
+  return ~x.impl();
 }
 
 
@@ -459,44 +465,8 @@ operator>>(Integer const& a, Integer const& b)
 }
 
 
-// Equality
-bool operator==(Integer const&, Integer const&);
-bool operator!=(Integer const&, Integer const&);
-
-// Ordering
-bool operator<(Integer const&, Integer const&);
-bool operator>(Integer const&, Integer const&);
-bool operator<=(Integer const&, Integer const&);
-bool operator>=(Integer const&, Integer const&);
-
-// Arithmetic
-Integer operator+(Integer const&, Integer const&);
-Integer operator-(Integer const&, Integer const&);
-Integer operator*(Integer const&, Integer const&);
-Integer operator/(Integer const&, Integer const&);
-Integer operator%(Integer const&, Integer const&);
-Integer operator-(Integer const&);
-Integer operator+(Integer const&);
-
-
-// Bit manipulation
-Integer operator&(Integer const&, Integer const&);
-Integer operator|(Integer const&, Integer const&);
-Integer operator^(Integer const&, Integer const&);
-Integer operator~(Integer const&);
-
-Integer operator<<(Integer const&, Integer const&);
-Integer operator>>(Integer const&, Integer const&);
-
-
 // Streaming
-
-void print(Printer&, Integer const&);
-void debug(Printer&, Integer const&);
-
 std::ostream& operator<<(std::ostream&, Integer const&);
-
-
 
 
 } // namespace lingo
