@@ -69,8 +69,9 @@ struct Parser
   Expr const* operator()();
 
   Type const* type();
+  Type const* primary_type();
+  Type const* paren_type();
   Type const* arrow_type();
-  Type const* base_type();
 
   Var const* var();
   Expr const* id();

@@ -101,11 +101,27 @@ Parser::accept()
 // -------------------------------------------------------------------------- //
 // Type parsing
 
+
 Type const*
-Parser::base_type()
+Parser::paren_type()
 {
-  Token tok = match(identifier_tok);
-  return on_base_type(tok);
+  require(lparen_tok);
+  Type const* t = type();
+  match(rparen_tok);
+  return t;
+}
+
+// primary-type: base-type
+//               '(' type ')'
+Type const*
+Parser::primary_type()
+{
+  if (Token tok = match_if(identifier_tok))
+    return on_base_type(tok);
+  if (lookahead() == lparen_tok)
+    return paren_type();
+  error(ts_.location(), "expected primary-type");
+  throw Parse_error();
 }
 
 
@@ -114,7 +130,7 @@ Parser::base_type()
 Type const*
 Parser::arrow_type()
 {
-  Type const* t = base_type();
+  Type const* t = primary_type();
   if (match_if(arrow_tok))
     t = on_arrow_type(t, arrow_type());
   return t;
@@ -187,7 +203,7 @@ Parser::abs()
 Expr const*
 Parser::paren()
 {
-  this->require(lparen_tok);
+  require(lparen_tok);
   Expr const* e = expr();
   match(rparen_tok);
   return e;

@@ -99,7 +99,100 @@ get_arrow_type(Type const* t1, Type const* t2)
 
 
 // -------------------------------------------------------------------------- //
+// Term precedence
+
+namespace
+{
+
+int
+precedence(Type const* t)
+{
+  struct Fn
+  {
+    int operator()(Base_type const* t) const { return 0; }
+    int operator()(Arrow_type const* t) const { return 1; }
+  };
+  return apply(t, Fn{});
+}
+
+
+int
+precedence(Expr const* e)
+{
+  struct Fn
+  {
+    int operator()(Ref const* e) const { return 0; }
+    int operator()(Abs const* e) const { return 0; }
+    int operator()(App const* e) const { return 1; }
+
+    // Never write these with parens.
+    int operator()(Var const* e) const { return 0; }
+    int operator()(Def const* e) const { return 0; }
+    int operator()(Decl const* e) const { return 0; }
+    int operator()(Seq const* e) const { return 0; }
+  };
+  return apply(e, Fn{});
+}
+
+
+// A subexpression needs parens only when its prcedence is
+// greater than or equal to that of its parent.
+//
+// TODO: Can we be more clever with parens and associativity?
+template<typename T>
+inline bool
+needs_parens(T const* par, T const* sub)
+{
+  return precedence(par) <= precedence(sub);
+}
+
+
+// Output streaming for nested sub-expressions.
+template<typename T>
+struct print_subterm
+{
+  print_subterm(T const* p, T const* s)
+    : par(p), sub(s)
+  { }
+
+  T const* par;
+  T const* sub;
+};
+
+
+inline print_subterm<Type>
+subterm(Type const* p, Type const* s)
+{
+  return print_subterm<Type>(p, s);
+}
+
+
+inline print_subterm<Expr>
+subterm(Expr const* p, Expr const* s)
+{
+  return print_subterm<Expr>(p, s);
+}
+
+
+
+template<typename T>
+std::ostream&
+operator<<(std::ostream& os, print_subterm<T> s)
+{
+  if (needs_parens(s.par, s.sub))
+    os << '(' << *s.sub << ')';
+  else
+    os << *s.sub;
+  return os;
+}
+
+
+} // namespace
+
+
+// -------------------------------------------------------------------------- //
 // Printing
+
 
 void
 print(std::ostream& os, Base_type const* t)
@@ -111,7 +204,8 @@ print(std::ostream& os, Base_type const* t)
 void
 print(std::ostream& os, Arrow_type const* t)
 {
-  os << *t->in() << " -> " << *t->out();
+  // os << *t->in() << "->" << *t->out();
+  os << subterm(t, t->in()) << "->" << subterm(t, t->out());
 }
 
 
@@ -132,7 +226,6 @@ void
 print(std::ostream& os, Var const* e)
 {
   os << *e->name() << ':' << *e->type();
-  // os << *e->name() << '\n';
 }
 
 
@@ -160,14 +253,14 @@ print(std::ostream& os, Decl const* e)
 void
 print(std::ostream& os, Abs const* e)
 {
-  os << '\\' << *e->var() << '.' << *e->expr();
+  os << '\\' << *e->var() << '.' << subterm(e, e->expr());
 }
 
 
 void
 print(std::ostream& os, App const* e)
 {
-  os << '(' << *e->fn() << ' ' << *e->arg() << ')';
+  os << subterm(e, e->fn()) << ' ' << subterm(e, e->arg()) << ')';
 }
 
 

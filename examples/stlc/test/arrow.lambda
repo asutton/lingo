@@ -5,3 +5,6 @@ idf = (\a:T->T.a);
 
 idf x;
 
+\x:A->A->A.x;
+\x:A->(A->A).x;
+\x:(A->A)->A.x;

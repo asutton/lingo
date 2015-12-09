@@ -14,3 +14,6 @@ idb false;
 
 idz 0;
 idz 2;
+
+
+\x:U->T.\y:U.x y;

@@ -183,7 +183,7 @@ struct subexpr
 std::ostream&
 operator<<(std::ostream& os, subexpr sub)
 {
-  if (needs_parens(sub.e, sub.e))
+  if (needs_parens(sub.e, sub.s))
     os << '(' << *sub.s << ')';
   else
     os << *sub.s;
