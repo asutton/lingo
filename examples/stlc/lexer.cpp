@@ -63,24 +63,26 @@ Lexer::scan()
     loc_ = cs_.location();
     switch (cs_.peek()) {
     case '\0': return eof();
-    case '(': return symbol1();
-    case ')': return symbol1();
-    case '\\': return symbol1();
-    case '.': return symbol1();
-    case '=': return symbol1();
-    case ':': return symbol1();
-    case ';': return symbol1();
+    case '(': return symbol();
+    case ')': return symbol();
+    case '\\': return symbol();
+    case '.': return symbol();
+    case '=': return symbol();
+    case ':': return symbol();
+    case ';': return symbol();
 
     case '-':
       save();
       if (cs_.peek() == '>')
-        return symbol1();
+        return symbol();
       else
         error();
 
     default:
       if (is_alpha(cs_.peek()))
         return identifier();
+      if (is_decimal_digit(cs_.peek()))
+        return integer();
       error();
     }
   }
@@ -110,8 +112,9 @@ Lexer::eof()
 }
 
 
+// Save the last character of a symbol and process it.
 Token
-Lexer::symbol1()
+Lexer::symbol()
 {
   save();
   return on_symbol();
@@ -126,12 +129,30 @@ Lexer::letter()
 }
 
 
+// digit ::= [0-9]
+void
+Lexer::digit()
+{
+  save();
+}
+
+
 Token
 Lexer::identifier()
 {
   letter();
   while (is_alpha(cs_.peek()))
     letter();
+  return on_identifier();
+}
+
+
+Token
+Lexer::integer()
+{
+  digit();
+  while (is_decimal_digit(cs_.peek()))
+    digit();
   return on_identifier();
 }
 
@@ -149,6 +170,16 @@ Lexer::on_identifier()
 {
   String str = str_.take();
   Symbol* sym = symbols.put_identifier(identifier_tok, str);
+  return Token(loc_, sym);
+}
+
+
+Token
+Lexer::on_integer()
+{
+  String str = str_.take();
+  int n = string_to_int<int>(str, 10);
+  Symbol* sym = symbols.put_integer(integer_tok, str, n);
   return Token(loc_, sym);
 }
 

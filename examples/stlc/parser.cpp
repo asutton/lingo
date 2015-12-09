@@ -23,7 +23,7 @@ namespace
 String const&
 token_spelling(Token_stream& ts)
 {
-  static String end = "end-of-file";
+  static String end = "end-of-input";
   if (ts.eof())
     return end;
   else
@@ -60,7 +60,7 @@ Parser::match(Token_kind k)
                       get_spelling(k),
                       token_spelling(ts_));
   error(ts_.location(), msg);
-  throw Parse_error("match");
+  throw Parse_error();
 }
 
 
@@ -131,6 +131,7 @@ Parser::type()
 // -------------------------------------------------------------------------- //
 // Expression parsing
 
+// var: id ':' type
 Var const*
 Parser::var()
 {
@@ -149,13 +150,25 @@ Parser::id()
 }
 
 
+// def: id '=' expr
+//
+// TODO: Allow explicit specification of types?
 Expr const*
 Parser::def()
 {
-  Var const* v = var();
+  Token n = require(identifier_tok);
   match(equal_tok);
   Expr const* e = expr();
-  return on_def(v, e);
+  return on_def(n, e);
+}
+
+
+// decl: id ':' expr
+Expr const*
+Parser::decl()
+{
+  Var const* v = var();
+  return on_decl(v);
 }
 
 
@@ -186,12 +199,18 @@ Parser::paren()
 //          identifier ':' expr
 //          '\' identifier '.' expr
 //          '(' expr ')'
+//
+// TODO: Factor definitions and declarations into a 
+// top-level parse. They should most definitely not
+// be primaries.
 Expr const*
 Parser::primary()
 {
   if (lookahead() == identifier_tok) {
     if (lookahead(1) == equal_tok)
       return def();
+    else if (lookahead(1) == colon_tok)
+      return decl();
     else
       return id();
   }
@@ -200,7 +219,7 @@ Parser::primary()
   if (lookahead() == lparen_tok)
     return paren();
   error(ts_.location(), "expected primary-expression");
-  throw Parse_error("primary");
+  throw Parse_error();
 }
 
 
@@ -230,6 +249,10 @@ Parser::expr()
 }
 
 
+// seq: seq ';' expr
+//      expr [;]
+//
+// We allow a trailing semicolon for convenience.
 Expr const*
 Parser::seq()
 {
@@ -253,7 +276,13 @@ Parser::operator()()
   Environment env(*this);
   if (ts_.eof())
     return nullptr;
-  return seq();
+  Expr const* e = seq();
+  if (!ts_.eof()) {
+    String msg = format("expected end-of-input but got '{}'", ts_.peek());
+    error(ts_.location(), msg);
+    throw Parse_error();
+  }
+  return e;
 }
 
 
@@ -294,32 +323,80 @@ Parser::on_id(Token tok)
   Symbol const* sym = tok.symbol();
   if (Name_binding const* bind = names_.lookup(sym))
     return new Ref(sym, bind->second);
-  else
-    return new Ref(sym);
+  error(ts_.location(), "no matching variable for '{}'", *sym);
+  throw Name_error();
 }
 
 
+// Generate a definition. Note that this produces a
+// variable whose type is that of `e`. Also note that
+// definitions cannot be recursive since the type is
+// deduced.
+//
+// TODO: Make this valid:
+//
+//    f : T->T;
+//    f = \x.x;
+//
+// This would allow me to assign a type to the identifier
+// before parsing and typing its definition.
 Expr const*
-Parser::on_def(Var const* v, Expr const* e)
+Parser::on_def(Token tok, Expr const* e)
 {
+  Type const* t = e->type();
+  Var const* v = on_var(tok, t);
   return new Def(v, e);
 }
 
 
+// The binding is created when the variable is parsed.
+Expr const*
+Parser::on_decl(Var const* v)
+{
+  return new Decl(v);
+}
+
+
+// G |- v:T1 ; G, v:T1 |- e : T2
+// ----------------------------
+//    G |- \v.e : T1 -> T2
 Expr const*
 Parser::on_abs(Var const* v, Expr const* e)
 {
-  return new Abs(v, e);
+  Type const* t = get_arrow_type(v->type(), e->type());
+  return new Abs(t, v, e);
 }
 
 
+// G |- e1 : T1 -> T2 ; G |- e2 : T1
+// ---------------------------------
+//        G |- e1 e2 : T2
+//
+// TODO: Improve diagnostics.
 Expr const*
 Parser::on_app(Expr const* e1, Expr const* e2)
 {
-  return new App(e1, e2);
+  // e1 shall have arrow type.
+  Arrow_type const* a = as<Arrow_type>(e1->type());
+  if (!a) {
+    error(ts_.location(), "expression does not have arrow type");
+    throw Type_error();
+  }
+  Type const* t1 = a->in();
+  Type const* t2 = a->out();
+
+  // The type of e2 shall match t1.
+  if (e2->type() != t1) {
+    error(ts_.location(), "type mismatch in application");
+    throw Type_error();
+  }
+
+  // The type of the expression shall be t2.
+  return new App(t2, e1, e2);
 }
 
 
+// Types are ignored.
 Expr const*
 Parser::on_seq(Expr const* e1, Expr const* e2)
 {

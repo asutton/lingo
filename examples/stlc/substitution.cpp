@@ -86,7 +86,7 @@ Substitution::subst(Abs const* e) const
 {
   Var const* v = cast<Var>(subst(e->var()));
   Expr const* d = subst(e->expr());
-  return new Abs(v, d);
+  return new Abs(e->type(), v, d);
 }
 
 
@@ -95,7 +95,7 @@ Substitution::subst(App const* e) const
 {
   Expr const* e1 = subst(e->fn());
   Expr const* e2 = subst(e->arg());
-  return new App(e1, e2);
+  return new App(e->type(), e1, e2);
 }
 
 
@@ -104,7 +104,7 @@ Substitution::subst(Seq const* e) const
 {
   Expr const* e1 = subst(e->left());
   Expr const* e2 = subst(e->right());
-  return new App(e1, e2);
+  return new App(e->type(), e1, e2);
 }
 
 

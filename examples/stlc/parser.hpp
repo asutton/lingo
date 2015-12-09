@@ -16,10 +16,36 @@ namespace calc
 using namespace lingo;
 
 
-// Denotes a parse error.
-struct Parse_error : std::runtime_error
+struct Translation_error : std::runtime_error
 {
-  using std::runtime_error::runtime_error;
+  using std::runtime_error::runtime_error;  
+};
+
+
+// Denotes a parse error.
+struct Parse_error : Translation_error
+{
+  Parse_error()
+    : Translation_error("parse error")
+  { }
+};
+
+
+// Indicates a name (lookup) error.
+struct Name_error : Translation_error
+{
+  Name_error()
+    : Translation_error("name error")
+  { }
+};
+
+
+// Denotes a type error.
+struct Type_error : Translation_error
+{
+  Type_error()
+    : Translation_error("type error")
+  { }
 };
 
 
@@ -49,6 +75,7 @@ struct Parser
   Var const* var();
   Expr const* id();
   Expr const* def();
+  Expr const* decl();
   Expr const* abs();
   Expr const* paren();
   Expr const* primary();
@@ -61,7 +88,8 @@ struct Parser
   Type const* on_arrow_type(Type const*, Type const*);
   Var const* on_var(Token, Type const*);
   Expr const* on_id(Token);
-  Expr const* on_def(Var const*, Expr const*);
+  Expr const* on_def(Token, Expr const*);
+  Expr const* on_decl(Var const*);
   Expr const* on_abs(Var const*, Expr const*);
   Expr const* on_app(Expr const*, Expr const*);
   Expr const* on_seq(Expr const*, Expr const*);

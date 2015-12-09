@@ -53,14 +53,19 @@ main(int argc, char* argv[])
   if (error_count())
     return -1;
 
-  // Transform tokens into abstract syntax.
-  Expr const* expr = parse();
-  if (error_count())
-    return 1;
-  // std::cout << "Parsed:\n" << *expr << '\n';
+  try {
+    // Transform tokens into abstract syntax.
+    Expr const* expr = parse();
+    if (error_count())
+      return 1;
+    // std::cout << "Parsed:\n" << *expr << '\n';
 
-  Evaluator eval;
-  Expr const* result = eval(expr);
-  if (result)
-    std::cout << "END: " << *result << '\n';
+    Evaluator eval;
+    Expr const* result = eval(expr);
+    if (result)
+      std::cout << *result << '\n';
+  } catch (Translation_error&) {
+    return 1;
+  }
+  return 0;
 }

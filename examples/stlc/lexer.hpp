@@ -73,18 +73,20 @@ struct Lexer
   // Scanners
   Token scan();
   Token eof();
-  Token symbol1();
-  Token symbol2();
+  Token symbol();
   Token identifier();
+  Token integer();
 
   // Consumers
   void error();
   void space();
   void letter();
+  void digit();
 
   // Semantic actions.
   Token on_symbol();
   Token on_identifier();
+  Token on_integer();
 
   void save();
 

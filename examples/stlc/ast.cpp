@@ -42,19 +42,27 @@ is_less(Arrow_type const* a, Arrow_type const* b)
 bool
 is_less(Type const* a, Type const* b)
 {
-  std::type_index t1 = typeid(a);
-  std::type_index t2 = typeid(b);
+  struct Fn
+  {
+    Type const* b;
+    bool operator()(Base_type const* a) const 
+    { 
+      return is_less(a, as<Base_type>(b)); 
+    }
+    bool operator()(Arrow_type const* a) const 
+    { 
+      return is_less(a, as<Arrow_type>(b)); 
+    }
+  };
+
+  std::type_index t1 = typeid(*a);
+  std::type_index t2 = typeid(*b);
   if (t1 < t2)
     return true;
   if (t2 < t1)
     return false;
-
-  // FIXME: Use a visitor.
-  if (Base_type const* t = as<Base_type>(a))
-    return is_less(t, cast<Base_type>(b));
-  if (Arrow_type const* t = as<Arrow_type>(a))
-    return is_less(t, cast<Arrow_type>(b));
-  lingo_unreachable();
+  lingo_assert(t1 == t2);
+  return apply(a, Fn{b});
 }
 
 
@@ -75,7 +83,7 @@ struct Type_less
 Type const*
 get_base_type(Symbol const* sym)
 {
-  std::set<Base_type, Type_less> s;
+  static std::set<Base_type, Type_less> s;
   auto iter = s.emplace(sym);
   return &*iter.first;
 }
@@ -84,7 +92,7 @@ get_base_type(Symbol const* sym)
 Type const*
 get_arrow_type(Type const* t1, Type const* t2)
 {
-  std::set<Arrow_type, Type_less> s;
+  static std::set<Arrow_type, Type_less> s;
   auto iter = s.emplace(t1, t2);
   return &*iter.first;
 }
@@ -96,32 +104,35 @@ get_arrow_type(Type const* t1, Type const* t2)
 void
 print(std::ostream& os, Base_type const* t)
 {
-  os << *t->name() << '\n';
+  os << *t->name();
 }
 
 
 void
 print(std::ostream& os, Arrow_type const* t)
 {
-  os << *t->in() << " -> " << *t->out() << '\n';
+  os << *t->in() << " -> " << *t->out();
 }
 
 
 void
 print(std::ostream& os, Type const* t)
 {
-  // TOOD: Use a visitor.
-  if (Base_type const* b = as<Base_type>(t))
-    print(os, b);
-  if (Arrow_type const* a = as<Arrow_type>(t))
-    print(os, a);
+  struct Fn
+  {
+    std::ostream& os;
+    void operator()(Base_type const* t) { print(os, t); }
+    void operator()(Arrow_type const* t) { print(os, t); }
+  };
+  apply(t, Fn{os});
 }
 
 
 void
 print(std::ostream& os, Var const* e)
 {
-  os << *e->name();
+  os << *e->name() << ':' << *e->type();
+  // os << *e->name() << '\n';
 }
 
 
@@ -142,7 +153,7 @@ print(std::ostream& os, Def const* e)
 void
 print(std::ostream& os, Decl const* e)
 {
-   os << *e->var() << " : " << *e->type();
+   os << *e->var();
 }
 
 

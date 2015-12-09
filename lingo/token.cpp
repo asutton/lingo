@@ -8,11 +8,13 @@ namespace lingo
 {
 
 
+// TODO: Add debugging support.
 std::ostream& 
 operator<<(std::ostream& os, Token tok)
 {
   if (tok) {
-    os << '<' << tok.kind() << ':' << tok.spelling() << '>';
+    os << tok.spelling();
+    // os << '<' << tok.kind() << ':' << tok.spelling() << '>';
   } else {
     os << "<invalid>";
   }

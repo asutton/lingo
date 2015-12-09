@@ -44,6 +44,8 @@ struct Type
 
   virtual ~Type()
   { }
+
+  virtual void accept(Visitor&) const = 0;
 };
 
 
@@ -61,6 +63,8 @@ struct Base_type : Type
     : name_(n)
   { }
 
+  void accept(Visitor& v) const { return v.visit(this); }
+
   Symbol const* name() const { return name_; }
 
   Symbol const* name_;
@@ -74,8 +78,10 @@ struct Arrow_type : Type
     : first(t1), second(t2)
   { }
 
+  void accept(Visitor& v) const { return v.visit(this); }
+
   Type const* in() const { return first; }
-  Type const* out() const { return first; }
+  Type const* out() const { return second; }
 
   Type const* first;
   Type const* second;
@@ -158,7 +164,8 @@ struct Var : Expr
 };
 
 
-// A reference to a variable.
+// A reference to a variable. The type of a reference
+// is that of its named variable.
 struct Ref : Expr
 {
   Ref(Symbol const* s)
@@ -200,8 +207,8 @@ struct Def : Expr
 // The declaration of a named constant.
 struct Decl : Expr
 {
-  Decl(Var const* v, Type const* t)
-    : Expr({}, t), first(v)
+  Decl(Var const* v)
+    : Expr({}, v->type()), first(v)
   { }
 
   void accept(Visitor& v) const { return v.visit(this); }
@@ -212,12 +219,11 @@ struct Decl : Expr
 };
 
 
-
 // An expression abstracted over a variable.
 struct Abs : Expr
 {
-  Abs(Var const* v, Expr const* e)
-    : first(v), third(e)
+  Abs(Type const* t, Var const* v, Expr const* e)
+    : Expr({}, t), first(v), third(e)
   { }
 
   void accept(Visitor& v) const { return v.visit(this); }
@@ -227,7 +233,7 @@ struct Abs : Expr
   Expr const* expr() const { return third; }
 
   Var const*  first;
-  Type const*  second;
+  Type const* second;
   Expr const* third;
 };
 
@@ -235,8 +241,8 @@ struct Abs : Expr
 // The application of an argument to a variable.
 struct App : Expr
 {
-  App(Expr const* e1, Expr const* e2)
-    : first(e1), second(e2)
+  App(Type const* t, Expr const* e1, Expr const* e2)
+    : Expr({}, t), first(e1), second(e2)
   { }
 
   void accept(Visitor& v) const { return v.visit(this); }
