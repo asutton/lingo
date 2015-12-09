@@ -48,7 +48,7 @@ struct Expr
 
   virtual void accept(Visitor&) const = 0;
 
-  Location location() const  { return loc_; }
+  Location     location() const { return loc_; }
   virtual Span span() const = 0;
 
   Location loc_;
@@ -107,16 +107,16 @@ struct Binary : Expr
 struct Int : Expr
 {
   Int(Location loc, Integer n)
-    : Expr(loc), first(n)
+    : Expr(loc), val_(n)
   { }
 
   void accept(Visitor& v) const { v.visit(this); }
 
   Span span() const;
 
-  Integer value() const { return first; }
+  Integer value() const { return val_; }
 
-  Integer first;
+  Integer val_;
 };
 
 
@@ -250,13 +250,17 @@ Integer evaluate(Expr const*);
 //                                  Facilities
 
 // Pretty printing
-void print(Printer&, Expr const*);
+void print(std::ostream&, Expr const*);
+void print(std::ostream&, Int const*);
+void print(std::ostream&, Unary const*);
+void print(std::ostream&, Binary const*);
+
+std::ostream& operator<<(std::ostream&, Expr const&);
 
 
 // Debug printing
-void debug(Printer&, Expr const*);
+void debug(std::ostream&, Expr const*);
 
-std::ostream& operator<<(std::ostream&, Expr const*);
 
 } // namespace calc
 
