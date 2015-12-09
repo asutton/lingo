@@ -5,8 +5,9 @@
 #include "ast.hpp"
 #include "parser.hpp"
 
-#include "lingo/error.hpp"
+#include <lingo/error.hpp>
 
+#include <iostream>
 
 namespace calc
 {
@@ -132,7 +133,7 @@ step_eval(Expr const* e)
     // Perform that evaluation.
     e = step(e);
   } while (!is<Int>(e));
-  print(e);
+  std::cout << *e << '\n';
   return e;
 }
 

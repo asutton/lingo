@@ -191,14 +191,13 @@ to_string(T const& x, P print)
 // Returns a string containing the textual representation
 // of `x`.
 //
-// Requires that `T` is a Printable type.
+// Requires that `T` is a Streamable type.
 template<typename T>
 inline String
 to_string(T const& x)
 {
   std::stringstream ss;
-  Printer p(ss);
-  print(p, x);
+  ss << x;
   return ss.str();
 }
 

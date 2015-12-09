@@ -7,49 +7,46 @@
 // The integer module provides arbitrary precision integers
 // and associated functions.
 
+#include <lingo/assert.hpp>
 #include <lingo/string.hpp>
-#include <lingo/print.hpp>
-#include <lingo/debug.hpp>
 
-#include <cassert>
-#include <cstddef>
-#include <cstdint>
-#include <string>
-#include <iostream>
+#include <llvm/ADT/APInt.h>
 
-#include <gmp.h>
 
 namespace lingo
 {
 
-// The Integer class represents arbitrary precision integer
-// values. The integer class also tracks the base in which
-// it was originally written. If unspecified, the base is 10.
-// This allows for pretty printing of tokens in the base in
-// which they were originally written.
-//
-// FIXME: Make a default constructor that takes a width
-// specification.
+// Represents an arbitrary precision integer. The defualt
+// interpretation of this value is as a signed integer.
+// However, unsigned versions of operations are provided
+// as well.
 class Integer
 {
 public:
-  // Default constructor
   Integer();
 
   // Copy semantics
   Integer(Integer const&);
   Integer& operator=(Integer const&);
 
-  // Value initialization. Allows implicit conversion.
-  Integer(std::intmax_t, int = 10);
+  // Move semantics
+  Integer(Integer&&);
+  Integer& operator=(Integer&&);
 
-  // String initialization
-  Integer(std::string const&, int = 10);
+  Integer(llvm::APInt const&);
+  Integer& operator=(llvm::APInt const&);
 
-  // Destructor
-  ~Integer();
+  Integer(llvm::APInt&&);
+  Integer& operator=(llvm::APInt&&);
 
-  // Arithmetic compound assignmnt operators.
+
+  // Value construction.
+  //
+  // TODO: Support initialization from an array.
+  Integer(std::int64_t);
+  Integer(std::uint64_t, bool);
+  Integer(int, std::uint64_t, bool);
+
   Integer& operator+=(Integer const&);
   Integer& operator-=(Integer const&);
   Integer& operator*=(Integer const&);
@@ -63,10 +60,6 @@ public:
   Integer& operator<<=(Integer const&);
   Integer& operator>>=(Integer const&);
 
-  Integer& neg();
-  Integer& abs();
-  Integer& comp();
-
   // Sign
   int sign() const;
   bool is_positive() const;
@@ -78,52 +71,403 @@ public:
   bool truth_value() const;
 
   int bits() const;
-  int base() const;
-  std::uintmax_t getu() const;
-  std::intmax_t gets() const;
-  const mpz_t& data() const;
+  std::uint64_t getu() const;
+  std::int64_t gets() const;
+
+  llvm::APInt const& impl() const;
 
 private:
-  mpz_t value_;
-  int   base_;
+  llvm::APInt z;
 };
 
-// Equality
-bool operator==(Integer const&, Integer const&);
-bool operator!=(Integer const&, Integer const&);
 
-// Ordering
-bool operator<(Integer const&, Integer const&);
-bool operator>(Integer const&, Integer const&);
-bool operator<=(Integer const&, Integer const&);
-bool operator>=(Integer const&, Integer const&);
+// Initialize a 32-bit signed 0. 
+inline
+Integer::Integer() 
+  : z(32, 0, true)
+{ }
+
+
+// Copy initialize this object with x.
+inline
+Integer::Integer(Integer const& x) 
+  : z(x.z)
+{ }
+
+
+// Copy assign this object to the value of x.
+inline Integer&
+Integer::operator=(Integer const& x) 
+{
+  z = x.z;
+  return *this;
+}
+
+
+inline
+Integer::Integer(Integer&& x)
+  : z(std::move(z))
+{ }
+
+
+inline Integer&
+Integer::operator=(Integer&& x)
+{
+  z = std::move(x.z);
+  return *this;
+}
+
+
+inline
+Integer::Integer(llvm::APInt const& n)
+  : z(n)
+{ }
+
+
+inline
+Integer& 
+Integer::operator=(llvm::APInt const& n)
+{
+  z = n;
+  return *this;
+}
+
+
+inline
+Integer::Integer(llvm::APInt&& n)
+  : z(std::move(n))
+{ }
+
+
+inline
+Integer& 
+Integer::operator=(llvm::APInt&& n)
+{
+  z = std::move(n);
+  return *this;
+}
+
+
+// Initialize an integer with the (signed) value.
+inline
+Integer::Integer(std::int64_t n)
+  : z(32, n, true)
+{ }
+
+
+// Initialize an integer with the given value. The
+// value is considered signed if `s` is true.
+inline
+Integer::Integer(std::uint64_t n, bool s)
+  : z(32, n, s)
+{ }
+
+
+// Initialize an integer value with `w` bits of
+// precision. The value is considered signed if
+// `s` is true.
+inline
+Integer::Integer(int w, std::uint64_t n, bool s)
+  : z(w, n, s)
+{ }
+
+
+inline Integer& 
+Integer::operator+=(Integer const& x) 
+{
+  z += x.z;
+  return *this;
+}
+
+
+inline Integer& 
+Integer::operator-=(Integer const& x) 
+{
+  z -= x.z;
+  return *this;
+}
+
+
+inline Integer& 
+Integer::operator*=(Integer const& x) 
+{
+  z += x.z;
+  return *this;
+}
+
+
+// Signed division.
+inline Integer& 
+Integer::operator/=(Integer const& x) 
+{
+  z = z.sdiv(x.z);
+  return *this;
+}
+
+
+// Signed remainder
+inline Integer& 
+Integer::operator%=(Integer const& x) 
+{
+  z = z.srem(x.z);
+  return *this;
+}
+
+
+inline Integer&
+Integer::operator&=(Integer const& x) 
+{
+  z &= x.z;
+  return *this;
+}
+
+
+inline Integer&
+Integer::operator|=(Integer const& x) 
+{
+  z |= x.z;
+  return *this;
+}
+
+
+inline Integer&
+Integer::operator^=(Integer const& x) 
+{
+  z &= x.z;
+  return *this;
+}
+
+
+inline Integer&
+Integer::operator<<=(Integer const& x) 
+{
+  z = z.shl(x.z);
+  return *this;
+}
+
+
+// Arithmetic right shift.
+inline Integer&
+Integer::operator>>=(Integer const& x) 
+{
+  z = z.ashr(x.z);
+  return *this;
+}
+
+
+// Returns true if the value is strictly positive.
+inline bool
+Integer::is_positive() const 
+{ 
+  return z.isStrictlyPositive();
+}
+
+
+// Returns true if the value is strictly negative.
+inline bool
+Integer::is_negative() const 
+{ 
+  return z.isNegative();
+}
+
+
+// Returns true if the value is nonpositive.
+inline bool
+Integer::is_nonpositive() const 
+{ 
+  return !is_positive();
+}
+
+
+// Returns true if the value is nonnegative.
+inline bool
+Integer::is_nonnegative() const 
+{ 
+  return !is_negative();
+}
+
+
+// Returns the truth value interpretation of the integer.
+inline bool
+Integer::truth_value() const
+{
+  return z.getBoolValue();
+}
+
+
+// Returns the number of bits in the integer representation.
+inline int
+Integer::bits() const 
+{ 
+  return z.getBitWidth();
+}
+
+
+
+// Returns the value as an unsigned integer.
+inline std::uint64_t
+Integer::getu() const 
+{ 
+  return z.getZExtValue();
+}
+
+
+// Returns the value as a signed integer.
+inline std::int64_t
+Integer::gets() const 
+{ 
+  return z.getSExtValue();
+}
+
+
+// Returns a reference to the underlying data.
+inline llvm::APInt const&
+Integer::impl() const 
+{ 
+  return z; 
+}
+
+
+// Equality comparison
+// Returns true when the two integers have the same value.
+inline bool
+operator==(Integer const& a, Integer const& b) 
+{
+  return a.impl() == b.impl();
+}
+
+
+inline bool 
+operator!=(Integer const& a, Integer const& b) 
+{ 
+  return !(a == b); 
+}
+
+
+// Ordering, defined for signed integers by default.
+inline bool
+operator<(Integer const& a, Integer const& b) 
+{
+  return a.impl().slt(b.impl());
+}
+
+
+inline bool
+operator>(Integer const& a, Integer const& b) 
+{ 
+  return a.impl().sgt(b.impl());
+}
+
+
+inline bool
+operator<=(Integer const& a, Integer const& b) 
+{ 
+  return a.impl().sle(b.impl());
+}
+
+
+inline bool
+operator>=(Integer const& a, Integer const& b) 
+{ 
+  return a.impl().sge(b.impl());
+}
+
 
 // Arithmetic
-Integer operator+(Integer const&, Integer const&);
-Integer operator-(Integer const&, Integer const&);
-Integer operator*(Integer const&, Integer const&);
-Integer operator/(Integer const&, Integer const&);
-Integer operator%(Integer const&, Integer const&);
-Integer operator-(Integer const&);
-Integer operator+(Integer const&);
+inline Integer
+operator+(Integer const& a, Integer const& b) 
+{ 
+  return Integer(a) += b; 
+}
 
 
-// Bit manipulation
-Integer operator&(Integer const&, Integer const&);
-Integer operator|(Integer const&, Integer const&);
-Integer operator^(Integer const&, Integer const&);
-Integer operator~(Integer const&);
+inline Integer
+operator-(Integer const& a, Integer const& b) 
+{ 
+  return Integer(a) -= b; 
+}
 
-Integer operator<<(Integer const&, Integer const&);
-Integer operator>>(Integer const&, Integer const&);
+
+inline Integer
+operator*(Integer const& a, Integer const& b) 
+{ 
+  return Integer(a) *= b; 
+}
+
+
+inline Integer
+operator/(Integer const& a, Integer const& b) 
+{ 
+  return Integer(a) /= b; 
+}
+
+
+inline Integer
+operator%(Integer const& a, Integer const& b) 
+{ 
+  return Integer(a) %= b; 
+}
+
+
+inline Integer 
+operator-(Integer const& x) 
+{ 
+  return -x.impl();
+}
+
+
+inline Integer 
+operator+(Integer const& x) 
+{ 
+  return x; 
+}
+
+
+inline Integer
+operator&(Integer const& a, Integer const& b) 
+{ 
+  return Integer(a) &= b; 
+}
+
+
+inline Integer
+operator|(Integer const& a, Integer const& b) 
+{ 
+  return Integer(a) |= b; 
+}
+
+
+inline Integer
+operator^(Integer const& a, Integer const& b) 
+{ 
+  return Integer(a) ^= b; 
+}
+
+
+inline Integer
+operator~(Integer const& x) 
+{ 
+  return ~x.impl();
+}
+
+
+inline Integer
+operator<<(Integer const& a, Integer const& b) 
+{ 
+  return Integer(a) <<= b; 
+}
+
+
+inline Integer
+operator>>(Integer const& a, Integer const& b) 
+{ 
+  return Integer(a) >>= b; 
+}
 
 
 // Streaming
-
-void print(Printer&, Integer const&);
-void debug(Printer&, Integer const&);
-
 std::ostream& operator<<(std::ostream&, Integer const&);
+
 
 } // namespace lingo
 

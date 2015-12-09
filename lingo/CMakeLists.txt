@@ -29,17 +29,13 @@ add_library(lingo
   token.cpp
   environment.cpp)
 
-target_include_directories(
-  lingo
-    PUBLIC
-      "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_SOURCE_DIR}/cppformat>"
-      ${GMP_INCLUDE_DIRS}
-      ${Boost_INCLUDE_DIRS}
-)
+target_include_directories(lingo PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_SOURCE_DIR}/cppformat>"
+  ${GMP_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${LLVM_INCLUDE_DIRS})
 
-target_link_libraries(
-  lingo
-    PUBLIC
-      ${GMP_LIBRARIES}
-      ${Boost_LIBRARIES}
-)
+target_link_libraries(lingo PUBLIC
+  ${GMP_LIBRARIES}
+  ${Boost_LIBRARIES}
+  ${LLVM_LIBRARIES})

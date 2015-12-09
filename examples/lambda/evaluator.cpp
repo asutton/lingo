@@ -4,6 +4,7 @@
 #include "evaluator.hpp"
 #include "substitution.hpp"
 
+#include <iostream>
 #include <stdexcept>
 
 
