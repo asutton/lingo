@@ -16,6 +16,7 @@ add_library(lingo
   node.cpp
   memory.cpp
   integer.cpp
+  real.cpp
   utility.cpp
   line.cpp
   location.cpp
