@@ -41,7 +41,6 @@ struct Evaluator
 };
 
 
-
 } // namespace calc
 
 #endif

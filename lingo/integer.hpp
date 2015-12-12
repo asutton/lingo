@@ -81,23 +81,23 @@ private:
 };
 
 
-// Initialize a 32-bit signed 0. 
+// Initialize a 32-bit signed 0.
 inline
-Integer::Integer() 
+Integer::Integer()
   : z(32, 0, true)
 { }
 
 
 // Copy initialize this object with x.
 inline
-Integer::Integer(Integer const& x) 
+Integer::Integer(Integer const& x)
   : z(x.z)
 { }
 
 
 // Copy assign this object to the value of x.
 inline Integer&
-Integer::operator=(Integer const& x) 
+Integer::operator=(Integer const& x)
 {
   z = x.z;
   return *this;
@@ -125,7 +125,7 @@ Integer::Integer(llvm::APInt const& n)
 
 
 inline
-Integer& 
+Integer&
 Integer::operator=(llvm::APInt const& n)
 {
   z = n;
@@ -140,7 +140,7 @@ Integer::Integer(llvm::APInt&& n)
 
 
 inline
-Integer& 
+Integer&
 Integer::operator=(llvm::APInt&& n)
 {
   z = std::move(n);
@@ -172,24 +172,24 @@ Integer::Integer(int w, std::uint64_t n, bool s)
 { }
 
 
-inline Integer& 
-Integer::operator+=(Integer const& x) 
+inline Integer&
+Integer::operator+=(Integer const& x)
 {
   z += x.z;
   return *this;
 }
 
 
-inline Integer& 
-Integer::operator-=(Integer const& x) 
+inline Integer&
+Integer::operator-=(Integer const& x)
 {
   z -= x.z;
   return *this;
 }
 
 
-inline Integer& 
-Integer::operator*=(Integer const& x) 
+inline Integer&
+Integer::operator*=(Integer const& x)
 {
   z += x.z;
   return *this;
@@ -197,8 +197,8 @@ Integer::operator*=(Integer const& x)
 
 
 // Signed division.
-inline Integer& 
-Integer::operator/=(Integer const& x) 
+inline Integer&
+Integer::operator/=(Integer const& x)
 {
   z = z.sdiv(x.z);
   return *this;
@@ -206,8 +206,8 @@ Integer::operator/=(Integer const& x)
 
 
 // Signed remainder
-inline Integer& 
-Integer::operator%=(Integer const& x) 
+inline Integer&
+Integer::operator%=(Integer const& x)
 {
   z = z.srem(x.z);
   return *this;
@@ -215,7 +215,7 @@ Integer::operator%=(Integer const& x)
 
 
 inline Integer&
-Integer::operator&=(Integer const& x) 
+Integer::operator&=(Integer const& x)
 {
   z &= x.z;
   return *this;
@@ -223,7 +223,7 @@ Integer::operator&=(Integer const& x)
 
 
 inline Integer&
-Integer::operator|=(Integer const& x) 
+Integer::operator|=(Integer const& x)
 {
   z |= x.z;
   return *this;
@@ -231,7 +231,7 @@ Integer::operator|=(Integer const& x)
 
 
 inline Integer&
-Integer::operator^=(Integer const& x) 
+Integer::operator^=(Integer const& x)
 {
   z &= x.z;
   return *this;
@@ -239,7 +239,7 @@ Integer::operator^=(Integer const& x)
 
 
 inline Integer&
-Integer::operator<<=(Integer const& x) 
+Integer::operator<<=(Integer const& x)
 {
   z = z.shl(x.z);
   return *this;
@@ -248,7 +248,7 @@ Integer::operator<<=(Integer const& x)
 
 // Arithmetic right shift.
 inline Integer&
-Integer::operator>>=(Integer const& x) 
+Integer::operator>>=(Integer const& x)
 {
   z = z.ashr(x.z);
   return *this;
@@ -257,32 +257,32 @@ Integer::operator>>=(Integer const& x)
 
 // Returns true if the value is strictly positive.
 inline bool
-Integer::is_positive() const 
-{ 
+Integer::is_positive() const
+{
   return z.isStrictlyPositive();
 }
 
 
 // Returns true if the value is strictly negative.
 inline bool
-Integer::is_negative() const 
-{ 
+Integer::is_negative() const
+{
   return z.isNegative();
 }
 
 
 // Returns true if the value is nonpositive.
 inline bool
-Integer::is_nonpositive() const 
-{ 
+Integer::is_nonpositive() const
+{
   return !is_positive();
 }
 
 
 // Returns true if the value is nonnegative.
 inline bool
-Integer::is_nonnegative() const 
-{ 
+Integer::is_nonnegative() const
+{
   return !is_negative();
 }
 
@@ -297,8 +297,8 @@ Integer::truth_value() const
 
 // Returns the number of bits in the integer representation.
 inline int
-Integer::bits() const 
-{ 
+Integer::bits() const
+{
   return z.getBitWidth();
 }
 
@@ -306,162 +306,162 @@ Integer::bits() const
 
 // Returns the value as an unsigned integer.
 inline std::uint64_t
-Integer::getu() const 
-{ 
+Integer::getu() const
+{
   return z.getZExtValue();
 }
 
 
 // Returns the value as a signed integer.
 inline std::int64_t
-Integer::gets() const 
-{ 
+Integer::gets() const
+{
   return z.getSExtValue();
 }
 
 
 // Returns a reference to the underlying data.
 inline llvm::APInt const&
-Integer::impl() const 
-{ 
-  return z; 
+Integer::impl() const
+{
+  return z;
 }
 
 
 // Equality comparison
 // Returns true when the two integers have the same value.
 inline bool
-operator==(Integer const& a, Integer const& b) 
+operator==(Integer const& a, Integer const& b)
 {
   return a.impl() == b.impl();
 }
 
 
-inline bool 
-operator!=(Integer const& a, Integer const& b) 
-{ 
-  return !(a == b); 
+inline bool
+operator!=(Integer const& a, Integer const& b)
+{
+  return !(a == b);
 }
 
 
 // Ordering, defined for signed integers by default.
 inline bool
-operator<(Integer const& a, Integer const& b) 
+operator<(Integer const& a, Integer const& b)
 {
   return a.impl().slt(b.impl());
 }
 
 
 inline bool
-operator>(Integer const& a, Integer const& b) 
-{ 
+operator>(Integer const& a, Integer const& b)
+{
   return a.impl().sgt(b.impl());
 }
 
 
 inline bool
-operator<=(Integer const& a, Integer const& b) 
-{ 
+operator<=(Integer const& a, Integer const& b)
+{
   return a.impl().sle(b.impl());
 }
 
 
 inline bool
-operator>=(Integer const& a, Integer const& b) 
-{ 
+operator>=(Integer const& a, Integer const& b)
+{
   return a.impl().sge(b.impl());
 }
 
 
 // Arithmetic
 inline Integer
-operator+(Integer const& a, Integer const& b) 
-{ 
-  return Integer(a) += b; 
+operator+(Integer const& a, Integer const& b)
+{
+  return Integer(a) += b;
 }
 
 
 inline Integer
-operator-(Integer const& a, Integer const& b) 
-{ 
-  return Integer(a) -= b; 
+operator-(Integer const& a, Integer const& b)
+{
+  return Integer(a) -= b;
 }
 
 
 inline Integer
-operator*(Integer const& a, Integer const& b) 
-{ 
-  return Integer(a) *= b; 
+operator*(Integer const& a, Integer const& b)
+{
+  return Integer(a) *= b;
 }
 
 
 inline Integer
-operator/(Integer const& a, Integer const& b) 
-{ 
-  return Integer(a) /= b; 
+operator/(Integer const& a, Integer const& b)
+{
+  return Integer(a) /= b;
 }
 
 
 inline Integer
-operator%(Integer const& a, Integer const& b) 
-{ 
-  return Integer(a) %= b; 
+operator%(Integer const& a, Integer const& b)
+{
+  return Integer(a) %= b;
 }
 
 
-inline Integer 
-operator-(Integer const& x) 
-{ 
+inline Integer
+operator-(Integer const& x)
+{
   return -x.impl();
 }
 
 
-inline Integer 
-operator+(Integer const& x) 
-{ 
-  return x; 
+inline Integer
+operator+(Integer const& x)
+{
+  return x;
 }
 
 
 inline Integer
-operator&(Integer const& a, Integer const& b) 
-{ 
-  return Integer(a) &= b; 
+operator&(Integer const& a, Integer const& b)
+{
+  return Integer(a) &= b;
 }
 
 
 inline Integer
-operator|(Integer const& a, Integer const& b) 
-{ 
-  return Integer(a) |= b; 
+operator|(Integer const& a, Integer const& b)
+{
+  return Integer(a) |= b;
 }
 
 
 inline Integer
-operator^(Integer const& a, Integer const& b) 
-{ 
-  return Integer(a) ^= b; 
+operator^(Integer const& a, Integer const& b)
+{
+  return Integer(a) ^= b;
 }
 
 
 inline Integer
-operator~(Integer const& x) 
-{ 
+operator~(Integer const& x)
+{
   return ~x.impl();
 }
 
 
 inline Integer
-operator<<(Integer const& a, Integer const& b) 
-{ 
-  return Integer(a) <<= b; 
+operator<<(Integer const& a, Integer const& b)
+{
+  return Integer(a) <<= b;
 }
 
 
 inline Integer
-operator>>(Integer const& a, Integer const& b) 
-{ 
-  return Integer(a) >>= b; 
+operator>>(Integer const& a, Integer const& b)
+{
+  return Integer(a) >>= b;
 }
 
 

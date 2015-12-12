@@ -45,13 +45,13 @@ is_less(Type const* a, Type const* b)
   struct Fn
   {
     Type const* b;
-    bool operator()(Base_type const* a) const 
-    { 
-      return is_less(a, as<Base_type>(b)); 
+    bool operator()(Base_type const* a) const
+    {
+      return is_less(a, as<Base_type>(b));
     }
-    bool operator()(Arrow_type const* a) const 
-    { 
-      return is_less(a, as<Arrow_type>(b)); 
+    bool operator()(Arrow_type const* a) const
+    {
+      return is_less(a, as<Arrow_type>(b));
     }
   };
 
@@ -172,7 +172,6 @@ subterm(Expr const* p, Expr const* s)
 {
   return print_subterm<Expr>(p, s);
 }
-
 
 
 template<typename T>

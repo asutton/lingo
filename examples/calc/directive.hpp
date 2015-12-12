@@ -47,5 +47,4 @@ contains_directive(lingo::Buffer const& buf)
 }
 
 
-
 } // namespace

@@ -1,7 +1,6 @@
 # Copyright (c) 2015 Andrew Sutton
 # All rights reserved
 
-
 # Bypass the usual cppformat build and build the
 # source into this tree.
 set(contrib_src ${PROJECT_SOURCE_DIR}/cppformat/format.cc)

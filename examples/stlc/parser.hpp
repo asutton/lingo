@@ -18,7 +18,7 @@ using namespace lingo;
 
 struct Translation_error : std::runtime_error
 {
-  using std::runtime_error::runtime_error;  
+  using std::runtime_error::runtime_error;
 };
 
 
@@ -128,7 +128,7 @@ struct Parser
 Expr const* parse(String const&);
 
 
-} // nammespace calc
+} // namespace calc
 
 
 #endif

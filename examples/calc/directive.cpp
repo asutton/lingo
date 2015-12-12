@@ -37,7 +37,6 @@ evaluation_mode(Evaluation_mode m)
 }
 
 
-
 // Process the directive. Note that errors may occur.
 void
 process_directive(Buffer const& buf)
@@ -59,6 +58,4 @@ process_directive(Buffer const& buf)
 }
 
 
-
 } // namespace calc
-

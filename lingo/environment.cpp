@@ -2,4 +2,3 @@
 // All rights reserved
 
 #include "environment.hpp"
-

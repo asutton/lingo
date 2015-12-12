@@ -22,6 +22,7 @@ struct Environment : std::unordered_map<S, T>
 {
 private:
   using Map = std::unordered_map<S, T>;
+
 public:
   using Name = S;
   using Value = T;
@@ -29,21 +30,21 @@ public:
 
   Binding& bind(S const&, T const&);
   Binding& rebind(S const&, T const&);
-  
+
   Binding const& get(S const&) const;
   Binding&       get(S const&);
-  
+
   Binding const* lookup(S const&) const;
   Binding*       lookup(S const&);
 };
 
 
-// Create a new name binding for the given entity. Behavior 
-// is undefined if a the symbol is already bound in this 
+// Create a new name binding for the given entity. Behavior
+// is undefined if a the symbol is already bound in this
 // environment.
 template<typename S, typename T>
 inline auto
-Environment<S, T>::bind(S const& sym, T const& ent) -> Binding& 
+Environment<S, T>::bind(S const& sym, T const& ent) -> Binding&
 {
   assert(!this->count(sym));
   auto ins = this->emplace(sym, ent);
@@ -55,7 +56,7 @@ Environment<S, T>::bind(S const& sym, T const& ent) -> Binding&
 // the binding does not exist.
 template<typename S, typename T>
 inline auto
-Environment<S, T>::rebind(S const& sym, T const& ent) -> Binding& 
+Environment<S, T>::rebind(S const& sym, T const& ent) -> Binding&
 {
   auto iter = this->find(sym);
   iter->second = ent;
@@ -124,12 +125,12 @@ struct Stack : std::vector<E*>
   using Name = typename E::Name;
   using Value = typename E::Value;
   using Binding = typename E::Binding;
-  
+
   void push(E*);
 
   template<typename... Args>
   void push(Args&&...);
-  
+
   void pop();
   E*   take();
 
@@ -149,7 +150,7 @@ struct Stack : std::vector<E*>
 
 // Push the given environment onto the stack.
 template<typename E>
-void 
+void
 Stack<E>::push(E* env)
 {
   this->push_back(env);
@@ -160,19 +161,19 @@ Stack<E>::push(E* env)
 // given arguments.
 template<typename E>
 template<typename... Args>
-inline void 
+inline void
 Stack<E>::push(Args&&... args)
 {
   E* env = new E(std::forward<Args>(args)...);
-  this->push_back(env); 
+  this->push_back(env);
 }
 
 
 // Pop the environment at the top of the stack.
 template<typename E>
-inline void 
+inline void
 Stack<E>::pop()
-{ 
+{
   E* env = this->back();
   this->pop_back();
   delete env;
@@ -182,7 +183,7 @@ Stack<E>::pop()
 // Create a new name binding in the top environment.
 template<typename E>
 inline auto
-Stack<E>::bind(Name const& n, Value const& v) -> Binding& 
+Stack<E>::bind(Name const& n, Value const& v) -> Binding&
 {
   return top().bind(n, v);
 }
@@ -191,7 +192,7 @@ Stack<E>::bind(Name const& n, Value const& v) -> Binding&
 // Rebind the given name to a new value.
 template<typename E>
 inline auto
-Stack<E>::rebind(Name const& n, Value const& v) -> Binding& 
+Stack<E>::rebind(Name const& n, Value const& v) -> Binding&
 {
   return top().rebind(n, v);
 }
@@ -231,7 +232,6 @@ Stack<E>::lookup(Name const& n) -> Binding*
   }
   return nullptr;
 }
-
 
 
 } // namespace lingo

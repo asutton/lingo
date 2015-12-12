@@ -38,19 +38,20 @@ class File : public Buffer
 {
   friend class File_manager;
 
-  File(Path const&, int);
 public:
   File(Path const&);
 
   // Returns the absolute path to the file.
   Path const& path() const { return path_; }
 
-  // Returns the file's index.  
+  // Returns the file's index.
   int index() const { return index_; }
 
 private:
   Path        path_;
   int         index_;
+
+  File(Path const&, int);
 };
 
 

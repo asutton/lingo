@@ -11,14 +11,14 @@
 namespace calc
 {
 
-Expr const* 
+Expr const*
 Evaluator::operator()(Expr const* e)
 {
   return eval(e);
 }
 
 
-Expr const* 
+Expr const*
 Evaluator::eval(Expr const* e)
 {
   struct Fn
@@ -36,7 +36,7 @@ Evaluator::eval(Expr const* e)
 }
 
 
-Expr const* 
+Expr const*
 Evaluator::eval(Var const* e)
 {
   return e;
@@ -54,7 +54,7 @@ Evaluator::eval(Var const* e)
 //    x not in S
 //    ------------ E-ref-2
 //    S |- x ->* x
-Expr const* 
+Expr const*
 Evaluator::eval(Ref const* e)
 {
   if (Var const* v = e->var())
@@ -68,7 +68,7 @@ Evaluator::eval(Ref const* e)
 //
 // FIXME: This should produce result \x.x, which could
 // be interpreted as the unit value.
-Expr const* 
+Expr const*
 Evaluator::eval(Def const* e)
 {
   defs_.bind(e->var(), e->expr());
@@ -85,7 +85,7 @@ Evaluator::eval(Decl const* e)
 
 
 // An abstraction is a value.
-Expr const* 
+Expr const*
 Evaluator::eval(Abs const* e)
 {
   return e;
@@ -101,7 +101,7 @@ Evaluator::eval(Abs const* e)
 //          t2 ->* v
 //    --------------------- E-app-2
 //    \x:T.t t2 ->* [x->v]t
-Expr const* 
+Expr const*
 Evaluator::eval(App const* e)
 {
   Abs const* fn = as<Abs>(eval(e->fn()));
