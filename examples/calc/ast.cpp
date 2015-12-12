@@ -14,11 +14,9 @@ namespace calc
 Span
 Int::span() const
 {
-  // FIXME: We shouldn't need to render this to a string
-  // just to see how long it is.
-  String str = to_string(first);
-
-  return {location(), Location(location().offset() + str.size())};
+  std::stringstream ss;
+  ss << val_;
+  return {loc_, Location(loc_.offset() + ss.str().size())};
 }
 
 
@@ -141,115 +139,138 @@ precedence(Expr const* e)
 // greater than that of the subexpression. Note that we could
 // easily implement the following policies:
 //
-//    1. Use parens for less or equal precedence expressions.
-//       This minimizes the use of parens.
-//    2. Use parens for non-primary expressions.
-//       This reflects the parse.
-//    3. Always use parens.
-//       Ths is unnecessarily verbose.
+//    1. Natural parens: precedence(expr) > precedence(sub)
+//       Parens are used only when needed to disambiguate
+//       operators with different precedence. Example:
 //
-// This currently implements extended policy #2.
+//          (3 * 2) + 4  ~>  3 * 2 + 4
+//
+//    2. Nested parens: precedence(expr) >= precedence(sub)
+//       Like above, except that parens are also added for
+//       subexpressions of like precedence.
+//
+//          (3 * 2) + 4  ~>  (3 * 2) + 4
+//
+//    3. Max parens: precedence(expr) != 0
+//       Parens are used everywhere except literals.
+//
+//          (3 * 2) + (4 * 2)  ~>  (3 * 2) + (4 * 2)
+//
+//    4. Always parens: true.
+//
+//          3  ~>  (3)
+//
+// This currently implements extended policy #3.
 inline bool
 needs_parens(Expr const* expr, Expr const* sub)
 {
   return precedence(sub) != 0;
-  // return precedence(expr) <= precedence(sub);
 }
 
 
-// Print a subexpression of an outer expression. This will automatically
-// add parentheses if they are needed (and omit them if they are not).
-inline void
-print_subexpr(Printer& p, Expr const* expr, Expr const* sub)
+// Output streaming for nested sub-expressions.
+struct subexpr
 {
-  if (needs_parens(expr, sub))
-    print_paren_enclosed(p, sub);
-  else
-    print(p, sub);
-}
-
-
-// Return the character representing the operator of an expression.
-struct Operator_fn
-{
-  char operator()(Int const* e) const { lingo_unreachable(); }
-  char operator()(Add const* e) const { return '+'; }
-  char operator()(Sub const* e) const { return '-'; }
-  char operator()(Mul const* e) const { return '*'; }
-  char operator()(Div const* e) const { return '/'; }
-  char operator()(Mod const* e) const { return '%'; }
-  char operator()(Neg const* e) const { return '-'; }
-  char operator()(Pos const* e) const { return '+'; }
-};
-
-
-// Prints the textual representation of an operator for
-// that node.
-inline void
-print_operator(Printer& p, Expr const* e)
-{
-  print(p, apply(e, Operator_fn()));
-}
-
-
-void
-print(Printer& p, Int const* e)
-{
-  print(p, e->value());
-}
-
-
-template<typename T>
-typename std::enable_if<is_binary<T>(), void>::type
-print(Printer& p, T const* e)
-{
-  print_subexpr(p, e, e->left());
-  print_space(p);
-  print_operator(p, e);
-  print_space(p);
-  print_subexpr(p, e, e->right());
-}
-
-
-template<typename T>
-typename std::enable_if<is_unary<T>(), void>::type
-print(Printer& p, T const* e)
-{
-  print_operator(p, e);
-  print_subexpr(p, e, e->arg());
-}
-
-
-
-struct Print_fn
-{
-  Print_fn(Printer& p)
-    : p(p)
+  subexpr(Expr const* e, Expr const* s)
+    : e(e), s(s)
   { }
 
-  void operator()(Int const* e) const { print(p, e); }
-  void operator()(Add const* e) const { print(p, e); }
-  void operator()(Sub const* e) const { print(p, e); }
-  void operator()(Mul const* e) const { print(p, e); }
-  void operator()(Div const* e) const { print(p, e); }
-  void operator()(Mod const* e) const { print(p, e); }
-  void operator()(Neg const* e) const { print(p, e); }
-  void operator()(Pos const* e) const { print(p, e); }
-
-  Printer& p;
+  Expr const* e;
+  Expr const* s;
 };
+
+
+std::ostream&
+operator<<(std::ostream& os, subexpr sub)
+{
+  if (needs_parens(sub.e, sub.s))
+    os << '(' << *sub.s << ')';
+  else
+    os << *sub.s;
+  return os;
+}
+
+
+// Output streaming for the operator name.
+struct opname
+{
+  opname(Expr const* e)
+    : e(e)
+  { }
+  
+  Expr const* e;
+};
+
+
+std::ostream&
+operator<<(std::ostream& os, opname op)
+{
+  struct Fn
+  {
+    char operator()(Int const* e) const { lingo_unreachable(); }
+    char operator()(Add const* e) const { return '+'; }
+    char operator()(Sub const* e) const { return '-'; }
+    char operator()(Mul const* e) const { return '*'; }
+    char operator()(Div const* e) const { return '/'; }
+    char operator()(Mod const* e) const { return '%'; }
+    char operator()(Neg const* e) const { return '-'; }
+    char operator()(Pos const* e) const { return '+'; }
+  };
+  return os << apply(op.e, Fn{});
+}
 
 
 } // namespace
 
 
+void
+print(std::ostream& os, Int const* e)
+{
+  os << e->value();
+}
+
+
+void
+print(std::ostream& os, Binary const* e)
+{
+  os << subexpr(e, e->left())
+     << ' ' << opname(e) << ' '
+     << subexpr(e, e->right());
+  
+}
+
+
+void
+print(std::ostream& os, Unary const* e)
+{
+  os << opname(e) << subexpr(e, e->arg());
+}
+
+
 // Pretty print the given expression.
 void
-print(Printer& p, Expr const* e)
+print(std::ostream& os, Expr const* e)
 {
-  lingo_assert(is_valid_node(e));
-  apply(e, Print_fn(p));
+  struct Fn
+  {
+    void operator()(Int const* e) const { print(os, e); }
+    void operator()(Binary const* e) const { print(os, e); }
+    void operator()(Unary const* e) const { print(os, e); }
+
+    std::ostream& os;
+  };
+  apply(e, Fn{os});
 }
+
+
+
+std::ostream&
+operator<<(std::ostream& os, Expr const& e)
+{
+  print(os, &e);
+  return os;
+}
+
 
 
 // -------------------------------------------------------------------------- //
@@ -298,12 +319,6 @@ debug(Printer& p, Expr const* e)
   apply(e, Debug_fn(p));
 }
 
-
-std::ostream&
-operator<<(std::ostream& os, Expr const* e)
-{
-  return os << to_string(e);
-}
 
 
 } // namespace calc

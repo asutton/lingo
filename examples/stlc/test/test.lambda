@@ -1,0 +1,19 @@
+
+true : Bool;
+false : Bool;
+
+0 : Int;
+1 : Int;
+2 : Int;
+
+idb = \x:Bool.x;
+idz = \x:Int.x;
+
+idb true;
+idb false;
+
+idz 0;
+idz 2;
+
+
+\x:U->T.\y:U.x y;

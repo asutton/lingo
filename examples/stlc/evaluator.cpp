@@ -27,6 +27,7 @@ Evaluator::eval(Expr const* e)
     Expr const* operator()(Var const* e) { return eval.eval(e); }
     Expr const* operator()(Ref const* e) { return eval.eval(e); }
     Expr const* operator()(Def const* e) { return eval.eval(e); }
+    Expr const* operator()(Decl const* e) { return eval.eval(e); }
     Expr const* operator()(Abs const* e) { return eval.eval(e); }
     Expr const* operator()(App const* e) { return eval.eval(e); }
     Expr const* operator()(Seq const* e) { return eval.eval(e); }
@@ -71,6 +72,14 @@ Expr const*
 Evaluator::eval(Def const* e)
 {
   defs_.bind(e->var(), e->expr());
+  return nullptr;
+}
+
+
+// Type bindings have no evaluation semantics.
+Expr const*
+Evaluator::eval(Decl const* e)
+{
   return nullptr;
 }
 

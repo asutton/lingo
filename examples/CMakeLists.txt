@@ -3,3 +3,4 @@
 
 add_subdirectory(calc)
 add_subdirectory(lambda)
+add_subdirectory(stlc)
