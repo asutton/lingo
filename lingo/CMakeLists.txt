@@ -29,6 +29,7 @@ add_library(lingo
   symbol.cpp
   token.cpp
   environment.cpp)
+target_compile_definitions(lingo PUBLIC ${LLVM_DEFINITIONS})
 
 target_include_directories(lingo PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR};${PROJECT_SOURCE_DIR}/cppformat>"

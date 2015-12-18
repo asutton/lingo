@@ -56,21 +56,21 @@ private:
 // Initialize an IEEE double precision floating point
 // value to 0.0.
 inline
-Real::Real() 
+Real::Real()
   : f(0.0)
 { }
 
 
 // Copy initialize this object with x.
 inline
-Real::Real(Real const& x) 
+Real::Real(Real const& x)
   : f(x.f)
 { }
 
 
 // Copy assign this object to the value of x.
 inline Real&
-Real::operator=(Real const& x) 
+Real::operator=(Real const& x)
 {
   f = x.f;
   return *this;
@@ -79,7 +79,7 @@ Real::operator=(Real const& x)
 
 inline
 Real::Real(Real&& x)
-  : f(std::move(f))
+  : f(std::move(x.f))
 { }
 
 
@@ -98,7 +98,7 @@ Real::Real(llvm::APFloat const& n)
 
 
 inline
-Real& 
+Real&
 Real::operator=(llvm::APFloat const& n)
 {
   f = n;
@@ -113,7 +113,7 @@ Real::Real(llvm::APFloat&& n)
 
 
 inline
-Real& 
+Real&
 Real::operator=(llvm::APFloat&& n)
 {
   f = std::move(n);
@@ -131,100 +131,100 @@ Real::Real(double n)
 
 // Returns a reference to the underlying data.
 inline llvm::APFloat const&
-Real::impl() const 
-{ 
-  return f; 
+Real::impl() const
+{
+  return f;
 }
 
 
 // Equality comparison
 // Returns true when the two integers have the same value.
 inline bool
-operator==(Real const& a, Real const& b) 
+operator==(Real const& a, Real const& b)
 {
   return a.impl().compare(b.impl()) == llvm::APFloat::cmpEqual;
 }
 
 
-inline bool 
-operator!=(Real const& a, Real const& b) 
-{ 
-  return !(a == b); 
+inline bool
+operator!=(Real const& a, Real const& b)
+{
+  return !(a == b);
 }
 
 
 // Ordering, defined for signed integers by default.
 inline bool
-operator<(Real const& a, Real const& b) 
+operator<(Real const& a, Real const& b)
 {
   return a.impl().compare(b.impl()) == llvm::APFloat::cmpLessThan;
 }
 
 
 inline bool
-operator>(Real const& a, Real const& b) 
-{ 
+operator>(Real const& a, Real const& b)
+{
   return a.impl().compare(b.impl()) == llvm::APFloat::cmpGreaterThan;
 }
 
 
 inline bool
-operator<=(Real const& a, Real const& b) 
-{ 
+operator<=(Real const& a, Real const& b)
+{
   return a < b || a == b;
 }
 
 
 inline bool
-operator>=(Real const& a, Real const& b) 
-{ 
+operator>=(Real const& a, Real const& b)
+{
   return a > b || a == b;
 }
 
 
 // Arithmetic
 inline Real
-operator+(Real const& a, Real const& b) 
-{ 
+operator+(Real const& a, Real const& b)
+{
   return a.impl() + b.impl();
 }
 
 
 inline Real
-operator-(Real const& a, Real const& b) 
-{ 
+operator-(Real const& a, Real const& b)
+{
   return a.impl() - b.impl();
 }
 
 
 inline Real
-operator*(Real const& a, Real const& b) 
-{ 
+operator*(Real const& a, Real const& b)
+{
   return a.impl() * b.impl();
 }
 
 
 inline Real
-operator/(Real const& a, Real const& b) 
-{ 
+operator/(Real const& a, Real const& b)
+{
   return a.impl() / b.impl();
 }
 
 
 // FIXME: Make sure that zero has the same floating point
 // semantics as x.
-inline Real 
-operator-(Real const& x) 
+inline Real
+operator-(Real const& x)
 {
   Real zero;
   return zero - x.impl();
 }
 
 
-inline Real 
-operator+(Real const& x) 
-{ 
-  return x; 
+inline Real
+operator+(Real const& x)
+{
+  return x;
 }
 
 
