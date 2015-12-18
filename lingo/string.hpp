@@ -9,9 +9,11 @@
 
 #include <lingo/assert.hpp>
 
-#include <cstring>
+#include <cstdint>
 #include <algorithm>
 #include <iosfwd>
+#include <limits>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -63,7 +65,7 @@ is_newline(char c)
 inline bool
 is_binary_digit(char c)
 {
-  return (c - '0' < 2);
+  return c >= '0' && c <= '1';
 }
 
 
@@ -71,15 +73,15 @@ is_binary_digit(char c)
 inline bool
 is_octal_digit(char c)
 {
-  return (c - '0' < 8);
+  return c >= '0' && c <= '7';
 }
 
 
-// Returns true if c is a decimial digit.
+// Returns true if c is a decimal digit.
 inline bool
 is_decimal_digit(char c)
 {
-  return std::isdigit(c);
+  return c >= '0' && c <= '9';
 }
 
 
@@ -87,52 +89,64 @@ is_decimal_digit(char c)
 inline bool
 is_hexadecimal_digit(char c)
 {
-  return std::isxdigit(c);
+  return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
 }
 
 
-// If is a digit in base d, return n. Otherwise,
-// throw a runtime error.
-inline int
-get_in_base(int n, int b)
-{
-  lingo_assert(n < b);
-  return n;
-}
+// Returns true if c is a digit in the specified base.
+bool
+is_digit(char c, int base);
 
 
-// Returns the integer value of a character in base b,
-// or -1 if the character is not a digit in that base.
-inline int
-char_to_int(char c, int b)
-{
-  if ('0' <= c && c <= '9')
-    return get_in_base(c - '0', b);
-  if ('a' <= c && c <= 'z')
-    return get_in_base(c - 'a' + 10, b);
-  if ('A' <= c && c <= 'Z')
-    return get_in_base(c - 'A' + 10, b);
-  return get_in_base(c, 0);
-}
+// Returns the integral value of character c in the specified base, or -1 if
+// c is not a valid digit.
+int
+digit_value(char c, int base);
 
 
 // Returns the integer value of the string in [first, last),
 // which contains an integer representation in base b. If
 // [first, last) contains any characters that are not digits
-// in base b, this throws a runtime error.
+// in base b, this throws an std::invalid_argument exception.
 //
 // Note that T must be an integer type and is given as an
 // explicit template argument.
 template<typename T, typename I>
-inline T
+T
 string_to_int(I first, I last, int b)
 {
-  T n = 0;
+  std::intmax_t n = 0;
+  std::size_t digit_count = 0;
+  bool neg = false;
+
+  if (first != last) {
+    switch (*first) {
+      case '+':
+        neg = false;
+        ++first;
+        break;
+      case '-':
+        neg = true;
+        ++first;
+        break;
+    }
+  }
+
   while (first != last) {
-    n = n * b + char_to_int(*first, b);
+    const int d = digit_value(*first, b);
+    if (d == -1)
+      throw std::invalid_argument("lingo::string_to_int");
+    ++digit_count;
+    n = n * b + d;
+    if (n < std::numeric_limits<T>::min() || n > std::numeric_limits<T>::max())
+      throw std::out_of_range("lingo::string_to_int");
     ++first;
   }
-  return n;
+
+  if (!digit_count)
+    throw std::invalid_argument("lingo::string_to_int");
+
+  return neg ? -n : n;
 }
 
 
@@ -162,7 +176,7 @@ public:
   { }
 
   String_view(char const* s)
-    : first(s), last(s + std::strlen(s))
+    : first(s), last(s + std::char_traits<char>::length(s))
   { }
 
   int size() const { return last - first; }
@@ -307,7 +321,7 @@ String_builder::put(char c)
 inline void
 String_builder::put(char const* s)
 {
-  put(s, std::strlen(s));
+  put(s, std::char_traits<char>::length(s));
 }
 
 

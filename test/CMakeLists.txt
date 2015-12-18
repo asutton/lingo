@@ -9,3 +9,5 @@ endmacro()
 link_libraries(lingo)
 
 add_test_program(test-font font.cpp)
+add_test_program(test-string string.cpp)
+add_test_program(test-unicode unicode.cpp)

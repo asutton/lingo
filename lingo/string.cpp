@@ -9,6 +9,31 @@ namespace lingo
 {
 
 // -------------------------------------------------------------------------- //
+//                           Algorithms
+
+static const char* digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+
+bool
+is_digit(char c, int base)
+{
+  lingo_assert(base > 0);
+  return std::char_traits<char>::find(digits, base, std::toupper(c));
+}
+
+
+int
+digit_value(char c, int base)
+{
+  lingo_assert(base > 0);
+  const char* p = std::char_traits<char>::find(digits, base, std::toupper(c));
+  if (!p)
+    return -1;
+  return p - digits;
+}
+
+
+// -------------------------------------------------------------------------- //
 //                          String view
 
 // Streaming.
