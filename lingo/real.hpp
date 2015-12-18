@@ -79,7 +79,7 @@ Real::operator=(Real const& x)
 
 inline
 Real::Real(Real&& x)
-  : f(std::move(f))
+  : f(std::move(x.f))
 { }
 
 

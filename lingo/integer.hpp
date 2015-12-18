@@ -106,7 +106,7 @@ Integer::operator=(Integer const& x)
 
 inline
 Integer::Integer(Integer&& x)
-  : z(std::move(z))
+  : z(std::move(x.z))
 { }
 
 

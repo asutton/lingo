@@ -29,6 +29,7 @@ add_library(lingo
   token.cpp
   environment.cpp
   unicode.cpp)
+target_compile_definitions(lingo PUBLIC ${LLVM_DEFINITIONS})
 target_include_directories(
   lingo
     PUBLIC
