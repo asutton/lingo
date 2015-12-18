@@ -70,6 +70,12 @@ The Lingo library also depends on a few external libraries:
   submodule 'cppformat'.
 - [GMP](https://gmplib.org) -- The GNU Multiple Precision Arithmetic Library
   (GMP) must be installed on your system.
+- [iconv]
+  (http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/iconv.h.html) --
+  The POSIX C header `<iconv.h>`, which contains the `iconv()` function,
+  must be installed on your system. On some platforms, this is part of the
+  system C library. On others, you can install
+  [GNU's libiconv](https://www.gnu.org/software/libiconv).
 
 
 # Building Lingo
