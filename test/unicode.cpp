@@ -50,7 +50,7 @@ int main()
     char* end_ptr;
     try {
       std::cout << string << " = "
-                << unicode_put(lingo::unescape_at(string, &end_ptr))
+                << unicode_put(lingo::unescape(string, &end_ptr))
                 << std::endl;
     }
     catch (const std::invalid_argument& exception) {
@@ -61,6 +61,16 @@ int main()
     }
     LOG_EXPR(end_ptr - string);
   }
+
+  // Sample text is "I can eat glass, and it does not hurt me" in
+  // traditional Chinese from http://www.columbia.edu/~fdc/utf8/.
+  const std::string text1(u8"我能吞下玻璃而不傷身體。");
+
+  std::u16string text2 = lingo::convert_UTF8_to_UTF16(text1);
+  lingo_assert(text2.size() == 12);
+
+  std::u32string text3 = lingo::convert_UTF8_to_UTF32(text1);
+  lingo_assert(text3.size() == 12);
 
   return 0;
 }

@@ -2,6 +2,7 @@
 // All rights reserved
 
 #include "config.hpp"
+
 #include "lingo/unicode.hpp"
 #include "lingo/string.hpp"
 
@@ -23,7 +24,7 @@ namespace lingo
 {
 
   char32_t
-  unescape_at(const char* str, char** str_end)
+  unescape(const char* str, char** str_end)
   {
     const std::size_t len = std::char_traits<char>::length(str);
     const char* first = str;
@@ -150,16 +151,15 @@ namespace lingo
   {
     std::basic_string<CharT> result;
 
-    const std::size_t max_bytes = std::max(std::numeric_limits<std::size_t>::max(), result.max_size() * sizeof(CharT));
-
     errno = 0;
 
     // Open the conversion descriptor.
     iconv_t utf8_to_dest = iconv_open(tocode, kUTF8Encoding);
 
     if (errno == EINVAL)
-      abort("iconv: The conversion from {} to {} is not supported by the implementation.", kUTF8Encoding, tocode);
+      abort("The conversion from {} to {} is not supported by the implementation of iconv().", kUTF8Encoding, tocode);
 
+    const std::size_t max_bytes = n * sizeof(CharT);
     ICONV_CONST char* in_buf = const_cast<ICONV_CONST char*>(str);
     char* out_buf = new char[max_bytes];
     std::size_t in_bytes = n;
