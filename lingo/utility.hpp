@@ -44,13 +44,9 @@ is(U const* u)
 }
 
 
-// Statically cast a pointer to a Node of type T to a
-// pointer to a Node of type U. This is not a checked
-// operation (except in debug mode).
-//
-// Note that this allows null and error nodes to be
-// interpreted as nodes of the given type (as their
-// values are considered common to all).
+// Statically cast a pointer to a Node of type T to a pointer
+// to a Node of type U. This is not a checked operation (except
+// in debug mode).
 template<typename T, typename U>
 inline T*
 cast(U* u)
@@ -66,6 +62,24 @@ cast(U const* u)
 {
   lingo_assert(u ? is<T>(u) : true);
   return static_cast<T const*>(u);
+}
+
+
+// Statically cast a reference to U to a reference to T.
+// Behavior is undefined if the ast is invalid.
+template<typename T, typename U>
+inline T&
+cast(U& u)
+{
+  return static_cast<T&>(u);
+}
+
+
+template<typename T, typename U>
+inline T const&
+cast(U const& u)
+{
+  return static_cast<T const&>(u);
 }
 
 
@@ -87,6 +101,24 @@ as(U const* u)
 }
 
 
+// Dynamically cast a reference to U to a reference to T.
+// An exception is thrown if this is a bad cast.
+template<typename T, typename U>
+inline T&
+as(U& u)
+{
+  return dynamic_cast<T&>(u);
+}
+
+
+template<typename T, typename U>
+inline T const&
+as(U const& u)
+{
+  return dynamic_cast<T const&>(u);
+}
+
+
 // Return a non-const pointer to the term. This is used
 // to modify a term post-initializatoin (which should
 // be rare).
@@ -101,7 +133,7 @@ modify(T const* t)
 // -------------------------------------------------------------------------- //
 // Source code locations
 
-// A locus is a line/column offset within a file. 
+// A locus is a line/column offset within a file.
 using Locus = std::pair<int, int>;
 
 

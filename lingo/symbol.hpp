@@ -18,8 +18,8 @@ namespace lingo
 // -------------------------------------------------------------------------- //
 //                            Symbols
 
-// The base class of all symbols of a language. By itself, this 
-// class is capable of representing symbols that have no other 
+// The base class of all symbols of a language. By itself, this
+// class is capable of representing symbols that have no other
 // attributes. Examples include punctuators and operators.
 class Symbol
 {
@@ -167,13 +167,13 @@ Symbol_table::~Symbol_table()
 }
 
 
-// Insert a new symbol into the table. The spelling of the symbol 
+// Insert a new symbol into the table. The spelling of the symbol
 // is given by the string s and the attributes are given in args.
 //
-// Note that the type of the symbol must be given explicitly, and 
+// Note that the type of the symbol must be given explicitly, and
 // it must derive from the Symbol class.
 //
-// If the symbol already exists, no insertion is performed. Note 
+// If the symbol already exists, no insertion is performed. Note
 // that this must not attempt to re-define the symbol as one of
 // a different kind. That is, the dynamic type of the existing
 // symbol shall be the same as T.
@@ -194,7 +194,7 @@ Symbol_table::put(int k, String const& s, Args&&... args)
 }
 
 
-// Insert a symbol with the spelling [first, last) and the 
+// Insert a symbol with the spelling [first, last) and the
 // properties in args...
 template<typename T, typename... Args>
 inline Symbol*
