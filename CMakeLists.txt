@@ -31,7 +31,10 @@ find_package(LLVM 3.6 REQUIRED CONFIG)
 llvm_map_components_to_libnames(LLVM_LIBRARIES core)
 
 # Other dependencies
-find_package(iconv REQUIRED)
+find_package(ICONV REQUIRED)
+if(NOT ICONV_SUPPORTS_UNICODE)
+  message(FATAL_ERROR "${PROJECT_NAME} requires that iconv() supports conversion between Unicode character encodings.")
+endif()
 
 check_include_file_cxx(unistd.h HAVE_UNISTD_H)
 if(NOT HAVE_UNISTD_H)
