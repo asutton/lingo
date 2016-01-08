@@ -17,15 +17,24 @@ namespace lingo
 
 // -------------------------------------------------------------------------- //
 //                            Symbols
+//
+// TODO: Add support for real-valued symbols.
+
+struct Symbol;
+struct Identifier_sym;
+struct Boolean_sym;
+struct Integer_sym;
+struct Character_sym;
+struct String_sym;
+
 
 // The base class of all symbols of a language. By itself, this
 // class is capable of representing symbols that have no other
 // attributes. Examples include punctuators and operators.
-class Symbol
+struct Symbol
 {
   friend struct Symbol_table;
 
-public:
   Symbol(int k)
     : str_(nullptr), tok_(k)
   { }
