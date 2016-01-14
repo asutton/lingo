@@ -1,13 +1,14 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
+#include "config.hpp"
+
 #include <cstdint>
 #include <iostream>
+#include <utility>
 
-#include <lingo/assert.hpp>
-#include <lingo/unicode.hpp>
-
-#define LOG_EXPR(x) std::cout << #x << " = " << (x) << std::endl
+#include "lingo/assert.hpp"
+#include "lingo/unicode.hpp"
 
 struct unicode_put_proxy
 {
@@ -22,55 +23,61 @@ inline unicode_put_proxy unicode_put(char32_t c)
 inline std::ostream& operator<<(std::ostream& out, unicode_put_proxy p)
 {
   const std::ios_base::fmtflags flags = out.flags();
+  const char fill = out.fill();
   out << "U+";
   out.flags(std::ios_base::hex | std::ios_base::right | std::ios_base::uppercase);
-  out.width(8);
+  out.width(4);
   out.fill('0');
-  out << static_cast<std::uint32_t>(p.c);
+  out << static_cast<std::uint_least32_t>(p.c);
   out.flags(flags);
-  out.width(0);
-  out.fill(' ');
+  out.fill(fill);
   return out;
 }
 
 int main()
 {
-  const char* strings[] = {
-    "",
-    "H",
-    "\\\"",
-    "\\0",
-    "\\1",
-    "\\2",
-    "\\033",
-    "\\U0001f34c",
+  const std::pair<const char*, char32_t> unescape_test_cases[] = {
+    {"", U'\0'},
+    {"a", U'a'},
+    {"\\\"", U'\"'},
+    {"\\0", U'\0'},
+    {"\\1", U'\1'},
+    {"\\033", U'\033'},
+    {"\\200", U'\200'},
+    {"\\x7f", U'\x7f'},
+    {"\\xFF", U'\xff'},
+    {"\\u00e9", U'\u00e9'},
+    {"\\U0001f34c", U'\U0001f34c'}
   };
 
-  for (const char* string : strings) {
-    char* end_ptr;
+  for (const auto& unescape_test_case : unescape_test_cases) {
     try {
-      std::cout << string << " = "
-                << unicode_put(lingo::unescape(string, &end_ptr))
-                << std::endl;
+      char* end_ptr;
+      char32_t c = lingo::to_unescaped<char32_t>(unescape_test_case.first, &end_ptr);
+      std::cout << unescape_test_case.first << " = " << unicode_put(c) << '\n';
+      lingo_assert(c == unescape_test_case.second);
+      lingo_assert(end_ptr == unescape_test_case.first + std::char_traits<char>::length(unescape_test_case.first));
     }
-    catch (const std::invalid_argument& exception) {
-      std::cerr << "Invalid argument." << std::endl;
+    catch (...) {
+      lingo_unreachable("lingo::to_unescaped() unexpectedly failed.");
     }
-    catch (const std::out_of_range& exception) {
-      std::cerr << "Argument is out of range." << std::endl;
-    }
-    LOG_EXPR(end_ptr - string);
   }
 
-  // Sample text is "I can eat glass, and it does not hurt me" in
-  // traditional Chinese from http://www.columbia.edu/~fdc/utf8/.
-  const std::string text1(u8"我能吞下玻璃而不傷身體。");
+  try {
+    const char* text = "\\u0080";
+    lingo::to_unescaped<char, char>(text, nullptr);
+    lingo_unreachable("lingo::to_unescaped() unexpectedly succeeded.");
+  }
+  catch (const std::out_of_range&) {}
 
-  std::u16string text2 = lingo::convert_UTF8_to_UTF16(text1);
-  lingo_assert(text2.size() == 12);
-
-  std::u32string text3 = lingo::convert_UTF8_to_UTF32(text1);
-  lingo_assert(text3.size() == 12);
+  try {
+    const char* text = "\\u0080";
+    unsigned char c = lingo::to_unescaped<unsigned char, char>(text, nullptr);
+    lingo_assert(c == 0x80);
+  }
+  catch (...) {
+    lingo_unreachable("lingo::to_unescaped() unexpectedly failed.");
+  }
 
   return 0;
 }

@@ -4,215 +4,249 @@
 #include "config.hpp"
 
 #include "lingo/unicode.hpp"
-#include "lingo/string.hpp"
 
 #include <cerrno>
 #include <stdexcept>
+#include <system_error>
+#include <utility>
 
 #include <iconv.h>
 
-#define kUTF8Encoding "UTF-8"
-#if WORDS_BIGENDIAN
-  #define kUTF16Encoding "UTF-16BE"
-  #define kUTF32Encoding "UTF-32BE"
-#else
-  #define kUTF16Encoding "UTF-16LE"
-  #define kUTF32Encoding "UTF-32LE"
-#endif
+#define kBufferSize 4096
 
 namespace lingo
 {
 
-  char32_t
-  unescape(const char* str, char** str_end)
-  {
-    const std::size_t len = std::char_traits<char>::length(str);
-    const char* first = str;
-    const char* last = str + len;
+// -------------------------------------------------------------------------- //
+//                         Character Set Conversion
 
-    char32_t result = U'\0';
+namespace
+{
+  const char* encoding_names[] = {
+    "ASCII",
+    "UTF-8",
+    "UTF-16",
+    "UTF-16BE",
+    "UTF-16LE",
+    "UTF-32",
+    "UTF-32BE",
+    "UTF-32LE"
+  };
+} // namespace
 
-    if (first != last) {
-      if (*first == '\\' && first + 1 < last) {
-        ++first;
-        switch (*first) {
-          case '\'':
-            result = '\'';
-            break;
-          case '\"':
-            result = '\"';
-            break;
-          case '\?':
-            result = '\?';
-            break;
-          case '\\':
-            result = '\\';
-            break;
-          case 'a':
-            result = '\a';
-            break;
-          case 'b':
-            result = '\b';
-            break;
-          case 'f':
-            result = '\f';
-            break;
-          case 'n':
-            result = '\n';
-            break;
-          case 'r':
-            result = '\r';
-            break;
-          case 't':
-            result = '\t';
-            break;
-          case 'v':
-            result = '\v';
-            break;
-          case 'x': {
-            char digits[2];
-            int digit_count = 0;
-            for (int j = 1; j <= 2; j++) {
-              if (first + j >= last || !is_hexadecimal_digit(*(first + j)))
-                break;
-              digits[j - 1] = *(first + j);
-              digit_count++;
-            }
-            if (digit_count == 0)
-              throw std::invalid_argument("invalid hexadecimal escape sequence");
-            result = string_to_int<char32_t>(digits, digits + digit_count, 16);
-            first += digit_count;
-            break;
-          }
-          case 'u': {
-            char digits[4];
-            int digit_count = 0;
-            for (int j = 1; j <= 4; j++) {
-              if (first + j >= last || !is_hexadecimal_digit(*(first + j)))
-                break;
-              digits[j - 1] = *(first + j);
-              digit_count++;
-            }
-            if (digit_count == 0)
-              throw std::invalid_argument("invalid UTF-16 escape sequence");
-            result = string_to_int<char32_t>(digits, digits + digit_count, 16);
-            first += digit_count;
-            break;
-          }
-          case 'U': {
-            char digits[8];
-            int digit_count = 0;
-            for (int j = 1; j <= 8; j++) {
-              if (first + j >= last || !is_hexadecimal_digit(*(first + j)))
-                break;
-              digits[j - 1] = *(first + j);
-              digit_count++;
-            }
-            if (digit_count == 0)
-              throw std::invalid_argument("invalid UTF-32 escape sequence");
-            result = string_to_int<char32_t>(digits, digits + digit_count, 16);
-            first += digit_count;
-            break;
-          }
-          default: {
-            char digits[3];
-            int digit_count = 0;
-            for (int j = 1; j <= 3; j++) {
-              if (first + j - 1 >= last || !is_octal_digit(*(first + j - 1)))
-                break;
-              digits[j - 1] = *(first + j - 1);
-              digit_count++;
-            }
-            if (digit_count) {
-              result = string_to_int<char32_t>(digits, digits + digit_count, 8);
-              first += digit_count - 1;
-            }
-            else
-              result = *first;
-            break;
-          }
-        }
-      }
-      else
-        result = *first;
-      ++first;
+
+const char*
+get_encoding_name(Encoding code)
+{
+  static const std::size_t n_encodings = std::end(encoding_names) - std::begin(encoding_names);
+
+  if (code < 0 || code >= n_encodings)
+    throw std::invalid_argument("lingo::get_encoding_name");
+
+  return encoding_names[code];
+}
+
+
+Character_set_converter::Character_set_converter() noexcept
+  : m_rep(reinterpret_cast<void*>(-1))
+{}
+
+
+Character_set_converter::Character_set_converter(Encoding fromcode, Encoding tocode)
+  : Character_set_converter()
+{
+  open(get_encoding_name(fromcode), get_encoding_name(tocode));
+}
+
+
+Character_set_converter::Character_set_converter(const char* fromcode, const char* tocode)
+  : Character_set_converter()
+{
+  open(fromcode, tocode);
+}
+
+
+Character_set_converter::Character_set_converter(Character_set_converter&& c) noexcept
+  : m_rep(std::exchange(c.m_rep, reinterpret_cast<void*>(-1)))
+{}
+
+
+Character_set_converter::~Character_set_converter()
+{
+  if (is_open())
+    iconv_close(reinterpret_cast<iconv_t>(m_rep));
+}
+
+
+Character_set_converter&
+Character_set_converter::operator=(Character_set_converter&& c) noexcept
+{
+  m_rep = std::exchange(c.m_rep, reinterpret_cast<void*>(-1));
+  return *this;
+}
+
+
+bool
+Character_set_converter::is_open() const
+{
+  return m_rep != reinterpret_cast<void*>(-1);
+}
+
+
+void
+Character_set_converter::open(const char* fromcode, const char* tocode)
+{
+  if (!is_open()) {
+    iconv_t cd = iconv_open(tocode, fromcode);
+    if (cd == iconv_t(-1))
+      throw std::system_error(errno, std::generic_category());
+    m_rep = reinterpret_cast<void*>(cd);
+  }
+}
+
+
+void
+Character_set_converter::close()
+{
+  if (is_open()) {
+    if (iconv_close(reinterpret_cast<iconv_t>(m_rep)) == -1)
+      throw std::system_error(errno, std::generic_category());
+    m_rep = reinterpret_cast<void*>(-1);
+  }
+}
+
+
+void
+Character_set_converter::reset()
+{
+  std::size_t n_conv = iconv(reinterpret_cast<iconv_t>(m_rep), nullptr, nullptr, nullptr, nullptr);
+  if (n_conv == std::size_t(-1))
+    throw std::system_error(errno, std::generic_category());
+}
+
+
+typename Character_set_converter::Result
+Character_set_converter::reset_bytes(char* to, char* to_end, char*& to_next)
+{
+  lingo_assert(to <= to_end);
+
+  Result result = ok;
+
+  char* out_buf = to;
+  std::size_t out_bytes = to_end - to;
+
+  std::size_t n_conv = iconv(reinterpret_cast<iconv_t>(m_rep), nullptr, nullptr, &out_buf, &out_bytes);
+  to_next = out_buf;
+
+  if (n_conv == std::size_t(-1)) {
+    switch (errno) {
+      case E2BIG:
+        result = partial;
+        break;
+      default:
+        throw std::system_error(errno, std::generic_category());
     }
-
-    if (str_end)
-      *str_end = const_cast<char*>(first);
-
-    return result;
   }
 
+  return result;
+}
 
-  template<typename CharT>
-  static std::basic_string<CharT>
-  convert_from_UTF8(const char* tocode, const char* str, std::size_t n)
-  {
-    std::basic_string<CharT> result;
 
-    errno = 0;
+typename Character_set_converter::Result
+Character_set_converter::convert_bytes(const char* from, const char* from_end, const char*& from_next, char* to, char* to_end, char*& to_next)
+{
+  lingo_assert(from <= from_end);
+  lingo_assert(to <= to_end);
 
-    // Open the conversion descriptor.
-    iconv_t utf8_to_dest = iconv_open(tocode, kUTF8Encoding);
+  Result result = ok;
 
-    if (errno == EINVAL)
-      abort("The conversion from {} to {} is not supported by the implementation of iconv().", kUTF8Encoding, tocode);
+  ICONV_CONST char* in_buf = const_cast<ICONV_CONST char*>(from);
+  char* out_buf = to;
+  std::size_t in_bytes = from_end - from;
+  std::size_t out_bytes = to_end - to;
 
-    const std::size_t max_bytes = n * sizeof(CharT);
-    ICONV_CONST char* in_buf = const_cast<ICONV_CONST char*>(str);
-    char* out_buf = new char[max_bytes];
-    std::size_t in_bytes = n;
-    std::size_t out_bytes = max_bytes;
+  std::size_t n_conv = iconv(reinterpret_cast<iconv_t>(m_rep), &in_buf, &in_bytes, &out_buf, &out_bytes);
+  from_next = const_cast<const char*>(in_buf);
+  to_next = out_buf;
 
-    // Perform the character set conversion.
-    iconv(utf8_to_dest, &in_buf, &in_bytes, &out_buf, &out_bytes);
-
-    if (errno == EILSEQ || errno == EINVAL)
-      throw std::invalid_argument("lingo::convert_from_UTF8");
-
-    const std::size_t out_size = (max_bytes - out_bytes) / sizeof(CharT);
-
-    result.reserve(out_size);
-    result.assign(reinterpret_cast<CharT*>(out_buf), out_size);
-
-    // Clean up.
-    delete[] out_buf;
-    iconv_close(utf8_to_dest);
-
-    return result;
+  if (n_conv == std::size_t(-1)) {
+    switch (errno) {
+      case E2BIG:
+      case EINVAL:
+        result = partial;
+        break;
+      case EILSEQ:
+        result = error;
+        break;
+      default:
+        throw std::system_error(errno, std::generic_category());
+    }
   }
 
+  return result;
+}
 
-  u16string
-  convert_UTF8_to_UTF16(const std::string& str)
-  {
-    const char* c_str = reinterpret_cast<const char*>(str.data());
-    return convert_from_UTF8<char16_t>(kUTF16Encoding, c_str, str.size());
+
+std::size_t
+Character_set_converter::converted_byte_length(const char* from, const char* from_end)
+{
+  lingo_assert(from <= from_end);
+
+  std::size_t result = 0;
+
+  char temp_buf[kBufferSize];
+
+  ICONV_CONST char* in_buf = const_cast<ICONV_CONST char*>(from);
+  std::size_t in_bytes = from_end - from;
+
+  while (in_bytes > 0) {
+    char* out_buf = temp_buf;
+    std::size_t out_bytes = kBufferSize;
+
+    std::size_t n_conv = iconv(reinterpret_cast<iconv_t>(m_rep), &in_buf, &in_bytes, &out_buf, &out_bytes);
+    result += out_buf - temp_buf;
+
+    if (n_conv == std::size_t(-1)) {
+      switch (errno) {
+        case E2BIG:
+          break;
+        case EINVAL:
+          errno = EILSEQ;
+          return result;
+        case EILSEQ:
+          return result;
+        default:
+          throw std::system_error(errno, std::generic_category());
+      }
+    }
   }
 
+  // Also take into account the termination/reset character sequence for when
+  // [from, from_end) ends with an incomplete character or shift sequence.
+  char* out_buf = temp_buf;
+  std::size_t out_bytes = kBufferSize;
 
-  u16string
-  convert_UTF8_to_UTF16(const u8string& str)
-  {
-    const char* c_str = reinterpret_cast<const char*>(str.data());
-    return convert_from_UTF8<char16_t>(kUTF16Encoding, c_str, str.size());
+  std::size_t n_conv = iconv(reinterpret_cast<iconv_t>(m_rep), nullptr, nullptr, &out_buf, &out_bytes);
+  result += out_buf - temp_buf;
+
+  if (n_conv == std::size_t(-1)) {
+    switch (errno) {
+      case E2BIG:
+        lingo_unreachable("Temporary output buffer is not large enough to contain termination/reset character sequence.");
+      default:
+        throw std::system_error(errno, std::generic_category());
+    }
   }
 
-
-  u32string
-  convert_UTF8_to_UTF32(const std::string& str)
-  {
-    const char* c_str = reinterpret_cast<const char*>(str.data());
-    return convert_from_UTF8<char32_t>(kUTF32Encoding, c_str, str.size());
-  }
+  return result;
+}
 
 
-  u32string
-  convert_UTF8_to_UTF32(const u8string& str)
-  {
-    const char* c_str = reinterpret_cast<const char*>(str.data());
-    return convert_from_UTF8<char32_t>(kUTF32Encoding, c_str, str.size());
-  }
+void
+Character_set_converter::swap(Character_set_converter& c) noexcept
+{
+  std::swap(m_rep, c.m_rep);
+}
+
 
 } // namespace lingo

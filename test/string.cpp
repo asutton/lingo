@@ -1,11 +1,9 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#include <iostream>
+#include "config.hpp"
 
 #include "lingo/string.hpp"
-
-#define LOG_EXPR(x) std::cout << #x << " = " << (x) << std::endl
 
 int main()
 {
@@ -30,16 +28,44 @@ int main()
   }
 
   try {
+    auto value = lingo::string_to_int<int>("-1", 10);
+    lingo_assert(value == -1);
+  }
+  catch (...) {
+    lingo_unreachable("lingo::string_to_int() unexpectedly failed.");
+  }
+
+  try {
     lingo::string_to_int<unsigned int>("-1", 10);
     lingo_unreachable("lingo::string_to_int() unexpectedly succeeded.");
   }
   catch (const std::out_of_range& exception) {}
 
   try {
-    lingo::string_to_int<unsigned char>("FF", 10);
+    auto value = lingo::string_to_int<char>("-128", 10);
+    lingo_assert(value == -128);
+  }
+  catch (...) {
+    lingo_unreachable("lingo::string_to_int() unexpectedly failed.");
+  }
+
+  try {
+    lingo::string_to_int<char>("-129", 10);
+    lingo_unreachable("lingo::string_to_int() unexpectedly succeeded.");
+  }
+  catch (const std::out_of_range& exception) {}
+
+  try {
+    lingo::string_to_int<char>("FF", 10);
     lingo_unreachable("lingo::string_to_int() unexpectedly succeeded.");
   }
   catch (const std::invalid_argument& exception) {}
+
+  try {
+    lingo::string_to_int<char>("FF", 16);
+    lingo_unreachable("lingo::string_to_int() unexpectedly succeeded.");
+  }
+  catch (const std::out_of_range& exception) {}
 
   try {
     auto value = lingo::string_to_int<unsigned char>("FF", 16);
