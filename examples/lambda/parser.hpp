@@ -9,7 +9,6 @@
 
 #include <lingo/environment.hpp>
 
-
 namespace calc
 {
 
@@ -95,6 +94,5 @@ Expr const* parse(String const&);
 
 
 } // namespace calc
-
 
 #endif

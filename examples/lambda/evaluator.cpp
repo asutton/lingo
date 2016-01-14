@@ -7,7 +7,6 @@
 #include <iostream>
 #include <stdexcept>
 
-
 namespace calc
 {
 

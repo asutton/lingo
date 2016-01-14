@@ -12,7 +12,6 @@
 namespace lingo
 {
 
-
 namespace
 {
 
@@ -66,7 +65,7 @@ file_manager()
 }
 
 
-// Open the file at the path indicatd by `p`. If the file has already
+// Open the file at the path indicated by `p`. If the file has already
 // been opened, then do nothing.
 File&
 File_manager::open(Path const& p)

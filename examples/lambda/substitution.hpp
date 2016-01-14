@@ -8,7 +8,6 @@
 
 #include <unordered_map>
 
-
 namespace calc
 {
 
@@ -35,6 +34,5 @@ struct Substitution : std::unordered_map<Var const*, Expr const*>
 
 
 } // namespace calc
-
 
 #endif

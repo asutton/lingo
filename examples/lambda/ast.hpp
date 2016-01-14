@@ -9,7 +9,6 @@
 #include "lingo/token.hpp"
 #include "lingo/print.hpp"
 
-
 namespace calc
 {
 

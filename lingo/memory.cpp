@@ -27,7 +27,7 @@ Collecting_factory::declare(Reach* r)
 }
 
 
-// Undecare a GC root.
+// Un-declare a GC root.
 void
 Collecting_factory::undeclare(Reach* r)
 {

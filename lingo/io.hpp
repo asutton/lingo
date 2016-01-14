@@ -6,19 +6,18 @@
 
 // This module contains extensions for input and output.
 //
-// TODO: Support bacground colors and actually implement
+// TODO: Support background colors and actually implement
 // underlining and blinking.
 //
-// TODO: Support 256 color terminals.
+// TODO: Support 256-color terminals.
 
 #include <iosfwd>
-
 
 namespace lingo
 {
 
 
-// Colors for text
+// Colors for text.
 enum Text_color
 {
   default_text, // Use the default color.
@@ -33,7 +32,7 @@ enum Text_color
 };
 
 
-// Text weight
+// Text weight.
 enum Text_weight
 {
   normal_text,
@@ -82,11 +81,10 @@ styled(T const& t, Text_color c, Text_weight w, Text_effects e)
 
 
 // -------------------------------------------------------------------------- //
-// Bright colors
+// Normal colors
 
 
-
-// Render t as bright text using the given color.
+// Render t as normal text using the given color.
 template<typename T>
 inline Styled_text<T>
 colored(T const& t, Text_color c)
@@ -95,7 +93,7 @@ colored(T const& t, Text_color c)
 }
 
 
-// Render t as bright red text.
+// Render t as normal red text.
 template<typename T>
 inline Styled_text<T>
 red(T const& t)
@@ -104,7 +102,7 @@ red(T const& t)
 }
 
 
-// Render t as bright blue text.
+// Render t as normal blue text.
 template<typename T>
 inline Styled_text<T>
 blue(T const& t)
@@ -113,7 +111,7 @@ blue(T const& t)
 }
 
 
-// Render t as bright green text.
+// Render t as normal green text.
 template<typename T>
 inline Styled_text<T>
 green(T const& t)
@@ -122,7 +120,7 @@ green(T const& t)
 }
 
 
-// Render t as bright cyan text.
+// Render t as normal cyan text.
 template<typename T>
 inline Styled_text<T>
 cyan(T const& t)
@@ -131,7 +129,7 @@ cyan(T const& t)
 }
 
 
-// Render t as bright magenta text.
+// Render t as normal magenta text.
 template<typename T>
 inline Styled_text<T>
 magenta(T const& t)
@@ -140,7 +138,7 @@ magenta(T const& t)
 }
 
 
-// Render t as bright yellow text.
+// Render t as normal yellow text.
 template<typename T>
 inline Styled_text<T>
 yellow(T const& t)
@@ -149,7 +147,7 @@ yellow(T const& t)
 }
 
 
-// Render t as bright white text.
+// Render t as normal white text.
 template<typename T>
 inline Styled_text<T>
 white(T const& t)
@@ -160,6 +158,7 @@ white(T const& t)
 
 // -------------------------------------------------------------------------- //
 // Bright colors
+
 
 // Render t as bright text.
 template<typename T>
@@ -346,6 +345,5 @@ void init_colors();
 
 
 } // namespace lingo
-
 
 #endif

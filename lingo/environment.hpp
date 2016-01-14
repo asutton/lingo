@@ -8,7 +8,6 @@
 #include <unordered_map>
 #include <vector>
 
-
 namespace lingo
 {
 
@@ -40,7 +39,7 @@ public:
 
 
 // Create a new name binding for the given entity. Behavior
-// is undefined if a the symbol is already bound in this
+// is undefined if the symbol is already bound in this
 // environment.
 template<typename S, typename T>
 inline auto
@@ -235,6 +234,5 @@ Stack<E>::lookup(Name const& n) -> Binding*
 
 
 } // namespace lingo
-
 
 #endif

@@ -15,27 +15,26 @@
 #include <string>
 #include <vector>
 
-
 namespace lingo
 {
 
 // -------------------------------------------------------------------------- //
 //                            Diagnostics
 
-// Different kids of diagnostics.
+// Different kinds of diagnostics.
 // TODO: Consider adding classes of error messages that correspond
-// to translation pahses (lexical errors, syntax error, type errors
+// to translation phases (lexical errors, syntax error, type errors
 // etc.).
 enum Diagnostic_kind
 {
-  error_diag,   // An error message
-  warning_diag, // A warning message
-  note_diag     // A note attached to another message
+  error_diag,   // An error message.
+  warning_diag, // A warning message.
+  note_diag     // A note attached to another message.
 };
 
 
 // Represents the positions where underlining begins and
-// ends. A caret represennts a single position within
+// ends. A caret represents a single position within
 // the span (if specified).
 //
 // TODO: This could be better designed.
@@ -127,7 +126,7 @@ public:
 
 private:
   bool suppress_; // True if diagnostics are temporarily suppressed.
-  int  errs_;     // Actual error count
+  int  errs_;     // Actual error count.
 };
 
 
@@ -137,7 +136,6 @@ private:
 void emit_diagnostics();
 void reset_diagnostics();
 int error_count();
-
 
 void error(Location, String const&);
 void error(Span, String const&);
@@ -282,7 +280,7 @@ note(char const* msg, Args&&... args)
 // if any errors were diagnosed during the processing of
 // a function.
 //
-// The `ok()` member functoin returns true if no errors
+// The `ok()` member function returns true if no errors
 // have been diagnosed at the point at which it is called.
 struct Error_count_guard
 {

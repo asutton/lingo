@@ -10,7 +10,6 @@
 #include <set>
 #include <typeindex>
 
-
 namespace calc
 {
 

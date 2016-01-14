@@ -92,7 +92,7 @@ debug(Printer& p, String_view s)
 
 // Debug print the given element, followed by a newline.
 // This function is provided as an entry point to the
-// usual debbuging facilities.
+// usual debugging facilities.
 template<typename T>
 inline void
 debug(T const& x)
@@ -274,7 +274,7 @@ debug(Printer& p, T const* node)
 }
 
 
-// Debug print a k-ary node
+// Debug print a k-ary node.
 template<typename T>
 inline typename std::enable_if<is_kary_node<T>()>::type
 debug(Printer& p, T const* node)

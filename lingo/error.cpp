@@ -10,7 +10,6 @@
 #include <stdexcept>
 #include <stack>
 
-
 namespace lingo
 {
 
@@ -97,10 +96,10 @@ std::ostream&
 operator<<(std::ostream& os, Diagnostic_kind k)
 {
   switch (k) {
-  case error_diag: return os << bright_red("error");
-  case warning_diag: return os << bright_magenta("warning");
-  case note_diag: return os << bright_cyan("note");
-  default: break;
+    case error_diag: return os << bright_red("error");
+    case warning_diag: return os << bright_magenta("warning");
+    case note_diag: return os << bright_cyan("note");
+    default: break;
   }
   lingo_unreachable("unknown diagnostic kind '{}'", (int)k);
 }
@@ -120,7 +119,6 @@ show_context(std::ostream& os, Diagnostic_info const& info)
       show_span(os, span);
   }
 }
-
 
 
 std::ostream&
@@ -149,7 +147,6 @@ Diagnostic_context root_;
 } // namespace
 
 
-
 Diagnostic::Diagnostic(Diagnostic_kind k, Location l, String const& m)
   : kind(k), info(l), msg(m)
 { }
@@ -174,7 +171,7 @@ Diagnostic_context::~Diagnostic_context()
 
 
 // Emit a single diagnostic. If this context is suppressing
-// diagnostics, then the save them for later.
+// diagnostics, then save them for later.
 void
 Diagnostic_context::emit(Diagnostic const& diag)
 {
@@ -187,7 +184,7 @@ Diagnostic_context::emit(Diagnostic const& diag)
 }
 
 
-// Reset the diagnotic context to a prinstine state.
+// Reset the diagnostic context to a pristine state.
 void
 Diagnostic_context::reset()
 {
@@ -197,7 +194,7 @@ Diagnostic_context::reset()
 
 
 // Emit all saved diagnostics. This does nothing if
-// the context is not supporessing diagnostics.
+// the context is not suppressing diagnostics.
 void
 Diagnostic_context::emit()
 {
@@ -207,8 +204,8 @@ Diagnostic_context::emit()
 }
 
 
-// Print all sved diagnostics. This is useful for
-// replaying diagnostcs when suppressed.
+// Print all saved diagnostics. This is useful for
+// replaying diagnostics when suppressed.
 void
 emit_diagnostics()
 {
@@ -216,7 +213,7 @@ emit_diagnostics()
 }
 
 
-// Rest the diagnotic context to a pristine state.
+// Reset the diagnostic context to a pristine state.
 void
 reset_diagnostics()
 {
@@ -260,13 +257,12 @@ warning(Location loc, String const& msg)
 }
 
 
-// Emit a warning diagnost over the given text span.
+// Emit a warning diagnostic over the given text span.
 void
 warning(Span span, String const& msg)
 {
   diags_.top()->emit({warning_diag, span, msg});
 }
-
 
 
 // Emit a note diagnostic.
@@ -285,5 +281,6 @@ note(Span span, String const& msg)
 {
   diags_.top()->emit({note_diag, span, msg});
 }
+
 
 } // namespace lingo

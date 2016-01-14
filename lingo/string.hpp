@@ -19,7 +19,6 @@
 #include <string>
 #include <vector>
 
-
 namespace lingo
 {
 
@@ -87,7 +86,7 @@ is_alpha(CharT c)
 }
 
 
-// Returns true if c is a newline character.
+// Returns true if c is the newline character.
 template<typename CharT>
 inline bool
 is_newline(CharT c)
@@ -96,7 +95,7 @@ is_newline(CharT c)
 }
 
 
-// Returns true if c in the class [01].
+// Returns true if c is in the class [01].
 template<typename CharT>
 inline bool
 is_binary_digit(CharT c)
@@ -470,6 +469,5 @@ Stringbuf::end() const
 
 
 } // namespace lingo
-
 
 #endif

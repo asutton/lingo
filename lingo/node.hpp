@@ -90,12 +90,12 @@ is_valid_node(T const* t)
 // Nodes with fixed arity have tuple-like member names (e.g.,
 // first, second, third). These accessor members correspond to
 // the sub-terms of each node. Accessor members may have different
-// tpyes, and are not required to be nodes.
+// types, and are not required to be nodes.
 //
-// A nullary node is a Node is an empty tuple, and has no
-// accessor members. A unary node has only accessor member
-// `first`. A binary node has only `first` and `second`.
-// A ternary node has `first`, second`, and `third`.
+// A nullary node is an empty tuple, and has no accessor members.
+// A unary node has only accessor member `first`. A binary node has
+// only `first` and `second`. A ternary node has `first`, second`,
+// and `third`.
 //
 // Note that more arity nodes can be defined if needed.
 //
@@ -123,7 +123,7 @@ struct is_non_void<void>
 };
 
 
-// Detect the existince of the member t->first.
+// Detect the existence of the member t->first.
 template<typename T>
 struct first_type
 {
@@ -224,7 +224,7 @@ has_end()
 }
 
 
-} // namesapce traits
+} // namespace traits
 
 
 // Returns true if T is a Nullary_node.
@@ -278,7 +278,7 @@ is_kary_node()
 
 
 // -------------------------------------------------------------------------- //
-//                        Reqiured term
+//                        Required term
 
 // The Maybe template is typically used to declare node
 // pointers within condition declarations.
@@ -384,8 +384,6 @@ struct Nonempty
 };
 
 
-
 } // namespace lingo
-
 
 #endif

@@ -22,7 +22,7 @@ class Line;
 
 // The location class represents the position of text within
 // a source file. This is a pair: the file in which the text
-// resides and its the starting offset of that text. Note that
+// resides and the starting offset of that text. Note that
 // the ending offset is determined by the kind of element:
 // token, comment, etc.
 //
@@ -60,28 +60,27 @@ private:
 };
 
 
-inline bool 
+inline bool
 operator==(Location a, Location b)
-{ 
+{
   return a.buffer() == b.buffer() && a.offset() == b.offset();
 }
 
 
 inline bool
 operator!=(Location a, Location b)
-{ 
+{
   return !(a == b);
 }
 
 
-
 // A span of text is contiguous region of characters within
 // a file.
-// 
-// The start location shall be less than or equal to the end 
+//
+// The start location shall be less than or equal to the end
 // location. A span is never empty.
 //
-// TODO: Support multi-line spnas?
+// TODO: Support multi-line spans?
 struct Span
 {
   Span()
@@ -101,12 +100,12 @@ struct Span
 
   Buffer const* buffer() const { return buf_; }
   File const* file() const;
-  
+
   // Returns the start and end offsets.
   int start_offset() const { return start_; }
   int end_offset() const   { return end_; }
-  
-  // Retursn the start and end source locations.
+
+  // Returns the start and end source locations.
   Location start_location() const { return {buf_, start_}; }
   Location end_location() const   { return {buf_, end_}; }
 
@@ -136,6 +135,5 @@ std::ostream& operator<<(std::ostream&, Span const&);
 
 
 } // namespace lingo
-
 
 #endif

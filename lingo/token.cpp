@@ -5,7 +5,6 @@
 
 #include "lingo/token.hpp"
 
-
 namespace lingo
 {
 

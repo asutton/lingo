@@ -17,7 +17,7 @@
 
 
 // Like unreachable except that this indicates a feature
-// that should be defined biut is not.
+// that should be defined but is not.
 #define lingo_unimplemented() \
   ::lingo::abort("{}:{}: unimplemented", __PRETTY_FUNCTION__, __LINE__)
 
@@ -65,6 +65,5 @@ abort(char const* msg, Args const&... args)
 
 
 } // namespace lingo
-
 
 #endif

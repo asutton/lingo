@@ -33,4 +33,4 @@ Buffer::Buffer(String const& str)
 }
 
 
-} // namespace
+} // namespace lingo

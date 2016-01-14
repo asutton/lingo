@@ -9,7 +9,6 @@
 
 #include <iostream>
 
-
 namespace calc
 {
 
@@ -444,5 +443,6 @@ parse(String const& str)
 
   return expr;
 }
+
 
 } // namespace calc

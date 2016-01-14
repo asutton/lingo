@@ -12,13 +12,12 @@
 
 #include <llvm/ADT/APFloat.h>
 
-
 namespace lingo
 {
 
 // Represents an arbitrary precision floating point value.
 // By default, this represents an IEEE double precision
-// value, but other models are also suppotted.
+// value, but other models are also supported.
 class Real
 {
 public:
@@ -126,7 +125,6 @@ inline
 Real::Real(double n)
   : f(n)
 { }
-
 
 
 // Returns a reference to the underlying data.

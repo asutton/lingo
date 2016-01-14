@@ -105,7 +105,7 @@ void
 print_value(Printer& p, double n)
 {
   p.os << n;
-  p.last = '0'; // An artifiical non-ws character
+  p.last = '0'; // An artificial non-ws character
 }
 
 

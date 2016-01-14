@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <iostream>
 
-
 namespace lingo
 {
 

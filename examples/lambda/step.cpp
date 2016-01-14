@@ -7,7 +7,6 @@
 
 #include <lingo/error.hpp>
 
-
 namespace calc
 {
 

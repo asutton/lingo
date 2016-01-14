@@ -10,6 +10,7 @@
 namespace lingo
 {
 
+
 // Returns the default debugging output stream.
 std::ostream&
 default_debug_stream()

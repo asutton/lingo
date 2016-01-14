@@ -8,7 +8,6 @@
 
 #include <lingo/environment.hpp>
 
-
 namespace calc
 {
 

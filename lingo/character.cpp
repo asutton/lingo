@@ -30,8 +30,8 @@ Character_stream::peek() const
 }
 
 
-// Returns the nth caracter past the curent position.
-// If the nth caracter is past the end of the file, then
+// Returns the nth character past the current position.
+// If the nth character is past the end of the file, then
 // this returns the null character.
 char
 Character_stream::peek(int n) const

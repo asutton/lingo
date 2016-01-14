@@ -3,7 +3,6 @@
 
 #include <lingo/buffer.hpp>
 
-
 namespace calc
 {
 
@@ -47,4 +46,4 @@ contains_directive(lingo::Buffer const& buf)
 }
 
 
-} // namespace
+} // namespace calc
