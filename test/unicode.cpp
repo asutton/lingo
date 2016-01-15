@@ -3,7 +3,6 @@
 
 #include "config.hpp"
 
-#include <cstdint>
 #include <iostream>
 #include <utility>
 
@@ -38,6 +37,7 @@ int main()
 {
   const std::pair<const char*, char32_t> unescape_test_cases[] = {
     {"", U'\0'},
+    {"\\", U'\\'}, // Should this be valid?
     {"a", U'a'},
     {"\\\"", U'\"'},
     {"\\0", U'\0'},
@@ -52,11 +52,17 @@ int main()
 
   for (const auto& unescape_test_case : unescape_test_cases) {
     try {
+      const char* str = unescape_test_case.first;
+      const std::size_t n = std::char_traits<char>::length(str);
+      const char32_t expected_value = unescape_test_case.second;
+
       char* end_ptr;
-      char32_t c = lingo::to_unescaped<char32_t>(unescape_test_case.first, &end_ptr);
-      std::cout << unescape_test_case.first << " = " << unicode_put(c) << '\n';
-      lingo_assert(c == unescape_test_case.second);
-      lingo_assert(end_ptr == unescape_test_case.first + std::char_traits<char>::length(unescape_test_case.first));
+      char32_t value = lingo::to_unescaped<char32_t>(str, &end_ptr);
+
+      std::cout << str << " = " << unicode_put(value) << '\n';
+
+      lingo_assert(value == expected_value);
+      lingo_assert(end_ptr == str + n);
     }
     catch (...) {
       lingo_unreachable("lingo::to_unescaped() unexpectedly failed.");
@@ -64,16 +70,39 @@ int main()
   }
 
   try {
-    const char* text = "\\u0080";
-    lingo::to_unescaped<char, char>(text, nullptr);
+    const signed char text[] = {-1, '\0'};
+    auto value = lingo::to_unescaped<signed char, signed char>(text, nullptr);
+    lingo_assert(value == -1);
+  }
+  catch (...) {
+    lingo_unreachable("lingo::to_unescaped() unexpectedly failed.");
+  }
+
+  try {
+    const signed char text[] = {-1, '\0'};
+    lingo::to_unescaped<unsigned char, signed char>(text, nullptr);
+    lingo_unreachable("lingo::to_unescaped() unexpectedly succeeded.");
+  }
+  catch (const std::out_of_range&) {}
+
+  try {
+    const char16_t* text = u"π"; // U+03C0 (Greek Small Letter Pi)
+    lingo::to_unescaped<std::uint8_t, char16_t>(text, nullptr);
     lingo_unreachable("lingo::to_unescaped() unexpectedly succeeded.");
   }
   catch (const std::out_of_range&) {}
 
   try {
     const char* text = "\\u0080";
-    unsigned char c = lingo::to_unescaped<unsigned char, char>(text, nullptr);
-    lingo_assert(c == 0x80);
+    lingo::to_unescaped<std::int8_t, char>(text, nullptr);
+    lingo_unreachable("lingo::to_unescaped() unexpectedly succeeded.");
+  }
+  catch (const std::out_of_range&) {}
+
+  try {
+    const char* text = "\\u0080";
+    auto value = lingo::to_unescaped<std::uint8_t, char>(text, nullptr);
+    lingo_assert(value == UINT8_C(0x80));
   }
   catch (...) {
     lingo_unreachable("lingo::to_unescaped() unexpectedly failed.");

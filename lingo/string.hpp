@@ -17,6 +17,7 @@
 #include <locale>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace lingo
@@ -49,6 +50,24 @@ template<>
 struct digits<char>
 {
   static constexpr const char* value = u8"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+};
+
+template<>
+struct digits<signed char>
+{
+  static constexpr const signed char* value = reinterpret_cast<const signed char*>(digits<char>::value);
+};
+
+template<>
+struct digits<unsigned char>
+{
+  static constexpr const unsigned char* value = reinterpret_cast<const unsigned char*>(digits<char>::value);
+};
+
+template<>
+struct digits<wchar_t>
+{
+  static constexpr const wchar_t* value = L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 };
 
 template<>
@@ -91,43 +110,7 @@ template<typename CharT>
 inline bool
 is_newline(CharT c)
 {
-  return c == CharT('\n');
-}
-
-
-// Returns true if c is in the class [01].
-template<typename CharT>
-inline bool
-is_binary_digit(CharT c)
-{
-  return c >= CharT('0') && c <= CharT('1');
-}
-
-
-// Returns true if c is an octal digit.
-template<typename CharT>
-inline bool
-is_octal_digit(CharT c)
-{
-  return c >= CharT('0') && c <= CharT('7');
-}
-
-
-// Returns true if c is a decimal digit.
-template<typename CharT>
-inline bool
-is_decimal_digit(CharT c)
-{
-  return c >= CharT('0') && c <= CharT('9');
-}
-
-
-// Returns true if c is a hexadecimal digit.
-template<typename CharT>
-inline bool
-is_hexadecimal_digit(CharT c)
-{
-  return (c >= CharT('0') && c <= CharT('9')) || (c >= CharT('A') && c <= CharT('F')) || (c >= CharT('a') && c <= CharT('f'));
+  return c == static_cast<CharT>('\n');
 }
 
 
@@ -136,8 +119,44 @@ template<typename CharT>
 inline bool
 is_digit(CharT c, int base)
 {
-  lingo_assert(base > 0);
+  lingo_assert(base > 0 && base <= 36);
   return std::char_traits<CharT>::find(digits<CharT>::value, base, std::toupper(c, std::locale::classic()));
+}
+
+
+// Returns true if c is in the class [01].
+template<typename CharT>
+inline bool
+is_binary_digit(CharT c)
+{
+  return is_digit(c, 2);
+}
+
+
+// Returns true if c is an octal digit.
+template<typename CharT>
+inline bool
+is_octal_digit(CharT c)
+{
+  return is_digit(c, 8);
+}
+
+
+// Returns true if c is a decimal digit.
+template<typename CharT>
+inline bool
+is_decimal_digit(CharT c)
+{
+  return is_digit(c, 10);
+}
+
+
+// Returns true if c is a hexadecimal digit.
+template<typename CharT>
+inline bool
+is_hexadecimal_digit(CharT c)
+{
+  return is_digit(c, 16);
 }
 
 
@@ -147,7 +166,7 @@ template<typename CharT>
 inline int
 digit_value(CharT c, int base)
 {
-  lingo_assert(base > 0);
+  lingo_assert(base > 0 && base <= 36);
   const CharT* p = std::char_traits<CharT>::find(digits<CharT>::value, base, std::toupper(c, std::locale::classic()));
   if (!p)
     return -1;
@@ -156,9 +175,12 @@ digit_value(CharT c, int base)
 
 
 // Returns the integer value of the string in [first, last),
-// which contains an integer representation in base b. If
-// [first, last) contains any characters that are not digits
-// in base b, this throws an std::invalid_argument exception.
+// which contains an integer representation in base b. If no
+// conversion could be performed, or if [first, last) contains
+// any characters that are not digits in base b, this throws an
+// std::invalid_argument exception. If the integer is outside
+// the range of the result type, this throws an
+// std::out_of_range exception.
 //
 // Note that T must be an integer type and is given as an
 // explicit template argument.
@@ -168,17 +190,16 @@ string_to_int(I first, I last, int b)
 {
   typedef typename std::iterator_traits<I>::value_type char_type;
 
-  std::intmax_t n = 0;
+  typename std::common_type<std::intmax_t, T>::type n = 0;
   std::size_t digit_count = 0;
   bool neg = false;
 
   if (first != last) {
     switch (*first) {
-      case char_type('+'):
-        neg = false;
+      case static_cast<char_type>('+'):
         ++first;
         break;
-      case char_type('-'):
+      case static_cast<char_type>('-'):
         neg = true;
         ++first;
         break;
@@ -202,14 +223,17 @@ string_to_int(I first, I last, int b)
   if (n < std::numeric_limits<T>::min() || n > std::numeric_limits<T>::max())
     throw std::out_of_range("lingo::string_to_int");
 
-  return n;
+  return static_cast<T>(n);
 }
 
 
-// Returns the integer value of a string containing an
-// integer representation in base b. If str contains any
-// characters that are not digits in base b, this throws
-// an std::invalid_argument exception.
+// Returns the integer value of the null-terminated string str,
+// which contains an integer representation in base b. If no
+// conversion could be performed, or if str contains any
+// characters that are not digits in base b, this throws an
+// std::invalid_argument exception. If the integer is outside
+// the range of the result type, this throws an
+// std::out_of_range exception.
 template<typename T, typename CharT>
 inline T
 string_to_int(CharT const* str, int b)
@@ -218,10 +242,12 @@ string_to_int(CharT const* str, int b)
 }
 
 
-// Returns the integer value of a string containing an
-// integer representation in base b. If str contains any
-// characters that are not digits in base b, this throws
-// an std::invalid_argument exception.
+// Returns the integer value of the string str, which contains
+// an integer representation in base b. If no conversion could
+// be performed, or if str contains any characters that are not
+// digits in base b, this throws an std::invalid_argument
+// exception. If the integer is outside the range of the result
+// type, this throws an std::out_of_range exception.
 template<typename T, typename CharT>
 inline T
 string_to_int(std::basic_string<CharT> const& str, int b)

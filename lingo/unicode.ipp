@@ -7,7 +7,6 @@
 #include <lingo/string.hpp>
 
 #include <memory>
-#include <type_traits>
 
 #define DIV_CEIL(a, b) (((a) + (b) - 1) / (b))
 
@@ -21,52 +20,51 @@ template<typename UCharT, typename CharT>
 UCharT
 to_unescaped(const CharT* str, CharT** str_end)
 {
-  typedef typename std::make_unsigned<UCharT>::type unsigned_result_type;
+  typedef typename std::make_unsigned<UCharT>::type unsigned_unescaped_char_type;
 
-  const std::size_t len = std::char_traits<CharT>::length(str);
   const CharT* first = str;
-  const CharT* last = str + len;
+  const CharT* last = str + std::char_traits<CharT>::length(str);
 
   UCharT result = UCharT();
 
   if (first != last) {
-    if (*first == CharT('\\') && first + 1 < last) {
+    if (*first == static_cast<CharT>('\\') && first + 1 < last) {
       ++first;
       switch (*first) {
-        case CharT('\''):
-          result = UCharT('\'');
+        case static_cast<CharT>('\''):
+          result = static_cast<UCharT>('\'');
           break;
-        case CharT('\"'):
-          result = UCharT('\"');
+        case static_cast<CharT>('\"'):
+          result = static_cast<UCharT>('\"');
           break;
-        case CharT('\?'):
-          result = UCharT('\?');
+        case static_cast<CharT>('\?'):
+          result = static_cast<UCharT>('\?');
           break;
-        case CharT('\\'):
-          result = UCharT('\\');
+        case static_cast<CharT>('\\'):
+          result = static_cast<UCharT>('\\');
           break;
-        case CharT('a'):
-          result = UCharT('\a');
+        case static_cast<CharT>('a'):
+          result = static_cast<UCharT>('\a');
           break;
-        case CharT('b'):
-          result = UCharT('\b');
+        case static_cast<CharT>('b'):
+          result = static_cast<UCharT>('\b');
           break;
-        case CharT('f'):
-          result = UCharT('\f');
+        case static_cast<CharT>('f'):
+          result = static_cast<UCharT>('\f');
           break;
-        case CharT('n'):
-          result = UCharT('\n');
+        case static_cast<CharT>('n'):
+          result = static_cast<UCharT>('\n');
           break;
-        case CharT('r'):
-          result = UCharT('\r');
+        case static_cast<CharT>('r'):
+          result = static_cast<UCharT>('\r');
           break;
-        case CharT('t'):
-          result = UCharT('\t');
+        case static_cast<CharT>('t'):
+          result = static_cast<UCharT>('\t');
           break;
-        case CharT('v'):
-          result = UCharT('\v');
+        case static_cast<CharT>('v'):
+          result = static_cast<UCharT>('\v');
           break;
-        case CharT('x'): {
+        case static_cast<CharT>('x'): {
           // Parse hexadecimal escape sequence.
           CharT digits[2];
           int digit_count = 0;
@@ -76,11 +74,11 @@ to_unescaped(const CharT* str, CharT** str_end)
             digits[j - 1] = *(first + j);
             digit_count++;
           }
-          result = UCharT(string_to_int<unsigned_result_type>(digits, digits + digit_count, 16));
+          result = static_cast<UCharT>(string_to_int<unsigned_unescaped_char_type>(digits, digits + digit_count, 16));
           first += digit_count;
           break;
         }
-        case CharT('u'): {
+        case static_cast<CharT>('u'): {
           // Parse 16-bit Unicode code point escape sequence.
           CharT digits[4];
           int digit_count = 0;
@@ -94,7 +92,7 @@ to_unescaped(const CharT* str, CharT** str_end)
           first += digit_count;
           break;
         }
-        case CharT('U'): {
+        case static_cast<CharT>('U'): {
           // Parse 32-bit Unicode code point escape sequence.
           CharT digits[8];
           int digit_count = 0;
@@ -122,18 +120,23 @@ to_unescaped(const CharT* str, CharT** str_end)
             digit_count++;
           }
           if (digit_count) {
-            result = UCharT(string_to_int<unsigned_result_type>(digits, digits + digit_count, 8));
+            result = static_cast<UCharT>(string_to_int<unsigned_unescaped_char_type>(digits, digits + digit_count, 8));
             first += digit_count - 1;
           }
           else
             // Strip backslash from single escaped character.
-            result = *first;
+            goto no_escape_sequence;
           break;
         }
       }
     }
-    else
-      result = *first;
+    else {
+no_escape_sequence:
+      const typename std::common_type<UCharT, CharT>::type c = *first;
+      if (c < std::numeric_limits<UCharT>::min() || c > std::numeric_limits<UCharT>::max())
+        throw std::out_of_range("lingo::to_unescaped");
+      result = static_cast<UCharT>(*first);
+    }
     ++first;
   }
 
@@ -145,7 +148,7 @@ to_unescaped(const CharT* str, CharT** str_end)
 
 
 // -------------------------------------------------------------------------- //
-//                         Character Set Conversion
+//                         Character set conversion
 
 template<typename TargetT>
 typename Character_set_converter::Result

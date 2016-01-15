@@ -18,20 +18,22 @@ namespace lingo
 {
 
 // -------------------------------------------------------------------------- //
-//                         Character Set Conversion
+//                         Character set conversion
 
 namespace
 {
-  const char* encoding_names[] = {
-    "ASCII",
-    "UTF-8",
-    "UTF-16",
-    "UTF-16BE",
-    "UTF-16LE",
-    "UTF-32",
-    "UTF-32BE",
-    "UTF-32LE"
-  };
+
+const char* encoding_names[] = {
+  "ASCII",
+  "UTF-8",
+  "UTF-16",
+  "UTF-16BE",
+  "UTF-16LE",
+  "UTF-32",
+  "UTF-32BE",
+  "UTF-32LE"
+};
+
 } // namespace
 
 

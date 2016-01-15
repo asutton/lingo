@@ -20,7 +20,7 @@
   #define CHAR8_T_TYPE std::uint_least8_t
 #endif
 
-// The type for an UTF-8 code unit.
+// The character type for an UTF-8 code unit.
 typedef CHAR8_T_TYPE char8_t;
 
 namespace lingo
@@ -42,15 +42,32 @@ typedef std::basic_string<char32_t> u32string;
 // -------------------------------------------------------------------------- //
 //                                Algorithms
 
-// Unescape a single character escape sequence.
+// Unescape a single character escape sequence. This function returns the
+// unescaped character value of the escape sequence at the beginning of str
+// as a character of type UCharT.
+//
+// If str does not begin with a character escape sequence, returns the first
+// character in str converted to UCharT. If str is empty, returns '\0'.
+//
+// Upon return, the pointer pointed to by str_end is set to point to the
+// character past the last character interpreted. If str_end is a null
+// pointer, it is ignored.
+//
+// If str begins with an invalid escape sequence, an std::invalid_argument
+// exception is thrown. If the unescaped character value is outside the range
+// of the result type UCharT, an std::out_of_range exception is thrown.
 template<typename UCharT, typename CharT>
 UCharT to_unescaped(const CharT* str, CharT** str_end);
 
 
 // -------------------------------------------------------------------------- //
-//                         Character Set Conversion
+//                         Character set conversion
 
-// String encodings.
+// Supported character encodings. This is not meant to be a complete list.
+//
+// NOTE: The UTF-16 and UTF-32 encodings use big-endian byte serialization by
+// default, but may include a byte order mark (BOM) at the beginning of the
+// input string to indicate the actual byte serialization used.
 enum Encoding
 {
   ASCII_encoding                 = 0,
@@ -78,7 +95,7 @@ enum Encoding
 };
 
 
-// Returns the name of the specified string encoding.
+// Returns the name of the specified character encoding.
 const char* get_encoding_name(Encoding code);
 
 
@@ -142,11 +159,11 @@ private:
 };
 
 
-// Converts a Unicode code point to the specified encoding.
+// Converts a Unicode code point to the specified character encoding.
 template<typename TargetT>
 std::basic_string<TargetT> convert_UTF32(Encoding tocode, char32_t c);
 
-// Converts a Unicode code point to the specified encoding.
+// Converts a Unicode code point to the specified character encoding.
 template<typename TargetT>
 std::basic_string<TargetT> convert_UTF32(const char* tocode, char32_t c);
 
