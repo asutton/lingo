@@ -1,8 +1,8 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
-#ifndef LINGO_INTEGER_HPP
-#define LINGO_INTEGER_HPP
+#ifndef LINGO_REAL_HPP
+#define LINGO_REAL_HPP
 
 // The integer module provides arbitrary precision integers
 // and associated functions.
