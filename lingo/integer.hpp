@@ -16,10 +16,11 @@
 namespace lingo
 {
 
-// Represents an arbitrary precision integer. The defualt
-// interpretation of this value is as a signed integer.
-// However, unsigned versions of operations are provided
-// as well.
+// Represents an arbitrary precision integer. The defualt interpretation
+// of this value is as a signed integer. However, unsigned variants can
+// also be constructed.
+//
+// TODO: Consider extending this to support byte ordering.
 class Integer
 {
 public:
@@ -470,7 +471,5 @@ std::ostream& operator<<(std::ostream&, Integer const&);
 
 
 } // namespace lingo
-
-#include <lingo/integer.ipp>
 
 #endif
