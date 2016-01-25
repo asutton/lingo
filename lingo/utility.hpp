@@ -44,13 +44,9 @@ is(U const* u)
 }
 
 
-// Statically cast a pointer to a Node of type T to a
-// pointer to a Node of type U. This is not a checked
-// operation (except in debug mode).
-//
-// Note that this allows null and error nodes to be
-// interpreted as nodes of the given type (as their
-// values are considered common to all).
+// Statically cast a pointer to a Node of type T to a pointer
+// to a Node of type U. This is not a checked operation (except
+// in debug mode).
 template<typename T, typename U>
 inline T*
 cast(U* u)
@@ -66,6 +62,24 @@ cast(U const* u)
 {
   lingo_assert(u ? is<T>(u) : true);
   return static_cast<T const*>(u);
+}
+
+
+// Statically cast a reference to U to a reference to T.
+// Behavior is undefined if the ast is invalid.
+template<typename T, typename U>
+inline T&
+cast(U& u)
+{
+  return static_cast<T&>(u);
+}
+
+
+template<typename T, typename U>
+inline T const&
+cast(U const& u)
+{
+  return static_cast<T const&>(u);
 }
 
 
@@ -87,6 +101,24 @@ as(U const* u)
 }
 
 
+// Dynamically cast a reference to U to a reference to T.
+// An exception is thrown if this is a bad cast.
+template<typename T, typename U>
+inline T&
+as(U& u)
+{
+  return dynamic_cast<T&>(u);
+}
+
+
+template<typename T, typename U>
+inline T const&
+as(U const& u)
+{
+  return dynamic_cast<T const&>(u);
+}
+
+
 // Return a non-const pointer to the term. This is used
 // to modify a term post-initializatoin (which should
 // be rare).
@@ -98,10 +130,18 @@ modify(T const* t)
 }
 
 
+template<typename T>
+inline T&
+modify(T const& t)
+{
+  return const_cast<T&>(t);
+}
+
+
 // -------------------------------------------------------------------------- //
 // Source code locations
 
-// A locus is a line/column offset within a file. 
+// A locus is a line/column offset within a file.
 using Locus = std::pair<int, int>;
 
 
@@ -135,11 +175,40 @@ struct Generic_visitor
   template<typename U>
   void invoke(U const& u) { r = fn(u); }
 
+  T result() const { return r; }
+
   // Enable tag dispatch.
   static non_void_tag tag() { return {}; }
 
   F fn;
   T r;
+};
+
+
+// Specialiation for reference returns. The return value must
+// outlive the visitor, otherwise visitation will result in
+// undefined behavior.
+template<typename F, typename T>
+struct Generic_visitor<F, T&>
+{
+  Generic_visitor(F f)
+    : fn(f), r()
+  { }
+
+  // Dispatch to the wrapped function object.
+  template<typename U>
+  void invoke(U const* u) { r = &fn(u); }
+
+  template<typename U>
+  void invoke(U const& u) { r = &fn(u); }
+
+  T& result() const { return *r; }
+
+  // Enable tag dispatch.
+  static non_void_tag tag() { return {}; }
+
+  F fn;
+  T* r;
 };
 
 
@@ -167,10 +236,10 @@ struct Generic_visitor<F, void>
 // Invoke the visitor, returning the function's value.
 template<typename T, typename V>
 inline auto
-accept(T const* t, V& v, non_void_tag)
+accept(T const* t, V& v, non_void_tag) -> decltype(v.result())
 {
   t->accept(v);
-  return v.r;
+  return v.result();
 }
 
 
@@ -186,7 +255,7 @@ accept(T const* t, V& v, void_tag)
 
 // Invoke the visitor, returning the function's value.
 template<typename T, typename V>
-inline auto
+inline decltype(auto)
 accept(T const* t, V& v)
 {
   return accept(t, v, v.tag());
@@ -194,7 +263,7 @@ accept(T const* t, V& v)
 
 
 template<typename T, typename V>
-inline auto
+inline decltype(auto)
 accept(T const& t, V& v)
 {
   return accept(&t, v, v.tag());
@@ -224,11 +293,40 @@ struct Generic_mutator
   template<typename U>
   void invoke(U& u) { r = fn(u); }
 
+  T result() const { return r; }
+
   // Enable tag dispatch.
   static non_void_tag tag() { return {}; }
 
   F fn;
   T r;
+};
+
+
+// Specialiation for reference returns. The return value must
+// outlive the visitor, otherwise visitation will result in
+// undefined behavior.
+template<typename F, typename T>
+struct Generic_mutator<F, T&>
+{
+  Generic_mutator(F f)
+    : fn(f), r()
+  { }
+
+  // Dispatch to the wrapped function object.
+  template<typename U>
+  void invoke(U* u) { r = &fn(u); }
+
+  template<typename U>
+  void invoke(U& u) { r = &fn(u); }
+
+  T& result() const { return *r; }
+
+  // Enable tag dispatch.
+  static non_void_tag tag() { return {}; }
+
+  F fn;
+  T* r;
 };
 
 
@@ -256,10 +354,10 @@ struct Generic_mutator<F, void>
 // Invoke the visitor, returning the function's value.
 template<typename T, typename V>
 inline auto
-accept(T* t, V& v, non_void_tag)
+accept(T* t, V& v, non_void_tag) -> decltype(v.result())
 {
   t->accept(v);
-  return v.r;
+  return v.result();
 }
 
 
@@ -274,7 +372,7 @@ accept(T* t, V& v, void_tag)
 
 // Invoke the visitor, returning the function's value.
 template<typename T, typename V>
-inline auto
+inline decltype(auto)
 accept(T* t, V& v)
 {
   return accept(t, v, v.tag());
@@ -282,7 +380,7 @@ accept(T* t, V& v)
 
 
 template<typename T, typename V>
-inline auto
+inline decltype(auto)
 accept(T& t, V& v)
 {
   return accept(&t, v, v.tag());

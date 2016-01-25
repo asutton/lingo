@@ -184,7 +184,6 @@ struct Tokenbuf : std::list<Token>
 // -------------------------------------------------------------------------- //
 //                            Token stream
 
-
 // A token stream provides a stream interface to a
 // token buffer.
 //
@@ -212,6 +211,7 @@ public:
   // FIXME: Use iterators, begin, and end instead
   // of a stream position.
   Position position() const;
+  void     reposition(Position);
 
 // private:
   Buffer&  input_;  // The source text buffer
@@ -298,6 +298,15 @@ inline Token_stream::Position
 Token_stream::position() const
 {
   return pos_;
+}
+
+
+// Sets the position of the stream that indicated. The
+// position must be in the current buffer.
+inline void
+Token_stream::reposition(Position p)
+{
+  pos_ = p;
 }
 
 
