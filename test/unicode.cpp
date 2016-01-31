@@ -35,26 +35,47 @@ inline std::ostream& operator<<(std::ostream& out, unicode_put_proxy p)
 
 int main()
 {
-  const std::pair<const char*, char32_t> unescape_test_cases[] = {
-    {"", U'\0'},
-    {"\\", U'\\'}, // Should this be valid?
+  const std::pair<const char*, char32_t> valid_escape_sequences[] = {
     {"a", U'a'},
+    {"\\\'", U'\''},
     {"\\\"", U'\"'},
+    {"\\\?", U'\?'},
+    {"\\\\", U'\\'},
+    {"\\a", U'\a'},
+    {"\\b", U'\b'},
+    {"\\f", U'\f'},
+    {"\\n", U'\n'},
+    {"\\r", U'\r'},
+    {"\\t", U'\t'},
+    {"\\v", U'\v'},
     {"\\0", U'\0'},
     {"\\1", U'\1'},
     {"\\033", U'\033'},
     {"\\200", U'\200'},
     {"\\x7f", U'\x7f'},
     {"\\xFF", U'\xff'},
+    {"\\u61", U'\u0061'},
     {"\\u00e9", U'\u00e9'},
-    {"\\U0001f34c", U'\U0001f34c'}
+    {"\\U0001f34c", U'\U0001f34c'},
+    {"\\U1F4A9", U'\U0001f4a9'} // 💩
+  };
+  const char* invalid_escape_sequences[] = {
+    "\\",
+    "\\$",
+    "\\8",
+    "\\x",
+    "\\xN",
+    "\\u",
+    "\\uNNNN",
+    "\\U",
+    "\\UNNNNNNNN"
   };
 
-  for (const auto& unescape_test_case : unescape_test_cases) {
+  for (const auto& valid_escape_sequence : valid_escape_sequences) {
     try {
-      const char* str = unescape_test_case.first;
+      const char* str = valid_escape_sequence.first;
       const std::size_t n = std::char_traits<char>::length(str);
-      const char32_t expected_value = unescape_test_case.second;
+      const char32_t expected_value = valid_escape_sequence.second;
 
       char* end_ptr;
       char32_t value = lingo::to_unescaped<char32_t>(str, &end_ptr);
@@ -67,6 +88,29 @@ int main()
     catch (...) {
       lingo_unreachable("lingo::to_unescaped() unexpectedly failed.");
     }
+  }
+
+  for (const char* invalid_escape_sequence : invalid_escape_sequences) {
+    try {
+      const char* str = invalid_escape_sequence;
+
+      char* end_ptr;
+      lingo::to_unescaped<char32_t>(str, &end_ptr);
+
+      lingo_unreachable("lingo::to_unescaped() unexpectedly succeeded.");
+    }
+    catch (...) {}
+  }
+
+  try {
+    const char* text = "\0";
+    char* end_ptr;
+    auto value = lingo::to_unescaped<char>(text, &end_ptr);
+    lingo_assert(value == '\0');
+    lingo_assert(end_ptr == text + 1);
+  }
+  catch (...) {
+    lingo_unreachable("lingo::to_unescaped() unexpectedly failed.");
   }
 
   try {

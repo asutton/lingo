@@ -26,8 +26,10 @@ typedef CHAR8_T_TYPE char8_t;
 namespace lingo
 {
 
+
 // -------------------------------------------------------------------------- //
 //                                  Types
+
 
 // UTF-8 encoded string type.
 typedef std::basic_string<char8_t> u8string;
@@ -42,12 +44,13 @@ typedef std::basic_string<char32_t> u32string;
 // -------------------------------------------------------------------------- //
 //                                Algorithms
 
-// Unescape a single character escape sequence. This function returns the
-// unescaped character value of the escape sequence at the beginning of str
-// as a character of type UCharT.
+
+// Unescape a single character escape sequence.
 //
-// If str does not begin with a character escape sequence, returns the first
-// character in str converted to UCharT. If str is empty, returns '\0'.
+// This function returns the unescaped character value of the escape sequence
+// at the beginning of str as a character of type UCharT. If str does not
+// begin with a character escape sequence, the function returns the first
+// character in str (including null characters) converted to UCharT.
 //
 // Upon return, the pointer pointed to by str_end is set to point to the
 // character past the last character interpreted. If str_end is a null
@@ -62,6 +65,7 @@ UCharT to_unescaped(const CharT* str, CharT** str_end);
 
 // -------------------------------------------------------------------------- //
 //                         Character set conversion
+
 
 // Supported character encodings. This is not meant to be a complete list.
 //

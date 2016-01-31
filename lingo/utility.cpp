@@ -12,6 +12,7 @@
 namespace lingo
 {
 
+
 std::string
 type_str(std::type_info const& t)
 {
