@@ -34,7 +34,7 @@ struct Symbol
 {
   friend struct Symbol_table;
 
-  Symbol(int k)
+  explicit Symbol(int k)
     : str_(nullptr), tok_(k)
   { }
 

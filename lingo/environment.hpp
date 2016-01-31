@@ -23,8 +23,8 @@ private:
   using Map = std::unordered_map<S, T>;
 
 public:
-  using Name = S;
-  using Value = T;
+  using Name_type = S;
+  using Value_type = T;
   using Binding = typename Map::value_type;
 
   Binding& bind(S const&, T const&);
@@ -114,15 +114,15 @@ Environment<S, T>::lookup(S const& sym) -> Binding*
 // -------------------------------------------------------------------------- //
 // Binding stack
 
-// The stack maintains the nested binding environments at
+// The stack maintains the nested binding environments at a
 // certain point in the program. Symbol lookup is processed
 // in the innermost environment, and works outward.
 template<typename E>
 struct Stack : std::vector<E*>
 {
   using Environment = E;
-  using Name = typename E::Name;
-  using Value = typename E::Value;
+  using Name_type = typename E::Name_type;
+  using Value_type = typename E::Value_type;
   using Binding = typename E::Binding;
 
   void push(E*);
@@ -133,8 +133,8 @@ struct Stack : std::vector<E*>
   void pop();
   E*   take();
 
-  Binding& bind(Name const&, Value const&);
-  Binding& rebind(Name const&, Value const&);
+  Binding& bind(Name_type const&, Value_type const&);
+  Binding& rebind(Name_type const&, Value_type const&);
 
   E&       top()       { return *this->back(); }
   E const& top() const { return *this->back(); }
@@ -142,8 +142,8 @@ struct Stack : std::vector<E*>
   E&       bottom()       { return *this->front(); }
   E const& bottom() const { return *this->front(); }
 
-  Binding const* lookup(Name const&) const;
-  Binding*       lookup(Name const&);
+  Binding const* lookup(Name_type const&) const;
+  Binding*       lookup(Name_type const&);
 };
 
 
@@ -182,7 +182,7 @@ Stack<E>::pop()
 // Create a new name binding in the top environment.
 template<typename E>
 inline auto
-Stack<E>::bind(Name const& n, Value const& v) -> Binding&
+Stack<E>::bind(Name_type const& n, Value_type const& v) -> Binding&
 {
   return top().bind(n, v);
 }
@@ -191,7 +191,7 @@ Stack<E>::bind(Name const& n, Value const& v) -> Binding&
 // Rebind the given name to a new value.
 template<typename E>
 inline auto
-Stack<E>::rebind(Name const& n, Value const& v) -> Binding&
+Stack<E>::rebind(Name_type const& n, Value_type const& v) -> Binding&
 {
   return top().rebind(n, v);
 }
@@ -211,7 +211,7 @@ Stack<E>::take()
 
 template<typename E>
 auto
-Stack<E>::lookup(Name const& n) const -> Binding const*
+Stack<E>::lookup(Name_type const& n) const -> Binding const*
 {
   for (auto iter = this->rbegin(); iter != this->rend(); ++iter) {
     if (Binding const* bind = (*iter)->lookup(n))
@@ -223,7 +223,7 @@ Stack<E>::lookup(Name const& n) const -> Binding const*
 
 template<typename E>
 auto
-Stack<E>::lookup(Name const& n) -> Binding*
+Stack<E>::lookup(Name_type const& n) -> Binding*
 {
   for (auto iter = this->rbegin(); iter != this->rend(); ++iter) {
     if (Binding* bind = (*iter)->lookup(n))

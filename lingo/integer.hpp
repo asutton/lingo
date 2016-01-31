@@ -11,14 +11,16 @@
 #include <lingo/string.hpp>
 
 #include <llvm/ADT/APInt.h>
+#include <llvm/ADT/StringRef.h>
 
 namespace lingo
 {
 
-// Represents an arbitrary precision integer. The default
-// interpretation of this value is as a signed integer.
-// However, unsigned versions of operations are provided
-// as well.
+// Represents an arbitrary precision integer. The default interpretation
+// of this value is as a signed integer. However, unsigned variants can
+// also be constructed.
+//
+// TODO: Consider extending this to support byte ordering.
 class Integer
 {
 public:
@@ -26,18 +28,17 @@ public:
 
   // Copy semantics
   Integer(Integer const&);
+  Integer(llvm::APInt const&);
+
   Integer& operator=(Integer const&);
+  Integer& operator=(llvm::APInt const&);
 
   // Move semantics
   Integer(Integer&&);
-  Integer& operator=(Integer&&);
-
-  Integer(llvm::APInt const&);
-  Integer& operator=(llvm::APInt const&);
-
   Integer(llvm::APInt&&);
-  Integer& operator=(llvm::APInt&&);
 
+  Integer& operator=(Integer&&);
+  Integer& operator=(llvm::APInt&&);
 
   // Value construction.
   //
@@ -45,6 +46,11 @@ public:
   Integer(std::int64_t);
   Integer(std::uint64_t, bool);
   Integer(int, std::uint64_t, bool);
+
+  // String initialization
+  Integer(String const&);
+  Integer(String const&, int);
+  Integer(int, String const&, int);
 
   Integer& operator+=(Integer const&);
   Integer& operator-=(Integer const&);
@@ -94,11 +100,25 @@ Integer::Integer(Integer const& x)
 { }
 
 
+inline
+Integer::Integer(llvm::APInt const& n)
+  : z(n)
+{ }
+
+
 // Copy assign this object to the value of x.
 inline Integer&
 Integer::operator=(Integer const& x)
 {
   z = x.z;
+  return *this;
+}
+
+
+inline Integer&
+Integer::operator=(llvm::APInt const& n)
+{
+  z = n;
   return *this;
 }
 
@@ -109,33 +129,18 @@ Integer::Integer(Integer&& x)
 { }
 
 
+inline
+Integer::Integer(llvm::APInt&& n)
+  : z(std::move(n))
+{ }
+
+
 inline Integer&
 Integer::operator=(Integer&& x)
 {
   z = std::move(x.z);
   return *this;
 }
-
-
-inline
-Integer::Integer(llvm::APInt const& n)
-  : z(n)
-{ }
-
-
-inline
-Integer&
-Integer::operator=(llvm::APInt const& n)
-{
-  z = n;
-  return *this;
-}
-
-
-inline
-Integer::Integer(llvm::APInt&& n)
-  : z(std::move(n))
-{ }
 
 
 inline
@@ -168,6 +173,30 @@ Integer::Integer(std::uint64_t n, bool s)
 inline
 Integer::Integer(int w, std::uint64_t n, bool s)
   : z(w, n, s)
+{ }
+
+
+// Initialize an 32-bit integer from the string representation
+// in base 10.
+inline
+Integer::Integer(String const& s)
+  : Integer(32, s, 10)
+{ }
+
+
+// Initialize an 32-bit integer from the string representation
+// in base r.
+inline
+Integer::Integer(String const& s, int r)
+  : Integer(32, s, r)
+{ }
+
+
+// Initialize an n-bit integer from the string representation
+// in base r.
+inline
+Integer::Integer(int b, String const& s, int r)
+  : z(b, s, r)
 { }
 
 
@@ -468,7 +497,5 @@ std::ostream& operator<<(std::ostream&, Integer const&);
 
 
 } // namespace lingo
-
-#include <lingo/integer.ipp>
 
 #endif

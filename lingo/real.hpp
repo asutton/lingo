@@ -1,11 +1,8 @@
-// Copyright (c) 2015 Andrew Sutton
+// Copyright (c) 2015-2016 Andrew Sutton
 // All rights reserved
 
-#ifndef LINGO_INTEGER_HPP
-#define LINGO_INTEGER_HPP
-
-// The integer module provides arbitrary precision integers
-// and associated functions.
+#ifndef LINGO_REAL_HPP
+#define LINGO_REAL_HPP
 
 #include <lingo/assert.hpp>
 #include <lingo/string.hpp>
@@ -15,9 +12,11 @@
 namespace lingo
 {
 
-// Represents an arbitrary precision floating point value.
-// By default, this represents an IEEE double precision
-// value, but other models are also supported.
+// Represents an arbitrary precision floating point value. By default,
+// this represents an IEEE double precision value, but other models
+// are also supported.
+//
+// TODO: This class needs some TLC.
 class Real
 {
 public:
@@ -120,7 +119,7 @@ Real::operator=(llvm::APFloat&& n)
 }
 
 
-// Initialize an integer with the (signed) value.
+// Initialize a floating point value with the (signed) value.
 inline
 Real::Real(double n)
   : f(n)
@@ -136,7 +135,7 @@ Real::impl() const
 
 
 // Equality comparison
-// Returns true when the two integers have the same value.
+// Returns true when the two floating point values have the same value.
 inline bool
 operator==(Real const& a, Real const& b)
 {
@@ -151,7 +150,7 @@ operator!=(Real const& a, Real const& b)
 }
 
 
-// Ordering, defined for signed integers by default.
+// Ordering, defined for signed floating point values by default.
 inline bool
 operator<(Real const& a, Real const& b)
 {
@@ -231,7 +230,5 @@ std::ostream& operator<<(std::ostream&, Real const&);
 
 
 } // namespace lingo
-
-#include <lingo/integer.ipp>
 
 #endif
