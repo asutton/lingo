@@ -12,6 +12,7 @@
 
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/StringRef.h>
+#include <llvm/ADT/Hashing.h>
 
 
 namespace lingo
@@ -491,6 +492,14 @@ inline Integer
 operator>>(Integer const& a, Integer const& b)
 {
   return Integer(a) >>= b;
+}
+
+
+// Hashing
+inline std::size_t
+hash_value(Integer const& n)
+{
+  return llvm::hash_value(n.impl());
 }
 
 
