@@ -60,40 +60,40 @@ private:
 };
 
 
-inline bool 
+inline bool
 operator==(Location a, Location b)
-{ 
+{
   return a.buffer() == b.buffer() && a.offset() == b.offset();
 }
 
 
 inline bool
 operator!=(Location a, Location b)
-{ 
+{
   return !(a == b);
 }
 
 
 
-// A span of text is contiguous region of characters within
-// a file.
-// 
-// The start location shall be less than or equal to the end 
+// A region of text is contiguous region of characters within
+// a file, possibly spanning multiple lines.
+//
+// The start location shall be less than or equal to the end
 // location. A span is never empty.
 //
 // TODO: Support multi-line spnas?
-struct Span
+struct Region
 {
-  Span()
+  Region()
     : buf_(nullptr), start_(-1), end_(-1)
   { }
 
-  Span(Buffer const* b, int m, int n)
+  Region(Buffer const* b, int m, int n)
     : buf_(b), start_(m), end_(n)
   { }
 
   // The locations shall be sourced from the same file.
-  Span(Location s, Location e)
+  Region(Location s, Location e)
     : buf_(s.buffer()), start_(s.offset()), end_(e.offset())
   {
     lingo_assert(buf_ == e.buffer());
@@ -101,11 +101,11 @@ struct Span
 
   Buffer const* buffer() const { return buf_; }
   File const* file() const;
-  
+
   // Returns the start and end offsets.
   int start_offset() const { return start_; }
   int end_offset() const   { return end_; }
-  
+
   // Retursn the start and end source locations.
   Location start_location() const { return {buf_, start_}; }
   Location end_location() const   { return {buf_, end_}; }
@@ -117,8 +117,11 @@ struct Span
   int   start_column_number() const;
   int   end_column_number() const;
 
+  // Returns the line of text associated with the region. Behavior
+  // is defined only when is_multiline() is false.
   Line const& line() const;
 
+  // Returns true if the region spans multiple lines of text.
   bool is_multiline() const;
 
   // Contextually converts to true iff both the start and
@@ -131,8 +134,45 @@ struct Span
 };
 
 
+inline int
+Region::start_line_number() const
+{
+  return start_locus().first;
+}
+
+
+inline int
+Region::end_line_number() const
+{
+  return end_locus().first;
+}
+
+
+inline int
+Region::start_column_number() const
+{
+  return start_locus().second;
+}
+
+
+inline int
+Region::end_column_number() const
+{
+  return end_locus().second;
+}
+
+
+// Returns true if the span covers multiple lines of text.
+inline bool
+Region::is_multiline() const
+{
+  return start_line_number() != end_line_number();
+}
+
+
+
 std::ostream& operator<<(std::ostream&, Location const&);
-std::ostream& operator<<(std::ostream&, Span const&);
+std::ostream& operator<<(std::ostream&, Region const&);
 
 
 } // namespace lingo

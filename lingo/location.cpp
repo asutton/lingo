@@ -55,7 +55,7 @@ Location::line() const
 
 
 File const*
-Span::file() const
+Region::file() const
 {
   return as<File>(buf_);
 }
@@ -63,7 +63,7 @@ Span::file() const
 
 // FIXME: Guarantee that the start and end lines are the same.
 Line const&
-Span::line() const
+Region::line() const
 {
   lingo_assert(!is_multiline());
   return buf_->lines().line(start_);
@@ -71,52 +71,16 @@ Span::line() const
 
 
 Locus
-Span::start_locus() const
+Region::start_locus() const
 {
   return buf_->lines().locus(start_);
 }
 
 
 Locus
-Span::end_locus() const
+Region::end_locus() const
 {
   return buf_->lines().locus(end_);
-}
-
-
-int
-Span::start_line_number() const
-{
-  return start_locus().first;
-}
-
-
-int
-Span::end_line_number() const
-{
-  return end_locus().first;
-}
-
-
-int
-Span::start_column_number() const
-{
-  return start_locus().second;
-}
-
-
-int
-Span::end_column_number() const
-{
-  return end_locus().second;
-}
-
-
-// Returns true if the span covers multiple lines of text.
-bool
-Span::is_multiline() const
-{
-  return start_line_number() != end_line_number();
 }
 
 
@@ -136,7 +100,7 @@ operator<<(std::ostream& os, Location const& loc)
 
 
 std::ostream&
-operator<<(std::ostream& os, Span const& span)
+operator<<(std::ostream& os, Region const& span)
 {
   return os << span.start_location();
 }

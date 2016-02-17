@@ -36,36 +36,25 @@ enum Diagnostic_kind
 
 // Represents the positions where underlining begins and
 // ends. A caret represennts a single position within
-// the span (if specified).
+// the region (if specified).
 //
 // TODO: This could be better designed.
 struct Diagnostic_info
 {
-  Diagnostic_info(Location loc)
-    : kind(loc_info)
-  {
-    data.loc = loc;
-  }
+  Diagnostic_info(Location loc) : kind(loc_info) { data.loc = loc; }
+  Diagnostic_info(Region reg) : kind(reg_info) { data.reg = reg; }
 
-  Diagnostic_info(Span span)
-    : kind(span_info)
-  {
-    data.span = span;
-  }
-
-  // Kinds of info.
   enum Kind
   {
     loc_info,
-    span_info
+    reg_info
   };
 
-  // These are simple integer types.
   union Data
   {
     Data() { }
     Location loc;
-    Span     span;
+    Region   reg;
   };
 
   Kind kind;
@@ -88,7 +77,7 @@ struct Diagnostic_info
 struct Diagnostic
 {
   Diagnostic(Diagnostic_kind, Location, String const&);
-  Diagnostic(Diagnostic_kind, Span, String const&);
+  Diagnostic(Diagnostic_kind, Region, String const&);
 
   Diagnostic_kind kind;
   Diagnostic_info info;
@@ -140,13 +129,13 @@ int error_count();
 
 
 void error(Location, String const&);
-void error(Span, String const&);
+void error(Region, String const&);
 
 void warning(Location, String const&);
-void warning(Span, String const&);
+void warning(Region, String const&);
 
 void note(Location, String const&);
-void note(Span, String const&);
+void note(Region, String const&);
 
 
 // -------------------------------------------------------------------------- //
@@ -173,7 +162,7 @@ void note(Span, String const&);
 //
 // An error can also be emitted over a region of text.
 //
-//    error(span, str, args...)
+//    error(reg, str, args...)
 //
 // If the span covers multiple lines, only the first is displayed.
 //
@@ -194,9 +183,9 @@ error(Location loc, char const* msg, Args&&... args)
 // the source code span.
 template<typename... Args>
 inline void
-error(Span span, char const* msg, Args&&... args)
+error(Region reg, char const* msg, Args&&... args)
 {
-  error(span, format(msg, std::forward<Args>(args)...));
+  error(reg, format(msg, std::forward<Args>(args)...));
 }
 
 
@@ -227,9 +216,9 @@ warning(Location loc, char const* msg, Args&&... args)
 // the source code location.
 template<typename... Args>
 inline void
-warning(Span span, char const* msg, Args&&... args)
+warning(Region reg, char const* msg, Args&&... args)
 {
-  warning(span, format(msg, std::forward<Args>(args)...));
+  warning(reg, format(msg, std::forward<Args>(args)...));
 }
 
 
@@ -259,9 +248,9 @@ note(Location loc, char const* msg, Args&&... args)
 // the source code location.
 template<typename... Args>
 inline void
-note(Span span, char const* msg, Args&&... args)
+note(Region reg, char const* msg, Args&&... args)
 {
-  note(span, format(msg, std::forward<Args>(args)...));
+  note(reg, format(msg, std::forward<Args>(args)...));
 }
 
 

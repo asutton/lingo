@@ -25,9 +25,9 @@ show_location(std::ostream& os, Diagnostic_info const& info)
     if (loc)
       os << bright_white(loc) << ':';
   } else {
-    Span const& span = info.data.span;
-    if (span)
-      os << bright_white(span) << ':';
+    Region const& reg = info.data.reg;
+    if (reg)
+      os << bright_white(reg) << ':';
   }
 }
 
@@ -57,11 +57,11 @@ show_line(std::ostream& os, Location const& loc)
 }
 
 
-// TODO: What if we have multiple lines in the span?
+// TODO: What if we have multiple lines in the region?
 void
-show_span(std::ostream& os, Span const& span)
+show_region(std::ostream& os, Region const& reg)
 {
-  Line const& line = span.line();
+  Line const& line = reg.line();
   os << indent_ << line.str() << '\n';
 
   // TODO: Do something better than this. We could print
@@ -72,15 +72,15 @@ show_span(std::ostream& os, Span const& span)
   //  > line3
   //
   // Where '>' serves as the caret.
-  if (span.is_multiline()) {
+  if (reg.is_multiline()) {
     os << indent_ << "...";
     return;
   }
 
   // Show the underscore, but only if the start position
   // is valid.
-  int start = span.start_column_number() - 1;
-  int end = span.end_column_number() - 1;
+  int start = reg.start_column_number() - 1;
+  int end = reg.end_column_number() - 1;
   if (start < 0)
     return;
   os << indent_ << std::string(start, ' ');
@@ -113,9 +113,9 @@ show_context(std::ostream& os, Diagnostic_info const& info)
       show_line(os, loc);
     }
   } else {
-    Span const& span = info.data.span;
-    if (span)
-      show_span(os, span);
+    Region const& reg = info.data.reg;
+    if (reg)
+      show_region(os, reg);
   }
 }
 
@@ -153,7 +153,7 @@ Diagnostic::Diagnostic(Diagnostic_kind k, Location l, String const& m)
 { }
 
 
-Diagnostic::Diagnostic(Diagnostic_kind k, Span s, String const& m)
+Diagnostic::Diagnostic(Diagnostic_kind k, Region s, String const& m)
   : kind(k), info(s), msg(m)
 { }
 
@@ -241,7 +241,7 @@ error(Location loc, String const& msg)
 
 // Emit an error diagnostic over the given text span.
 void
-error(Span span, String const& msg)
+error(Region span, String const& msg)
 {
   diags_.top()->emit({error_diag, span, msg});
 }
@@ -260,9 +260,9 @@ warning(Location loc, String const& msg)
 
 // Emit a warning diagnost over the given text span.
 void
-warning(Span span, String const& msg)
+warning(Region reg, String const& msg)
 {
-  diags_.top()->emit({warning_diag, span, msg});
+  diags_.top()->emit({warning_diag, reg, msg});
 }
 
 
@@ -279,9 +279,9 @@ note(Location loc, String const& msg)
 
 
 void
-note(Span span, String const& msg)
+note(Region reg, String const& msg)
 {
-  diags_.top()->emit({note_diag, span, msg});
+  diags_.top()->emit({note_diag, reg, msg});
 }
 
 } // namespace lingo
