@@ -13,26 +13,26 @@
 // Expands to a call to the unreachable function and inserts
 // the function and line at which the insertion is called.
 #define lingo_unreachable(msg, args...) \
-  ::lingo::abort("{}:{}: " msg, __PRETTY_FUNCTION__, __LINE__, ## args)
+  ::lingo::abort("{}:{}: " msg, __FILE__, __LINE__, ## args)
 
 
 // Like unreachable except that this indicates a feature
 // that should be defined biut is not.
 #define lingo_unimplemented() \
-  ::lingo::abort("{}:{}: unimplemented", __PRETTY_FUNCTION__, __LINE__)
+  ::lingo::abort("{}:{}: unimplemented", __FILE__, __LINE__)
 
 
 // Expands to a call to the assertion function and inserts
 // the function and line at which the assertion is called.
 #define lingo_assert(cond)                                       \
   if (!(cond))                                                   \
-    ::lingo::abort("{}:{}: assertion failed '{}'", __PRETTY_FUNCTION__, __LINE__, #cond)
+    ::lingo::abort("{}:{}: assertion failed '{}'", __FILE__, __LINE__, #cond)
 
 
 // Like lingo_assert, but allows the inclusion of a message.
 #define lingo_alert(cond, msg, args...)                          \
   if (!(cond))                                                   \
-    ::lingo::abort("%s:%s: " msg, __PRETTY_FUNCTION__, __LINE__, ## args)
+    ::lingo::abort("%s:%s: " msg, __FILE__, __LINE__, ## args)
 
 
 namespace lingo
