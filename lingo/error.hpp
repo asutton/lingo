@@ -85,6 +85,10 @@ struct Diagnostic
 };
 
 
+// Streaming
+std::ostream& operator<<(std::ostream&, Diagnostic const&);
+
+
 // A diagnostic context is a record of all diagnostic messages that
 // have been emitted as part some processing phase.
 //

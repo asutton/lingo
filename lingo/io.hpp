@@ -17,6 +17,15 @@
 namespace lingo
 {
 
+// This index is used to access the private color flag on streams.
+// For example, to enable color in a stringstream, use:
+//
+//    std::stringstream ss;
+//    ss.iword(ios_color_flag) = true;
+//    ss << bright_red("hello");
+//
+extern int ios_color_flag;
+
 
 // Colors for text
 enum Text_color

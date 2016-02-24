@@ -12,14 +12,8 @@
 namespace lingo
 {
 
-
-namespace
-{
-
-bool color_output = false;
-bool color_error = false;
-
-} // namespace
+// Allocate a space for storing color flags.
+int ios_color_flag = std::ios_base::xalloc();
 
 
 // Determine if colors should be enabled on the
@@ -27,21 +21,21 @@ bool color_error = false;
 void
 init_colors()
 {
-  color_output = isatty(1);
-  color_error = isatty(2);
+  if (isatty(1))
+    std::cout.iword(ios_color_flag) = true;
+  if (isatty(2))
+    std::cerr.iword(ios_color_flag) = true;
 }
 
 
-// Return true if color should be used for the
-// given stream.
+// Return true if color should be used for the given stream.
+//
+// NOTE: I use the iword of a stream to store the color to indicate
+// that a non-standard stream should use color, set iword to 1.
 bool
-enable_color(std::ostream& os)
+supports_color(std::ostream& os)
 {
-  if (&os == &std::cout)
-    return color_output;
-  if (&os == &std::cerr)
-    return color_error;
-  return false;
+  return os.iword(ios_color_flag);
 }
 
 
@@ -87,7 +81,7 @@ get_effects(Text_effects)
 void
 start_font(std::ostream& os, Font_spec font)
 {
-  if (!enable_color(os))
+  if (!supports_color(os))
     return;
 
   char const* codes[3] {
@@ -112,7 +106,7 @@ start_font(std::ostream& os, Font_spec font)
 void
 end_font(std::ostream& os)
 {
-  if (!enable_color(os))
+  if (!supports_color(os))
     return;
 
   os << "\033[0m";
