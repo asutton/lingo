@@ -79,4 +79,3 @@ operator<<(std::ostream& os, Expr const& e)
 
 
 } // namespace calc
-

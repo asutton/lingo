@@ -4,9 +4,7 @@
 #ifndef CALC_PARSER_HPP
 #define CALC_PARSER_HPP
 
-
 #include "lexer.hpp"
-
 
 namespace calc
 {
@@ -22,7 +20,6 @@ struct Parse_error : std::runtime_error
 {
   using std::runtime_error::runtime_error;
 };
-
 
 
 // The parser is responsible for transforming a stream of tokens
@@ -62,7 +59,6 @@ struct Parser
 Expr const* parse(String const&);
 
 
-} // nammespace calc
-
+} // namespace calc
 
 #endif

@@ -8,15 +8,14 @@
 
 #include <unordered_map>
 
-
 namespace calc
 {
 
 
 // This class represents the lexical substitution of an
-// an expression for an argument. 
+// an expression for an argument.
 
-// Note that the actual substitution rules are defined as 
+// Note that the actual substitution rules are defined as
 // an application of this object as a function.
 struct Substitution : std::unordered_map<Var const*, Expr const*>
 {
@@ -35,6 +34,5 @@ struct Substitution : std::unordered_map<Var const*, Expr const*>
 
 
 } // namespace calc
-
 
 #endif

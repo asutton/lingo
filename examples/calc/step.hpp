@@ -13,6 +13,6 @@ struct Expr;
 Expr const* step_eval(Expr const*);
 
 
-} // namespace
+} // namespace calc
 
 #endif

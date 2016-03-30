@@ -16,7 +16,7 @@ class Buffer;
 
 // A character stream provides a sequence of characters and has
 // a very simple streaming interface consisting of only 5 functions:
-// peek(), get(), and eof(), begin(), and end(). Character streams
+// peek(), get(), eof(), begin(), and end(). Character streams
 // are the input to lexical analyzers.
 //
 // There are also two support functions: null() returns a non-character
@@ -54,13 +54,13 @@ public:
   char const* end() const { return last_; }
 
 private:
-  Buffer&       buf_;  // The stream's source file
+  Buffer&       buf_;   // The stream's source file
   char const*   base_;  // The beginning of the stream
   char const*   first_; // Current character pointer
   char const*   last_;  // Past the end of the character buffer
 };
 
-} // namespace lingo
 
+} // namespace lingo
 
 #endif

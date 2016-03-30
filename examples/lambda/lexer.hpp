@@ -4,14 +4,13 @@
 #ifndef CALC_LEXER_HPP
 #define CALC_LEXER_HPP
 
-// The calc lexer defines the additional tokens used by the 
-// language and the machine used to recognize those tokens 
+// The calc lexer defines the additional tokens used by the
+// language and the machine used to recognize those tokens
 // in input source.
 
 #include <lingo/symbol.hpp>
 #include <lingo/token.hpp>
 #include <lingo/character.hpp>
-
 
 namespace calc
 {
@@ -92,6 +91,5 @@ struct Lexer
 
 
 } // namespace calc
-
 
 #endif

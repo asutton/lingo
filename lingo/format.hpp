@@ -6,7 +6,7 @@
 
 // This module imports the cppformat library by Victor
 // Zverovich. In particular, it makes a number of facilities
-// available in the lingo namesapce.
+// available in the lingo namespace.
 
 #include <format.h>
 

@@ -14,11 +14,10 @@
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/Hashing.h>
 
-
 namespace lingo
 {
 
-// Represents an arbitrary precision integer. The defualt interpretation
+// Represents an arbitrary precision integer. The default interpretation
 // of this value is as a signed integer. However, unsigned variants can
 // also be constructed.
 //
@@ -301,7 +300,7 @@ Integer::is_negative() const
 }
 
 
-// Returns true if the value is nonpositive.
+// Returns true if the value is not positive.
 inline bool
 Integer::is_nonpositive() const
 {
@@ -331,7 +330,6 @@ Integer::bits() const
 {
   return z.getBitWidth();
 }
-
 
 
 // Returns the value as an unsigned integer.

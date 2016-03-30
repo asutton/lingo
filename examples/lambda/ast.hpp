@@ -9,7 +9,6 @@
 #include "lingo/token.hpp"
 #include "lingo/print.hpp"
 
-
 namespace calc
 {
 
@@ -105,7 +104,6 @@ struct Ref : Expr
 };
 
 
-
 // The definition of a variable.
 struct Def : Expr
 {
@@ -177,7 +175,7 @@ struct Seq : Expr
 // -------------------------------------------------------------------------- //
 //                                Generic visitor
 
-// A parameterized visitor that dispatches to a function 
+// A parameterized visitor that dispatches to a function
 // object. F is the type of the function and T is its
 // return type.
 //
