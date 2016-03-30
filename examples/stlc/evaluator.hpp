@@ -8,7 +8,6 @@
 
 #include <lingo/environment.hpp>
 
-
 namespace calc
 {
 
@@ -40,7 +39,6 @@ struct Evaluator
 
   Value_map defs_;
 };
-
 
 
 } // namespace calc

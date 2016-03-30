@@ -19,7 +19,7 @@
 // This library is designed around the concept `Printable`.
 // All Printable types overload the `print` function.
 //
-// In the cotnext of nodes representing programs, we assume
+// In the context of nodes representing programs, we assume
 // that printing yields text that represents the program in
 // its original text. In contrast, debug printing generates
 // an alternative textual representation.
@@ -233,7 +233,7 @@ print(Printer& p, char const* msg, Args const&... args)
 }
 
 
-// Prrint a terminal (unary) node.
+// Print a terminal (unary) node.
 template<typename T>
 inline void
 print_terminal(Printer& p, T const* node)
@@ -263,7 +263,7 @@ print_quoted(Printer& p, T const& x)
 }
 
 
-// Print an element enclosed in parens.
+// Print an element enclosed in parentheses.
 template<typename T>
 inline void
 print_paren_enclosed(Printer& p, T const& x)

@@ -10,7 +10,6 @@
 #include <list>
 #include <iosfwd>
 
-
 namespace lingo
 {
 
@@ -25,7 +24,7 @@ constexpr int invalid_tok = -1;
 //
 // Note that tokens internally track their kind as
 // an integer value. This allows client languages
-// to define their own token enumeration wihtout
+// to define their own token enumeration without
 // having to instantiate a new token class.
 class Token
 {
@@ -319,6 +318,5 @@ Token_stream::location() const
 
 
 } // namespace lingo
-
 
 #endif

@@ -10,7 +10,6 @@
 
 #include <map>
 
-
 namespace lingo
 {
 
@@ -51,6 +50,6 @@ protected:
 };
 
 
-} // namespace
+} // namespace lingo
 
 #endif

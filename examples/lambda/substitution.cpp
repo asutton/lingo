@@ -4,18 +4,17 @@
 #include "substitution.hpp"
 #include "ast.hpp"
 
-
 namespace calc
 {
 
-Expr const* 
+Expr const*
 Substitution::operator()(Expr const* e) const
 {
   return subst(e);
 }
 
 
-Expr const* 
+Expr const*
 Substitution::subst(Expr const* e) const
 {
   struct Fn

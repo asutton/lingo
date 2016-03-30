@@ -9,7 +9,6 @@
 
 #include <lingo/environment.hpp>
 
-
 namespace calc
 {
 
@@ -94,7 +93,6 @@ struct Parser
 Expr const* parse(String const&);
 
 
-} // nammespace calc
-
+} // namespace calc
 
 #endif

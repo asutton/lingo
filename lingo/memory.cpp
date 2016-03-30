@@ -1,6 +1,8 @@
 // Copyright (c) 2015 Andrew Sutton
 // All rights reserved
 
+#include "config.hpp"
+
 #include "lingo/memory.hpp"
 #include "lingo/error.hpp"
 
@@ -25,7 +27,7 @@ Collecting_factory::declare(Reach* r)
 }
 
 
-// Undecare a GC root.
+// Un-declare a GC root.
 void
 Collecting_factory::undeclare(Reach* r)
 {

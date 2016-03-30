@@ -9,7 +9,6 @@
 
 #include <iostream>
 
-
 namespace calc
 {
 
@@ -216,7 +215,7 @@ Parser::paren()
 //          '\' identifier '.' expr
 //          '(' expr ')'
 //
-// TODO: Factor definitions and declarations into a 
+// TODO: Factor definitions and declarations into a
 // top-level parse. They should most definitely not
 // be primaries.
 Expr const*
@@ -255,7 +254,6 @@ Parser::postfix()
   }
   return e;
 }
-
 
 
 Expr const*
@@ -300,7 +298,6 @@ Parser::operator()()
   }
   return e;
 }
-
 
 
 // -------------------------------------------------------------------------- //
@@ -446,5 +443,6 @@ parse(String const& str)
 
   return expr;
 }
+
 
 } // namespace calc

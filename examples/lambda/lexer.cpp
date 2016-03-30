@@ -43,7 +43,7 @@ get_spelling(Token_kind k)
 // Lexing
 
 
-void 
+void
 Lexer::save()
 {
   str_.put(cs_.get());

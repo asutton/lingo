@@ -197,7 +197,7 @@ struct opname
   opname(Expr const* e)
     : e(e)
   { }
-  
+
   Expr const* e;
 };
 
@@ -236,7 +236,7 @@ print(std::ostream& os, Binary const* e)
   os << subexpr(e, e->left())
      << ' ' << opname(e) << ' '
      << subexpr(e, e->right());
-  
+
 }
 
 
@@ -263,14 +263,12 @@ print(std::ostream& os, Expr const* e)
 }
 
 
-
 std::ostream&
 operator<<(std::ostream& os, Expr const& e)
 {
   print(os, &e);
   return os;
 }
-
 
 
 // -------------------------------------------------------------------------- //
@@ -320,6 +318,4 @@ debug(Printer& p, Expr const* e)
 }
 
 
-
 } // namespace calc
-

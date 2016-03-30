@@ -138,4 +138,4 @@ step_eval(Expr const* e)
 }
 
 
-} // namespace
+} // namespace calc

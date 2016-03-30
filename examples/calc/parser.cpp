@@ -9,7 +9,6 @@
 
 #include <iostream>
 
-
 namespace calc
 {
 
