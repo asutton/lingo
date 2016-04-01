@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Andrew Sutton
+// Copyright (c) 2015-2016 Andrew Sutton
 // All rights reserved
 
 #include "config.hpp"
@@ -41,12 +41,7 @@ const char* encoding_names[] = {
 const char*
 get_encoding_name(Encoding code)
 {
-  static const std::size_t n_encodings = std::end(encoding_names) - std::begin(encoding_names);
-
-  if (code < 0 || code >= n_encodings)
-    throw std::invalid_argument("lingo::get_encoding_name");
-
-  return encoding_names[code];
+  return encoding_names[(int)code];
 }
 
 
@@ -235,7 +230,8 @@ Character_set_converter::converted_byte_length(const char* from, const char* fro
   if (n_conv == std::size_t(-1)) {
     switch (errno) {
       case E2BIG:
-        lingo_unreachable("Temporary output buffer is not large enough to contain termination/reset character sequence.");
+        lingo_unreachable("Temporary output buffer is not large enough to "
+                          "contain termination/reset character sequence.");
       default:
         throw std::system_error(errno, std::generic_category());
     }
