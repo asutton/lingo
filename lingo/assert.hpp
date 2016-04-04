@@ -18,8 +18,15 @@
 
 // Like unreachable except that this indicates a feature
 // that should be defined biut is not.
-#define lingo_unimplemented() \
-  ::lingo::abort("{}:{}: unimplemented", __FILE__, __LINE__)
+#define lingo_unimplemented(msg) \
+  ::lingo::abort("{}:{}: unimplemented '{}'", __FILE__, __LINE__, msg)
+
+
+// Throws an internal error to indicate an unhandled case for
+// the dynamic type of x. Note that x must be a reference to an
+// polymorphic object.
+#define lingo_unhandled(x) \
+  ::lingo::abort("{}:{}: unhandled case '{}'", __FILE__, __LINE__, ::lingo::type_str(x))
 
 
 // Expands to a call to the assertion function and inserts
