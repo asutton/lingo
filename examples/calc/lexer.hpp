@@ -12,7 +12,6 @@
 #include <lingo/token.hpp>
 #include <lingo/character.hpp>
 
-
 namespace calc
 {
 
@@ -93,6 +92,5 @@ struct Lexer
 
 
 } // namespace calc
-
 
 #endif

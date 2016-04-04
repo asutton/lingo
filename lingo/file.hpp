@@ -14,7 +14,6 @@
 
 #include <boost/filesystem.hpp>
 
-
 namespace lingo
 {
 
@@ -31,26 +30,27 @@ using Path = boost::filesystem::path;
 // -------------------------------------------------------------------------- //
 // Files
 
-// Represents a file system file. This object is primary used
+// Represents a file system file. This object is primarily used
 // to house the text the file contains, providing long-term
 // storage for its text.
 class File : public Buffer
 {
   friend class File_manager;
 
-  File(Path const&, int);
 public:
   File(Path const&);
 
   // Returns the absolute path to the file.
   Path const& path() const { return path_; }
 
-  // Returns the file's index.  
+  // Returns the file's index.
   int index() const { return index_; }
 
 private:
   Path        path_;
   int         index_;
+
+  File(Path const&, int);
 };
 
 
@@ -58,7 +58,7 @@ private:
 // File manager
 
 // The file manager provides a facility for globally managing
-// opened files. This effectively a list of opened (note: not
+// opened files. This effectively maintains a list of opened (note: not
 // open) files and a side-table for efficient path-based lookup.
 class File_manager
 {

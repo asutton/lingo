@@ -9,7 +9,6 @@
 
 #include <llvm/ADT/APFloat.h>
 
-
 namespace lingo
 {
 
@@ -120,12 +119,11 @@ Real::operator=(llvm::APFloat&& n)
 }
 
 
-// Initialize an integer with the (signed) value.
+// Initialize a floating point value with the (signed) value.
 inline
 Real::Real(double n)
   : f(n)
 { }
-
 
 
 // Returns a reference to the underlying data.
@@ -137,7 +135,7 @@ Real::impl() const
 
 
 // Equality comparison
-// Returns true when the two integers have the same value.
+// Returns true when the two floating point values have the same value.
 inline bool
 operator==(Real const& a, Real const& b)
 {
@@ -152,7 +150,7 @@ operator!=(Real const& a, Real const& b)
 }
 
 
-// Ordering, defined for signed integers by default.
+// Ordering, defined for signed floating point values by default.
 inline bool
 operator<(Real const& a, Real const& b)
 {

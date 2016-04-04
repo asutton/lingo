@@ -9,14 +9,13 @@
 
 #include <map>
 
-
 namespace lingo
 {
 
 
 // A line of text is the sequence of characters from column
-// 0 up to its newline. Each line maintains a pair of pointers
-// 
+// 0 up to the first newline. Each line maintains a pair of pointers.
+//
 //
 // The members of this class are public to allow them to be
 // updated by a character stream during processing.
@@ -48,7 +47,7 @@ public:
 
 
 // A line map associates an offset in the source code with
-// it's underlying line of text.
+// its underlying line of text.
 struct Line_map : std::map<int, Line>
 {
   Locus       locus(int) const;
@@ -57,6 +56,5 @@ struct Line_map : std::map<int, Line>
 
 
 } // namespace lingo
-
 
 #endif

@@ -4,7 +4,6 @@
 #include "substitution.hpp"
 #include "ast.hpp"
 
-
 namespace calc
 {
 

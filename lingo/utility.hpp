@@ -10,7 +10,6 @@
 #include <typeinfo>
 #include <utility>
 
-
 namespace lingo
 {
 
@@ -142,7 +141,7 @@ as(U const& u)
 
 
 // Return a non-const pointer to the term. This is used
-// to modify a term post-initializatoin (which should
+// to modify a term post-initialization (which should
 // be rare).
 template<typename T>
 inline T*
@@ -207,7 +206,7 @@ struct Generic_visitor
 };
 
 
-// Specialiation for reference returns. The return value must
+// Specialization for reference returns. The return value must
 // outlive the visitor, otherwise visitation will result in
 // undefined behavior.
 template<typename F, typename T>
@@ -325,7 +324,7 @@ struct Generic_mutator
 };
 
 
-// Specialiation for reference returns. The return value must
+// Specialization for reference returns. The return value must
 // outlive the visitor, otherwise visitation will result in
 // undefined behavior.
 template<typename F, typename T>
@@ -410,6 +409,5 @@ accept(T& t, V& v)
 
 
 } // namespace lingo
-
 
 #endif

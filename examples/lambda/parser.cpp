@@ -9,7 +9,6 @@
 
 #include <iostream>
 
-
 namespace calc
 {
 
@@ -56,8 +55,8 @@ Parser::match(Token_kind k)
   if (lookahead() == k)
     return ts_.get();
 
-  String msg = format("expected '{}' but got '{}'", 
-                      get_spelling(k), 
+  String msg = format("expected '{}' but got '{}'",
+                      get_spelling(k),
                       token_spelling(ts_));
   error(ts_.location(), msg);
   throw Parse_error("match");
@@ -174,7 +173,7 @@ Parser::primary()
 
 // Parse the second part of applicaiton. Note that
 // the first term is parsed in the postfix parser.
-Expr const* 
+Expr const*
 Parser::app()
 {
   return expr();
@@ -197,7 +196,6 @@ Parser::postfix()
   }
   return e;
 }
-
 
 
 Expr const*
@@ -232,7 +230,6 @@ Parser::operator()()
     return nullptr;
   return seq();
 }
-
 
 
 // -------------------------------------------------------------------------- //
@@ -291,10 +288,10 @@ Parser::on_seq(Expr const* e1, Expr const* e2)
 
 
 // Parse the given buffer.
-Expr const* 
+Expr const*
 parse(String const& str)
 {
-  Buffer buf(str);  
+  Buffer buf(str);
   Character_stream cs(buf);
   Token_stream ts(buf);
   Lexer lex(cs, ts);
@@ -316,5 +313,6 @@ parse(String const& str)
 
   return expr;
 }
+
 
 } // namespace calc

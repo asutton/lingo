@@ -69,7 +69,7 @@ class Reach;
 
 
 // Every object allocated through the garbage collector is
-// an instance of the collectable type.
+// an instance of the Collectable type.
 struct Collectable
 {
   Collectable()
@@ -256,12 +256,12 @@ private:
 Collecting_factory& gc();
 
 
-// The reach class declares a new root into the garbage
+// The Reach class declares a new root into the garbage
 // collector. When this object is destroyed, it is no
 // longer a collection root.
 //
 // Note that a GC root will only store references to
-// collectable objects.
+// Collectable objects.
 class Reach : std::vector<Collectable*>
 {
   friend class Collecting_factory;
@@ -337,9 +337,9 @@ private:
 //                            Algorithms
 
 
-// This function deletes the object pointed at by p sets it
+// This function deletes the object pointed at by p and sets it
 // to nullptr, returning that value. This is primarily used
-// to reduce reduntant code on certain error conditions during
+// to reduce redundant code on certain error conditions during
 // parsing and elaboration.
 template<typename T>
 inline T*

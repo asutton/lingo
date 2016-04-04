@@ -73,5 +73,4 @@ abort(char const* msg, Args const&... args)
 
 } // namespace lingo
 
-
 #endif

@@ -10,7 +10,6 @@
 #include <unordered_map>
 #include <typeinfo>
 
-
 namespace lingo
 {
 
@@ -45,8 +44,8 @@ struct Symbol
   int           token() const    { return tok_; }
 
 private:
-  String const* str_; // The textual representation
-  int           tok_; // The associated token kind
+  String const* str_; // The textual representation.
+  int           tok_; // The associated token kind.
 };
 
 
@@ -96,8 +95,8 @@ struct Integer_sym : Symbol
 
 // Character symbols are represented by their integer
 // encoding in the execution character set. That
-// defaults to extended ASCII. Note that this internall
-// represnted as a system integer for simplicity.
+// defaults to extended ASCII. Note that this is internally
+// represented as a system integer for simplicity.
 //
 // TODO: Support wide character encoding in ISO 10646
 // (Unicode).

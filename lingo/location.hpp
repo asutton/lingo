@@ -22,7 +22,7 @@ class Line;
 
 // The location class represents the position of text within
 // a source file. This is a pair: the file in which the text
-// resides and its the starting offset of that text. Note that
+// resides and the starting offset of that text. Note that
 // the ending offset is determined by the kind of element:
 // token, comment, etc.
 //
@@ -112,7 +112,7 @@ struct Region
   int start_offset() const { return start_; }
   int end_offset() const   { return end_; }
 
-  // Retursn the start and end source locations.
+  // Returns the start and end source locations.
   Location start_location() const { return {buf_, start_}; }
   Location end_location() const   { return {buf_, end_}; }
 
@@ -182,6 +182,5 @@ std::ostream& operator<<(std::ostream&, Region const&);
 
 
 } // namespace lingo
-
 
 #endif
