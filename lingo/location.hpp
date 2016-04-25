@@ -42,12 +42,16 @@ public:
     : buf_(nullptr), off_(n)
   { }
 
-  Location(Buffer const* b, int n)
+  Location(Buffer* b, int n)
     : buf_(b), off_(n)
   { }
 
   Buffer const* buffer() const { return buf_; }
+  Buffer*       buffer()       { return buf_; }
+
   File const*   file() const;
+  File*         file();
+
   int           offset() const { return off_; }
   int           line_number() const;
   int           column_number() const;
@@ -59,8 +63,8 @@ public:
   explicit operator bool() const { return off_ != -1; }
 
 private:
-  Buffer const* buf_;
-  int           off_;
+  Buffer* buf_;
+  int     off_;
 };
 
 
@@ -91,7 +95,7 @@ struct Region
     : buf_(nullptr), start_(-1), end_(-1)
   { }
 
-  Region(Buffer const* b, int m, int n)
+  Region(Buffer* b, int m, int n)
     : buf_(b), start_(m), end_(n)
   { }
 
@@ -103,7 +107,10 @@ struct Region
   }
 
   Buffer const* buffer() const { return buf_; }
+  Buffer*       buffer()       { return buf_; }
+
   File const* file() const;
+  File*       file();
 
   // Returns the start and end offsets.
   int start_offset() const { return start_; }
@@ -131,9 +138,9 @@ struct Region
   // end are valid offsets.
   explicit operator bool() const { return start_ != -1; }
 
-  Buffer const* buf_;
-  int           start_;
-  int           end_;
+  Buffer* buf_;
+  int     start_;
+  int     end_;
 };
 
 

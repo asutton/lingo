@@ -4,8 +4,8 @@
 #ifndef LINGO_STRING_HPP
 #define LINGO_STRING_HPP
 
-// The string module defines facilities and abstractions for
-// working with character strings.
+// The string module defines facilities and abstractions for working
+// with character strings.
 
 #include <lingo/assert.hpp>
 
@@ -50,18 +50,6 @@ template<>
 struct digits<char>
 {
   static constexpr const char* value = u8"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-};
-
-template<>
-struct digits<signed char>
-{
-  static constexpr const signed char* value = reinterpret_cast<const signed char*>(digits<char>::value);
-};
-
-template<>
-struct digits<unsigned char>
-{
-  static constexpr const unsigned char* value = reinterpret_cast<const unsigned char*>(digits<char>::value);
 };
 
 template<>

@@ -53,7 +53,7 @@ show_line(std::ostream& os, Location const& loc)
   int caret = loc.column_number();
   if (caret < 0)
     return;
-  os << indent_ << std::string(caret, ' ');
+  os << indent_ << std::string(caret - 1, ' ');
   os << bright_cyan('^') << '\n';
 }
 
@@ -78,14 +78,13 @@ show_region(std::ostream& os, Region const& reg)
     return;
   }
 
-  // Show the underscore, but only if the start position
-  // is valid.
+  // Show the underscore, but only if the start position is valid.
   int start = reg.start_column_number() - 1;
-  int end = reg.end_column_number() - 1;
+  int end = reg.end_column_number();
   if (start < 0)
     return;
   os << indent_ << std::string(start, ' ');
-  os << bright_cyan(std::string(end - start, '~')) << '\n';
+  os << bright_red(std::string(end - start, '~')) << '\n';
 }
 
 

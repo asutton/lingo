@@ -14,11 +14,17 @@
 namespace lingo
 {
 
-// Returns the file associated with the location. If the
-// location is not sourced from a file, this returns
-// nullptr.
+// Returns the file associated with the location. If the location is
+// not sourced from a file, this returns nullptr.
 File const*
 Location::file() const
+{
+  return as<File>(buf_);
+}
+
+
+File*
+Location::file()
 {
   return as<File>(buf_);
 }
@@ -57,6 +63,13 @@ Location::line() const
 
 File const*
 Region::file() const
+{
+  return as<File>(buf_);
+}
+
+
+File*
+Region::file()
 {
   return as<File>(buf_);
 }

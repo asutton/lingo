@@ -33,8 +33,7 @@ type_str(T const& t)
 // Dynamic type information
 
 
-// Returns true if the object pointed to by `u` has
-// the dynamic type `T`.
+// Returns true if the object pointed to by `u` has the dynamic type `T`.
 template<typename T, typename U>
 inline bool
 is(U const* u)
@@ -43,9 +42,32 @@ is(U const* u)
 }
 
 
-// Statically cast a pointer to a Node of type T to a pointer
-// to a Node of type U. This is not a checked operation (except
-// in debug mode).
+template<typename T, typename U>
+inline bool
+is(U* u)
+{
+  return dynamic_cast<T*>(u);
+}
+
+
+template<typename T, typename U>
+inline bool
+is(U const& u)
+{
+  return dynamic_cast<T const*>(&u);
+}
+
+
+template<typename T, typename U>
+inline bool
+is(U& u)
+{
+  return dynamic_cast<T*>(&u);
+}
+
+
+// Statically cast a pointer to a Node of type T to a pointer to a node of
+// type U. This is not a checked operation (except in debug mode).
 template<typename T, typename U>
 inline T*
 cast(U* u)
@@ -64,8 +86,8 @@ cast(U const* u)
 }
 
 
-// Statically cast a reference to U to a reference to T.
-// Behavior is undefined if the ast is invalid.
+// Statically cast a reference to U to a reference to T. Behavior is undefined
+// if the u does not have dynamic type T.
 template<typename T, typename U>
 inline T&
 cast(U& u)
@@ -80,6 +102,43 @@ cast(U const& u)
 {
   return static_cast<T const&>(u);
 }
+
+
+// Cast the object u to the dynamic type of T. Behavior is undefined if
+// the objects have different dynamic type.
+template<typename T, typename U>
+inline T*
+cast_as(T* t, U* u)
+{
+  return cast<T>(u);
+}
+
+
+template<typename T, typename U>
+inline T const*
+cast_as(T const* t, U const* u)
+{
+  return cast<T>(u);
+}
+
+
+// Cast the object u to the dynamic type of T. Behavior is undefined if
+// the objects have different dynamic type.
+template<typename T, typename U>
+inline T&
+cast_as(T& t, U& u)
+{
+  return cast<T>(u);
+}
+
+
+template<typename T, typename U>
+inline T const&
+cast_as(T const& t, U const& u)
+{
+  return cast<T>(u);
+}
+
 
 
 // Returns `u` with type `T*` iff the object pointed

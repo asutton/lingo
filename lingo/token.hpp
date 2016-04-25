@@ -165,36 +165,24 @@ std::ostream& operator<<(std::ostream&, Token);
 // Token buffer
 
 
-// A token buffer is a finite sequence of tokens.
-//
-// Note that tokens are maintained in a linked list
-// so that modifications to the buffer don't invalidate
-// iterators.
-//
-// TODO: Define appropriate constructors, etc.
-//
-// FIXME: Is this being used?
-struct Tokenbuf : std::list<Token>
-{
-  using std::list<Token>::list;
-};
+// A token buffer is a finite sequence of tokens. Note that tokens are
+// maintained in a linked list so that modifications during parsing won't
+// invalidate iterators.
+using Token_seq = std::list<Token>;
 
 
 // -------------------------------------------------------------------------- //
 //                            Token stream
 
-// A token stream provides a stream interface to a
-// token buffer.
-//
-// TODO: This is currently modeling a read/write stream.
-// We probably need both a read and write stream position,
-// although the write position is always at the end.
+// A token stream provides a stream interface to a token buffer. Note
+// that tokens in the stream can be source from multiple input buffers.
 class Token_stream
 {
 public:
-  using Position = Tokenbuf::iterator;
+  using Position = Token_seq::iterator;
 
-  Token_stream(Buffer& b);
+  Token_stream();
+  Token_stream(Token_seq const&);
 
   bool eof() const;
   Token peek() const;
@@ -202,8 +190,8 @@ public:
   Token get();
   void put(Token);
 
-  // Buffer
-  Buffer const& buffer() const { return input_; }
+  Token_seq const& tokens() const { return buf_; }
+  Token_seq&       tokens()       { return buf_; }
 
   Location location() const;
 
@@ -213,17 +201,22 @@ public:
   void     reposition(Position);
 
 // private:
-  Buffer&  input_;  // The source text buffer
-  Tokenbuf buf_;    // The underlying token buffer
+  Token_seq buf_;   // The underlying token buffer
   Position pos_;    // The current input/output position.
 };
 
 
-// Initialize a token stream with an empty
-// buffer.
+// Initialize a token stream with an empty token buffer.
 inline
-Token_stream::Token_stream(Buffer& b)
-  : input_(b), buf_(), pos_(buf_.begin())
+Token_stream::Token_stream()
+  : buf_(), pos_(buf_.begin())
+{ }
+
+
+// Initialize a token stream with the given token buffer.
+inline
+Token_stream::Token_stream(Token_seq const& toks)
+  : buf_(toks), pos_(buf_.begin())
 { }
 
 
@@ -235,14 +228,13 @@ Token_stream::eof() const
 }
 
 
-// Returns the current token. If at the end of file,
-// return an invalid token whose location is past the
-// end of the file.
+// Returns the current token. If at the end of file, return an invalid
+// token.
 inline Token
 Token_stream::peek() const
 {
   if (eof())
-    return Token(Location(&input_, buf_.size()));
+    return Token();
   else
     return *pos_;
 }
@@ -267,12 +259,13 @@ Token_stream::peek(int n) const
 }
 
 
-// Returns the current token and advances the stream.
+// Returns the current token and advances the stream. If past the end of
+// input, this returns an invalid token.
 inline Token
 Token_stream::get()
 {
   if (eof())
-    return Token(Location(&input_, buf_.size() - 1));
+    return Token();
   else
     return *pos_++;
 }

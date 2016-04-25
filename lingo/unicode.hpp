@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Andrew Sutton
+// Copyright (c) 2015-2016 Andrew Sutton
 // All rights reserved
 
 #ifndef LINGO_UNICODE_HPP
@@ -15,7 +15,7 @@
 #define UNICODE_MAX 0x10FFFF
 
 #if CHAR_BIT == 8
-  #define CHAR8_T_TYPE unsigned char
+  #define CHAR8_T_TYPE char
 #else
   #define CHAR8_T_TYPE std::uint_least8_t
 #endif
@@ -23,13 +23,13 @@
 // The character type for an UTF-8 code unit.
 typedef CHAR8_T_TYPE char8_t;
 
+
 namespace lingo
 {
 
 
 // -------------------------------------------------------------------------- //
 //                                  Types
-
 
 // UTF-8 encoded string type.
 typedef std::basic_string<char8_t> u8string;
@@ -111,7 +111,8 @@ public:
   enum Result
   {
     ok,       // Conversion was completed with no error.
-    partial,  // Conversion stopped due to incomplete character sequence or insufficient space in the output buffer.
+    partial,  // Conversion stopped due to incomplete character sequence or
+              // insufficient space in the output buffer.
     error     // Conversion stopped due to illegal byte sequence.
   };
 
