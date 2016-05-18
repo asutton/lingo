@@ -20,13 +20,17 @@ class File;
 class Line;
 
 
-// The location class represents the position of text within
-// a source file. This is a pair: the file in which the text
-// resides and the starting offset of that text. Note that
-// the ending offset is determined by the kind of element:
-// token, comment, etc.
+// The location class represents the position of text within a source file.
+// This is a pair: the file in which the text resides and the starting offset
+// of that text. Note that the ending offset is determined by the kind of
+// element: token, comment, etc.
 //
 // Note that for redirected input, the file may be null.
+//
+// FIXME: I can make this a single character pointer, and then use external
+// data structures to map that back to a file, and then to a line and offset.
+// However, this will essentially require that I maintain files in a global
+// repository (i.e., file manager).
 class Location
 {
 public:

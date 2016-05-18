@@ -104,6 +104,43 @@ cast(U const& u)
 }
 
 
+// Cast the object u to the dynamic type of T. Behavior is undefined if
+// the objects have different dynamic type.
+template<typename T, typename U>
+inline T*
+cast_as(T* t, U* u)
+{
+  return cast<T>(u);
+}
+
+
+template<typename T, typename U>
+inline T const*
+cast_as(T const* t, U const* u)
+{
+  return cast<T>(u);
+}
+
+
+// Cast the object u to the dynamic type of T. Behavior is undefined if
+// the objects have different dynamic type.
+template<typename T, typename U>
+inline T&
+cast_as(T& t, U& u)
+{
+  return cast<T>(u);
+}
+
+
+template<typename T, typename U>
+inline T const&
+cast_as(T const& t, U const& u)
+{
+  return cast<T>(u);
+}
+
+
+
 // Returns `u` with type `T*` iff the object pointed
 // to by `u` has dynamic type `T`.
 template<typename T, typename U>
