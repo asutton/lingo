@@ -114,9 +114,12 @@ Environment<S, T>::lookup(S const& sym) -> Binding*
 // -------------------------------------------------------------------------- //
 // Binding stack
 
-// The stack maintains the nested binding environments at a
-// certain point in the program. Symbol lookup is processed
-// in the innermost environment, and works outward.
+// The stack maintains the nested binding environments at a certain point 
+// in the program. Symbol lookup is processed in the innermost environment, 
+// and works outward.
+//
+// Note that this data structure does not own the environments being
+// stacked. Those must be maintained separately.
 template<typename E>
 struct Stack : std::vector<E*>
 {
@@ -126,12 +129,7 @@ struct Stack : std::vector<E*>
   using Binding = typename E::Binding;
 
   void push(E*);
-
-  template<typename... Args>
-  void push(Args&&...);
-
   void pop();
-  E*   take();
 
   Binding& bind(Name_type const&, Value_type const&);
   Binding& rebind(Name_type const&, Value_type const&);
@@ -156,26 +154,12 @@ Stack<E>::push(E* env)
 }
 
 
-// Push a new environment, constructed over the
-// given arguments.
-template<typename E>
-template<typename... Args>
-inline void
-Stack<E>::push(Args&&... args)
-{
-  E* env = new E(std::forward<Args>(args)...);
-  this->push_back(env);
-}
-
-
 // Pop the environment at the top of the stack.
 template<typename E>
 inline void
 Stack<E>::pop()
 {
-  E* env = this->back();
   this->pop_back();
-  delete env;
 }
 
 
@@ -194,18 +178,6 @@ inline auto
 Stack<E>::rebind(Name_type const& n, Value_type const& v) -> Binding&
 {
   return top().rebind(n, v);
-}
-
-
-// Remove the current environment from the stack,
-// and return it. This does not destroy the environment.
-template<typename E>
-inline E*
-Stack<E>::take()
-{
-  E* env = this->back();
-  this->pop_back();
-  return env;
 }
 
 
